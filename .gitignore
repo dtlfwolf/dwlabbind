@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Packaging
+build/
+dist/
+
+# Environment
+.env
+
+# Local config outputs
+*.xml
+
+# OS
+.DS_Store
+Thumbs.db
