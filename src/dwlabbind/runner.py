@@ -7,6 +7,7 @@ import json
 import sys
 
 from .api import BindApiServer
+from .importers import import_server_config
 from .models import BindServer, BindZone, HAConfig, SecurityConfig
 from .xml_store import XmlConfigStore
 
@@ -68,9 +69,27 @@ def _cmd_serve_api(args: argparse.Namespace) -> None:
     api.start()
 
 
+def _cmd_import(args: argparse.Namespace) -> None:
+    store = XmlConfigStore(args.config)
+    server = import_server_config(
+        server_type=args.server_type,
+        config_path=args.config_path,
+        name=args.name,
+        ip=args.ip,
+        port=args.port,
+        role=args.role,
+        version=args.version,
+    )
+    store.save(server)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Manage BIND server configuration")
-    parser.add_argument("--config", default="./bind.xml", help="Path to XML config")
+    parser.add_argument(
+        "--config",
+        default=None,
+        help="Path to XML config (defaults to OS-specific config directory)",
+    )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     init = subparsers.add_parser("init", help="Initialize a new config")
@@ -103,6 +122,16 @@ def build_parser() -> argparse.ArgumentParser:
     serve_api.add_argument("--host", default="127.0.0.1")
     serve_api.add_argument("--port", type=int, default=8080)
     serve_api.set_defaults(func=_cmd_serve_api)
+
+    import_config = subparsers.add_parser("import", help="Import existing DNS config")
+    import_config.add_argument("--server-type", required=True, choices=["bind9", "powerdns", "msdns"])
+    import_config.add_argument("--config-path", required=True, help="Path to server config or zone list")
+    import_config.add_argument("--name", required=True)
+    import_config.add_argument("--ip", required=True)
+    import_config.add_argument("--port", type=int, default=53)
+    import_config.add_argument("--role", default="master")
+    import_config.add_argument("--version", default="")
+    import_config.set_defaults(func=_cmd_import)
 
     return parser
 

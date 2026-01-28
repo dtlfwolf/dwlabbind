@@ -7,6 +7,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Optional
 
 from .models import BindServer, BindZone
+from .importers import import_server_config
 from .xml_store import XmlConfigStore
 
 
@@ -56,6 +57,27 @@ class BindApiHandler(BaseHTTPRequestHandler):
             server = BindServer.from_dict(data)
             self._save_server(server)
             self._send_json({"status": "saved"})
+            return
+        if self.path == "/import":
+            data = self._read_json()
+            if data is None:
+                self._send_json({"error": "invalid json"}, status=400)
+                return
+            try:
+                server = import_server_config(
+                    server_type=data.get("server_type", "bind9"),
+                    config_path=data.get("config_path", ""),
+                    name=data.get("name", "imported"),
+                    ip=data.get("ip", ""),
+                    port=int(data.get("port", 53)),
+                    role=data.get("role", "master"),
+                    version=data.get("version", ""),
+                )
+            except (ValueError, FileNotFoundError) as exc:
+                self._send_json({"error": str(exc)}, status=400)
+                return
+            self._save_server(server)
+            self._send_json({"status": "imported", "server": server.to_dict()})
             return
         if self.path == "/zones":
             data = self._read_json()

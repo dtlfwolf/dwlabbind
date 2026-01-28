@@ -158,6 +158,111 @@ class HAConfig:
         )
 
 
+class NameServerProfile:
+    def __init__(self, server_type: str = "bind9", version: str = "") -> None:
+        self.server_type = server_type
+        self.version = version
+
+    def to_dict(self) -> dict:
+        return {"server_type": self.server_type, "version": self.version}
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "NameServerProfile":
+        return cls(
+            server_type=data.get("server_type", "bind9"),
+            version=data.get("version", ""),
+        )
+
+    def to_xml_element(self) -> ET.Element:
+        element = ET.Element("server_profile")
+        element.set("type", self.server_type)
+        element.set("version", self.version)
+        return element
+
+    @classmethod
+    def from_xml_element(cls, element: Optional[ET.Element]) -> "NameServerProfile":
+        if element is None:
+            return cls()
+        return cls(
+            server_type=element.get("type", "bind9"),
+            version=element.get("version", ""),
+        )
+
+
+class OptionsConfig:
+    DEFAULT_EXCLUSIVE_GROUPS = [
+        {"dnssec-validation", "dnssec-enable"},
+    ]
+    DEFAULT_ALLOWED_VALUES = {
+        "recursion": {"yes", "no"},
+        "dnssec-validation": {"auto", "yes", "no"},
+        "dnssec-enable": {"yes", "no"},
+    }
+
+    def __init__(
+        self,
+        options: Optional[dict] = None,
+        exclusive_groups: Optional[List[set]] = None,
+        allowed_values: Optional[dict] = None,
+    ) -> None:
+        self.options = options or {}
+        self.exclusive_groups = exclusive_groups or list(self.DEFAULT_EXCLUSIVE_GROUPS)
+        self.allowed_values = allowed_values or dict(self.DEFAULT_ALLOWED_VALUES)
+
+    def add_option(self, name: str, value: str) -> None:
+        self._validate_option(name, value)
+        self.options[name] = value
+
+    def update_option(self, name: str, value: str) -> None:
+        self.add_option(name, value)
+
+    def remove_option(self, name: str) -> None:
+        self.options.pop(name, None)
+
+    def add_exclusive_group(self, names: List[str]) -> None:
+        self.exclusive_groups.append(set(names))
+
+    def _validate_option(self, name: str, value: str) -> None:
+        allowed = self.allowed_values.get(name)
+        if allowed and value not in allowed:
+            raise ValueError(f"Unsupported value for {name}: {value}")
+        for group in self.exclusive_groups:
+            if name in group:
+                conflicts = group - {name}
+                for other in conflicts:
+                    if other in self.options:
+                        raise ValueError(
+                            f"Option {name} is mutually exclusive with {other}"
+                        )
+
+    def to_dict(self) -> dict:
+        return {"options": dict(self.options)}
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "OptionsConfig":
+        return cls(options=dict(data.get("options", {})))
+
+    def to_xml_element(self) -> ET.Element:
+        element = ET.Element("options")
+        for name, value in self.options.items():
+            item = ET.SubElement(element, "option")
+            item.set("name", name)
+            item.set("value", str(value))
+        return element
+
+    @classmethod
+    def from_xml_element(cls, element: Optional[ET.Element]) -> "OptionsConfig":
+        if element is None:
+            return cls()
+        options: dict = {}
+        for item in element.findall("option"):
+            name = item.get("name", "")
+            value = item.get("value", "")
+            if name:
+                options[name] = value
+        return cls(options=options)
+
+
 class BindZone:
     def __init__(
         self,
@@ -227,6 +332,8 @@ class BindServer:
         port: int = 53,
         role: str = "master",
         zones: Optional[List[BindZone]] = None,
+        server_profile: Optional[NameServerProfile] = None,
+        options: Optional[OptionsConfig] = None,
         security: Optional[SecurityConfig] = None,
         high_availability: Optional[HAConfig] = None,
     ) -> None:
@@ -235,6 +342,8 @@ class BindServer:
         self.port = port
         self.role = role
         self.zones = zones or []
+        self.server_profile = server_profile or NameServerProfile()
+        self.options = options or OptionsConfig()
         self.security = security or SecurityConfig()
         self.high_availability = high_availability or HAConfig()
 
@@ -251,6 +360,8 @@ class BindServer:
             "port": self.port,
             "role": self.role,
             "zones": [zone.to_dict() for zone in self.zones],
+            "server_profile": self.server_profile.to_dict(),
+            "options": self.options.to_dict(),
             "security": self.security.to_dict(),
             "high_availability": self.high_availability.to_dict(),
         }
@@ -264,6 +375,8 @@ class BindServer:
             port=int(data.get("port", 53)),
             role=data.get("role", "master"),
             zones=zones,
+            server_profile=NameServerProfile.from_dict(data.get("server_profile", {})),
+            options=OptionsConfig.from_dict(data.get("options", {})),
             security=SecurityConfig.from_dict(data.get("security", {})),
             high_availability=HAConfig.from_dict(data.get("high_availability", {})),
         )
@@ -277,6 +390,8 @@ class BindServer:
         zones_element = ET.SubElement(element, "zones")
         for zone in self.zones:
             zones_element.append(zone.to_xml_element())
+        element.append(self.server_profile.to_xml_element())
+        element.append(self.options.to_xml_element())
         element.append(self.security.to_xml_element())
         element.append(self.high_availability.to_xml_element())
         return element
@@ -287,6 +402,8 @@ class BindServer:
         zones = []
         if zones_element is not None:
             zones = [BindZone.from_xml_element(item) for item in zones_element.findall("zone")]
+        server_profile = NameServerProfile.from_xml_element(element.find("server_profile"))
+        options = OptionsConfig.from_xml_element(element.find("options"))
         security = SecurityConfig.from_xml_element(element.find("security"))
         ha = HAConfig.from_xml_element(element.find("high_availability"))
         return cls(
@@ -295,6 +412,8 @@ class BindServer:
             port=int(element.get("port", "53")),
             role=element.get("role", "master"),
             zones=zones,
+            server_profile=server_profile,
+            options=options,
             security=security,
             high_availability=ha,
         )
