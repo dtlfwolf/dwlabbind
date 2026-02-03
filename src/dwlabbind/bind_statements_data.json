@@ -1,0 +1,5629 @@
+[
+  {
+    "blocks": [
+      "topmost"
+    ],
+    "default": null,
+    "description": "Assigns a symbolic name to an address match list.",
+    "grammar": "acl <string> { <address_match_element>; ... }; // may occur multiple times",
+    "name": "acl",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "address_match_element",
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "key",
+      "view.key"
+    ],
+    "default": null,
+    "description": "Defines the algorithm to be used in a key clause.",
+    "grammar": "algorithm <string>;",
+    "name": "algorithm",
+    "tags": [
+      "security"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options.rate-limit",
+      "view.rate-limit"
+    ],
+    "default": null,
+    "description": "Limits UDP responses of all kinds.",
+    "grammar": "all-per-second <integer>;",
+    "name": "all-per-second",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Controls the ability to add zones at runtime via rndc addzone.",
+    "grammar": "allow-new-zones <boolean>;",
+    "name": "allow-new-zones",
+    "tags": [
+      "zone",
+      "server"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Defines an address_match_list that is allowed to send NOTIFY messages for the zone, in addition to addresses defined in the primaries option for the zone.",
+    "grammar": "allow-notify { <address_match_element>; ... };",
+    "name": "allow-notify",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "address_match_element"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "primary",
+      "redirect",
+      "secondary",
+      "static-stub",
+      "stub)"
+    ],
+    "default": null,
+    "description": "Specifies which hosts (an IP address list) are allowed to send queries to this resolver.",
+    "grammar": "allow-query { <address_match_element>; ... };",
+    "name": "allow-query",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "address_match_element"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies which hosts (an IP address list) can access this server's cache and thus effectively controls recursion.",
+    "grammar": "allow-query-cache { <address_match_element>; ... };",
+    "name": "allow-query-cache",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "address_match_element"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies which hosts (an IP address list) can access this server's cache. Used on servers with multiple interfaces.",
+    "grammar": "allow-query-cache-on { <address_match_element>; ... };",
+    "name": "allow-query-cache-on",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "address_match_element"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "primary",
+      "redirect",
+      "secondary",
+      "static-stub",
+      "stub)"
+    ],
+    "default": null,
+    "description": "Specifies which local addresses (an IP address list) are allowed to send queries to this resolver. Used in multi-homed configurations.",
+    "grammar": "allow-query-on { <address_match_element>; ... };",
+    "name": "allow-query-on",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "address_match_element"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Defines an address_match_list of clients that are allowed to perform recursive queries.",
+    "grammar": "allow-recursion { <address_match_element>; ... };",
+    "name": "allow-recursion",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "address_match_element"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies which local addresses can accept recursive queries.",
+    "grammar": "allow-recursion-on { <address_match_element>; ... };",
+    "name": "allow-recursion-on",
+    "tags": [
+      "server",
+      "query"
+    ],
+    "types": [
+      "address_match_element"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Defines an address_match_list of hosts that are allowed to transfer the zone information from this server.",
+    "grammar": "allow-transfer [ port <integer> ] [ transport <string> ] { <address_match_element>; ... };",
+    "name": "allow-transfer",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "address_match_element",
+      "integer",
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary)"
+    ],
+    "default": null,
+    "description": "Defines an address_match_list of hosts that are allowed to submit dynamic updates for primary zones.",
+    "grammar": "allow-update { <address_match_element>; ... };",
+    "name": "allow-update",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "address_match_element"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Defines an address_match_list of hosts that are allowed to submit dynamic updates to a secondary server for transmission to a primary.",
+    "grammar": "allow-update-forwarding { <address_match_element>; ... };",
+    "name": "allow-update-forwarding",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "address_match_element"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Defines one or more hosts that are sent NOTIFY messages when zone changes occur.",
+    "grammar": "also-notify [ port <integer> ]&#160; { ( <remote-servers> | <ipv4_address> [ port <integer> ] | <ipv6_address> [ port <integer> ] ) [ key <string> ] [ tls <string> ]; ... };",
+    "name": "also-notify",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "integer",
+      "ipv4_address",
+      "ipv6_address",
+      "remote-servers",
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Defines alternate local IPv4 address(es) to be used by the server for inbound zone transfers, if the address(es) defined by transfer-source fail and use-alt-transfer-source is enabled.",
+    "grammar": "alt-transfer-source ( <ipv4_address> | * ); // deprecated",
+    "name": "alt-transfer-source",
+    "tags": [
+      "deprecated"
+    ],
+    "types": [
+      "ipv4_address"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Defines alternate local IPv6 address(es) to be used by the server for inbound zone transfers.",
+    "grammar": "alt-transfer-source-v6 ( <ipv6_address> | * ); // deprecated",
+    "name": "alt-transfer-source-v6",
+    "tags": [
+      "deprecated"
+    ],
+    "types": [
+      "ipv6_address"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Controls whether COOKIE EDNS replies are sent in response to client queries.",
+    "grammar": "answer-cookie <boolean>;",
+    "name": "answer-cookie",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Allows multiple views to share a single cache database.",
+    "grammar": "attach-cache <string>;",
+    "name": "attach-cache",
+    "tags": [
+      "view"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Controls whether BIND, acting as a resolver, provides authoritative NXDOMAIN (domain does not exist) answers.",
+    "grammar": "auth-nxdomain <boolean>;",
+    "name": "auth-nxdomain",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Permits varying levels of automatic DNSSEC key management.",
+    "grammar": "auto-dnssec ( allow | maintain | off ); // deprecated",
+    "name": "auto-dnssec",
+    "tags": [
+      "dnssec"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Controls the automatic rescanning of network interfaces when addresses are added or removed.",
+    "grammar": "automatic-interface-scan <boolean>;",
+    "name": "automatic-interface-scan",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the range(s) of ports to be excluded from use as sources for UDP/IPv4 messages.",
+    "grammar": "avoid-v4-udp-ports { <portrange>; ... }; // deprecated",
+    "name": "avoid-v4-udp-ports",
+    "tags": [
+      "deprecated"
+    ],
+    "types": [
+      "portrange"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the range(s) of ports to be excluded from use as sources for UDP/IPv6 messages.",
+    "grammar": "avoid-v6-udp-ports { <portrange>; ... }; // deprecated",
+    "name": "avoid-v6-udp-ports",
+    "tags": [
+      "deprecated"
+    ],
+    "types": [
+      "portrange"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the pathname of a file to override the built-in trusted keys provided by named.",
+    "grammar": "bindkeys-file <quoted_string>;",
+    "name": "bindkeys-file",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Defines an address_match_list of hosts to ignore. The server will neither respond to queries from nor send queries to these addresses.",
+    "grammar": "blackhole { <address_match_element>; ... };",
+    "name": "blackhole",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "address_match_element"
+    ]
+  },
+  {
+    "blocks": [
+      "server",
+      "view.server"
+    ],
+    "default": null,
+    "description": "Allows a remote server to be ignored.",
+    "grammar": "bogus <boolean>;",
+    "name": "bogus",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options.dns64",
+      "view.dns64"
+    ],
+    "default": null,
+    "description": "Enables dns64 synthesis even if the validated result would cause a DNSSEC validation failure.",
+    "grammar": "break-dnssec <boolean>;",
+    "name": "break-dnssec",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "logging.channel"
+    ],
+    "default": null,
+    "description": "Controls flushing of log messages.",
+    "grammar": "buffered <boolean>;",
+    "name": "buffered",
+    "tags": [
+      "logging"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "tls"
+    ],
+    "default": null,
+    "description": "Specifies the path to a file containing TLS certificates for trusted CA authorities, used to verify remote peer certificates.",
+    "grammar": "ca-file <quoted_string>;",
+    "name": "ca-file",
+    "tags": [
+      "server",
+      "security"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [],
+    "default": null,
+    "description": "Configures catalog zones in named.conf.",
+    "grammar": null,
+    "name": "catalog-zones",
+    "tags": [
+      "zone"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "logging"
+    ],
+    "default": null,
+    "description": "Specifies the type of data logged to a particular channel.",
+    "grammar": "category <string> { <string>; ... }; // may occur multiple times",
+    "name": "category",
+    "tags": [
+      "logging"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "tls"
+    ],
+    "default": null,
+    "description": "Specifies the path to a file containing the TLS certificate for a connection.",
+    "grammar": "cert-file <quoted_string>;",
+    "name": "cert-file",
+    "tags": [
+      "server",
+      "security"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "logging"
+    ],
+    "default": null,
+    "description": "Defines a stream of data that can be independently logged.",
+    "grammar": "channel <string> {\n\tbuffered <boolean>;\n\tfile <quoted_string> [ versions ( unlimited | <integer> ) ] [ size <size> ] [ suffix ( increment | timestamp ) ];\n\tnull;\n\tprint-category <boolean>;\n\tprint-severity <boolean>;\n\tprint-time ( iso8601 | iso8601-utc | local | <boolean> );\n\tseverity <log_severity>;\n\tstderr;\n\tsyslog [ <syslog_facility> ];\n}; // may occur multiple times",
+    "name": "channel",
+    "tags": [
+      "logging"
+    ],
+    "types": [
+      "boolean",
+      "integer",
+      "log_severity",
+      "quoted_string",
+      "size",
+      "string",
+      "syslog_facility"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary)"
+    ],
+    "default": null,
+    "description": "Checks primary zones for records that are treated as different by DNSSEC but are semantically equal in plain DNS.",
+    "grammar": "check-dup-records ( fail | warn | ignore );",
+    "name": "check-dup-records",
+    "tags": [
+      "dnssec",
+      "query"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary)"
+    ],
+    "default": null,
+    "description": "Performs post-load zone integrity checks on primary zones.",
+    "grammar": "check-integrity <boolean>;",
+    "name": "check-integrity",
+    "tags": [
+      "zone"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary)"
+    ],
+    "default": null,
+    "description": "Checks whether an MX record appears to refer to an IP address.",
+    "grammar": "check-mx ( fail | warn | ignore );",
+    "name": "check-mx",
+    "tags": [
+      "zone"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary)"
+    ],
+    "default": null,
+    "description": "Sets the response to MX records that refer to CNAMEs.",
+    "grammar": "check-mx-cname ( fail | warn | ignore );",
+    "name": "check-mx-cname",
+    "tags": [
+      "zone"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (hint",
+      "mirror",
+      "primary",
+      "secondary",
+      "stub)"
+    ],
+    "default": null,
+    "description": "Restricts the character set and syntax of certain domain names in primary files and/or DNS responses received from the network.",
+    "grammar": null,
+    "name": "check-names",
+    "tags": [
+      "server",
+      "query"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary)"
+    ],
+    "default": null,
+    "description": "Specifies whether to check for sibling glue when performing integrity checks.",
+    "grammar": "check-sibling <boolean>;",
+    "name": "check-sibling",
+    "tags": [
+      "zone"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary)"
+    ],
+    "default": null,
+    "description": "Specifies whether to check for a TXT Sender Policy Framework record, if an SPF record is present.",
+    "grammar": "check-spf ( warn | ignore );",
+    "name": "check-spf",
+    "tags": [
+      "zone"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary)"
+    ],
+    "default": null,
+    "description": "Sets the response to SRV records that refer to CNAMEs.",
+    "grammar": "check-srv-cname ( fail | warn | ignore );",
+    "name": "check-srv-cname",
+    "tags": [
+      "zone"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary)"
+    ],
+    "default": null,
+    "description": "Checks for non-terminal wildcards.",
+    "grammar": "check-wildcard <boolean>;",
+    "name": "check-wildcard",
+    "tags": [
+      "zone"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "tls"
+    ],
+    "default": null,
+    "description": "Specifies a list of allowed ciphers.",
+    "grammar": "ciphers <string>;",
+    "name": "ciphers",
+    "tags": [
+      "security"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options.dns64",
+      "view.dns64"
+    ],
+    "default": null,
+    "description": "Specifies an access control list (ACL) of clients that are affected by a given dns64 directive.",
+    "grammar": "clients { <address_match_element>; ... };",
+    "name": "clients",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "address_match_element"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Sets the initial minimum number of simultaneous recursive clients accepted by the server for any given query before the server drops additional clients.",
+    "grammar": "clients-per-query <integer>;",
+    "name": "clients-per-query",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "topmost"
+    ],
+    "default": null,
+    "description": "Specifies control channels to be used to manage the name server.",
+    "grammar": "controls {\n\tinet ( <ipv4_address> | <ipv6_address> | * ) [ port ( <integer> | * ) ] allow { <address_match_element>; ... } [ keys { <string>; ... } ] [ read-only <boolean> ]; // may occur multiple times\n\tunix <quoted_string> perm <integer> owner <integer> group <integer> [ keys { <string>; ... } ] [ read-only <boolean> ]; // may occur multiple times\n}; // may occur multiple times",
+    "name": "controls",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "address_match_element",
+      "boolean",
+      "integer",
+      "ipv4_address",
+      "ipv6_address",
+      "quoted_string",
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the algorithm to be used when generating a server cookie.",
+    "grammar": "cookie-algorithm ( aes | siphash24 );",
+    "name": "cookie-algorithm",
+    "tags": [
+      "server"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies a shared secret used for generating and verifying EDNS COOKIE options within an anycast cluster.",
+    "grammar": "cookie-secret <string>; // may occur multiple times",
+    "name": "cookie-secret",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the maximum size of a core dump.",
+    "grammar": "coresize ( default | unlimited | <sizeval> ); // deprecated",
+    "name": "coresize",
+    "tags": [
+      "deprecated"
+    ],
+    "types": [
+      "sizeval"
+    ]
+  },
+  {
+    "blocks": [
+      "dlz",
+      "zone (mirror",
+      "primary",
+      "secondary",
+      "stub)",
+      "view.dlz"
+    ],
+    "default": null,
+    "description": "Specifies the type of database to be used to store zone data.",
+    "grammar": "database <string>;",
+    "name": "database",
+    "tags": [
+      "zone"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the maximum amount of data memory that can be used by the server.",
+    "grammar": "datasize ( default | unlimited | <sizeval> ); // deprecated",
+    "name": "datasize",
+    "tags": [
+      "deprecated"
+    ],
+    "types": [
+      "sizeval"
+    ]
+  },
+  {
+    "blocks": [
+      "zone (forward",
+      "hint",
+      "stub)"
+    ],
+    "default": null,
+    "description": "Indicates that a forward, hint, or stub zone is to be treated as a delegation-only type zone.",
+    "grammar": "delegation-only <boolean>; // deprecated",
+    "name": "delegation-only",
+    "tags": [
+      "deprecated"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Rejects A or AAAA records if the corresponding IPv4 or IPv6 addresses match a given address_match_list.",
+    "grammar": "deny-answer-addresses { <address_match_element>; ... } [ except-from { <string>; ... } ];",
+    "name": "deny-answer-addresses",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "address_match_element",
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Rejects CNAME or DNAME records if the &quot;alias&quot; name matches a given list of domain_name elements.",
+    "grammar": "deny-answer-aliases { <string>; ... } [ except-from { <string>; ... } ];",
+    "name": "deny-answer-aliases",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "tls"
+    ],
+    "default": null,
+    "description": "Specifies the path to a file containing Diffie-Hellman parameters, for enabling cipher suites.",
+    "grammar": "dhparam-file <quoted_string>;",
+    "name": "dhparam-file",
+    "tags": [
+      "server",
+      "security"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary",
+      "secondary",
+      "stub)"
+    ],
+    "default": null,
+    "description": "Concentrates zone maintenance so that all transfers take place once every heartbeat-interval, ideally during a single call.",
+    "grammar": "dialup ( notify | notify-passive | passive | refresh | <boolean> );",
+    "name": "dialup",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the server's working directory.",
+    "grammar": "directory <quoted_string>;",
+    "name": "directory",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Disables DNSSEC algorithms from a specified zone.",
+    "grammar": "disable-algorithms <string> { <string>; ... }; // may occur multiple times",
+    "name": "disable-algorithms",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Disables DS digest types from a specified zone.",
+    "grammar": "disable-ds-digests <string> { <string>; ... }; // may occur multiple times",
+    "name": "disable-ds-digests",
+    "tags": [
+      "dnssec",
+      "zone"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Disables individual empty zones.",
+    "grammar": "disable-empty-zone <string>; // may occur multiple times",
+    "name": "disable-empty-zone",
+    "tags": [
+      "zone",
+      "server"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [],
+    "default": null,
+    "description": "Configures a Dynamically Loadable Zone (DLZ) database in named.conf.",
+    "grammar": null,
+    "name": "dlz",
+    "tags": [
+      "zone"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Instructs named to return mapped IPv4 addresses to AAAA queries when there are no AAAA records.",
+    "grammar": "dns64 <netprefix> {\n\tbreak-dnssec <boolean>;\n\tclients { <address_match_element>; ... };\n\texclude { <address_match_element>; ... };\n\tmapped { <address_match_element>; ... };\n\trecursive-only <boolean>;\n\tsuffix <ipv6_address>;\n}; // may occur multiple times",
+    "name": "dns64",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "address_match_element",
+      "boolean",
+      "ipv6_address",
+      "netprefix"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies the name of the contact for dns64 zones.",
+    "grammar": "dns64-contact <string>;",
+    "name": "dns64-contact",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [],
+    "default": null,
+    "description": "Specifies the name of the server for dns64 zones.",
+    "grammar": null,
+    "name": "dns64-server",
+    "tags": [
+      "server"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Specifies the number of days in the future when automatically generated DNSSEC signatures expire.",
+    "grammar": "dnskey-sig-validity <integer>;",
+    "name": "dnskey-sig-validity",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "dnssec-policy"
+    ],
+    "default": null,
+    "description": "Specifies the time to live (TTL) for DNSKEY resource records.",
+    "grammar": "dnskey-ttl <duration>;",
+    "name": "dnskey-ttl",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "duration"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Turns on the DNS Response Policy Service (DNSRPS) interface.",
+    "grammar": "dnsrps-enable <boolean>;",
+    "name": "dnsrps-enable",
+    "tags": [
+      "server",
+      "security"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Provides additional RPZ configuration settings, which are passed to the DNS Response Policy Service (DNSRPS) provider library.",
+    "grammar": "dnsrps-options { <unspecified-text> };",
+    "name": "dnsrps-options",
+    "tags": [
+      "server",
+      "security"
+    ],
+    "types": [
+      "unspecified-text"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Instructs BIND 9 to accept expired DNSSEC signatures when validating.",
+    "grammar": "dnssec-accept-expired <boolean>;",
+    "name": "dnssec-accept-expired",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Specifies that only key-signing keys are used to sign the DNSKEY, CDNSKEY, and CDS RRsets at a zone's apex.",
+    "grammar": "dnssec-dnskey-kskonly <boolean>;",
+    "name": "dnssec-dnskey-kskonly",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Sets the frequency of automatic checks of the DNSSEC key repository.",
+    "grammar": "dnssec-loadkeys-interval <integer>;",
+    "name": "dnssec-loadkeys-interval",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Defines hierarchies that must or may not be secure (signed and validated).",
+    "grammar": "dnssec-must-be-secure <string> <boolean>; // may occur multiple times",
+    "name": "dnssec-must-be-secure",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "boolean",
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "topmost",
+      "options",
+      "view",
+      "zone (primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Defines a key and signing policy (KASP) for zones.",
+    "grammar": null,
+    "name": "dnssec-policy",
+    "tags": [
+      "dnssec"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary)"
+    ],
+    "default": null,
+    "description": "Allows a dynamic zone to transition from secure to insecure by deleting all DNSKEY records.",
+    "grammar": "dnssec-secure-to-insecure <boolean>;",
+    "name": "dnssec-secure-to-insecure",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Controls the scheduled maintenance of DNSSEC signatures.",
+    "grammar": "dnssec-update-mode ( maintain | no-resign );",
+    "name": "dnssec-update-mode",
+    "tags": [
+      "dnssec"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Enables DNSSEC validation in named.",
+    "grammar": "dnssec-validation ( yes | no | auto );",
+    "name": "dnssec-validation",
+    "tags": [
+      "dnssec"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Enables logging of dnstap messages.",
+    "grammar": "dnstap { ( all | auth | client | forwarder | resolver | update ) [ ( query | response ) ]; ... };",
+    "name": "dnstap",
+    "tags": [
+      "logging"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies an identity string to send in dnstap messages.",
+    "grammar": "dnstap-identity ( <quoted_string> | none | hostname );",
+    "name": "dnstap-identity",
+    "tags": [
+      "logging"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Configures the path to which the dnstap frame stream is sent.",
+    "grammar": "dnstap-output ( file | unix ) <quoted_string> [ size ( unlimited | <size> ) ] [ versions ( unlimited | <integer> ) ] [ suffix ( increment | timestamp ) ];",
+    "name": "dnstap-output",
+    "tags": [
+      "logging"
+    ],
+    "types": [
+      "integer",
+      "quoted_string",
+      "size"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies a version string to send in dnstap messages.",
+    "grammar": "dnstap-version ( <quoted_string> | none );",
+    "name": "dnstap-version",
+    "tags": [
+      "logging"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the Differentiated Services Code Point (DSCP) value (obsolete).",
+    "grammar": "dscp <integer>; // obsolete",
+    "name": "dscp",
+    "tags": [
+      "server",
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies host names or addresses of machines with access to both IPv4 and IPv6 transports.",
+    "grammar": "dual-stack-servers [ port <integer> ] { ( <quoted_string> [ port <integer> ] | <ipv4_address> [ port <integer> ] | <ipv6_address> [ port <integer> ] ); ... };",
+    "name": "dual-stack-servers",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "integer",
+      "ipv4_address",
+      "ipv6_address",
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Indicates the pathname of the file where the server dumps the database after rndc dumpdb.",
+    "grammar": "dump-file <quoted_string>;",
+    "name": "dump-file",
+    "tags": [
+      "logging"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [],
+    "default": null,
+    "description": "Configures a DynDB database in named.conf.",
+    "grammar": null,
+    "name": "dyndb",
+    "tags": [
+      "zone"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "server",
+      "view.server"
+    ],
+    "default": null,
+    "description": "Controls the use of the EDNS0 (RFC 2671) feature.",
+    "grammar": "edns <boolean>;",
+    "name": "edns",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "server",
+      "view",
+      "view.server"
+    ],
+    "default": null,
+    "description": "Sets the maximum advertised EDNS UDP buffer size to control the size of packets received from authoritative servers in response to recursive queries.",
+    "grammar": "edns-udp-size <integer>;",
+    "name": "edns-udp-size",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "server",
+      "view.server"
+    ],
+    "default": null,
+    "description": "Sets the maximum EDNS VERSION that is sent to the server(s) by the resolver.",
+    "grammar": "edns-version <integer>;",
+    "name": "edns-version",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies the contact name in the returned SOA record for empty zones.",
+    "grammar": "empty-contact <string>;",
+    "name": "empty-contact",
+    "tags": [
+      "zone",
+      "server"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies the server name in the returned SOA record for empty zones.",
+    "grammar": "empty-server <string>;",
+    "name": "empty-server",
+    "tags": [
+      "zone",
+      "server"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Enables or disables all empty zones.",
+    "grammar": "empty-zones-enable <boolean>;",
+    "name": "empty-zones-enable",
+    "tags": [
+      "zone",
+      "server"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "http"
+    ],
+    "default": null,
+    "description": "Specifies a list of HTTP query paths on which to listen.",
+    "grammar": "endpoints { <quoted_string>; ... };",
+    "name": "endpoints",
+    "tags": [
+      "server",
+      "query"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "options.rate-limit",
+      "view.rate-limit"
+    ],
+    "default": null,
+    "description": "Limits the number of errors for a valid domain name and record type.",
+    "grammar": "errors-per-second <integer>;",
+    "name": "errors-per-second",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options.dns64",
+      "view.dns64"
+    ],
+    "default": null,
+    "description": "Allows a list of IPv6 addresses to be ignored if they appear in a domain name's AAAA records in dns64.",
+    "grammar": "exclude { <address_match_element>; ... };",
+    "name": "exclude",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "address_match_element"
+    ]
+  },
+  {
+    "blocks": [
+      "options.rate-limit",
+      "view.rate-limit"
+    ],
+    "default": null,
+    "description": "Exempts specific clients or client groups from rate limiting.",
+    "grammar": "exempt-clients { <address_match_element>; ... };",
+    "name": "exempt-clients",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "address_match_element"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Sets the parameters for dynamic resizing of the fetches-per-server quota in response to detected congestion.",
+    "grammar": "fetch-quota-params <integer> <fixedpoint> <fixedpoint> <fixedpoint>;",
+    "name": "fetch-quota-params",
+    "tags": [
+      "server",
+      "query"
+    ],
+    "types": [
+      "fixedpoint",
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Sets the maximum number of simultaneous iterative queries allowed to be sent by a server to an upstream name server before the server blocks additional queries.",
+    "grammar": "fetches-per-server <integer> [ ( drop | fail ) ];",
+    "name": "fetches-per-server",
+    "tags": [
+      "server",
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Sets the maximum number of simultaneous iterative queries allowed to any one domain before the server blocks new queries for data in or beneath that zone.",
+    "grammar": "fetches-per-zone <integer> [ ( drop | fail ) ];",
+    "name": "fetches-per-zone",
+    "tags": [
+      "server",
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "zone (hint",
+      "mirror",
+      "primary",
+      "redirect",
+      "secondary",
+      "stub)",
+      "logging.channel"
+    ],
+    "default": null,
+    "description": "Specifies the zone's filename.",
+    "grammar": null,
+    "name": "file",
+    "tags": [
+      "zone"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the maximum number of files the server may have open concurrently.",
+    "grammar": "files ( default | unlimited | <sizeval> ); // deprecated",
+    "name": "files",
+    "tags": [
+      "deprecated"
+    ],
+    "types": [
+      "sizeval"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Controls whether pending zone writes are flushed when the name server exits.",
+    "grammar": "flush-zones-on-shutdown <boolean>;",
+    "name": "flush-zones-on-shutdown",
+    "tags": [
+      "zone"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (forward",
+      "primary",
+      "secondary",
+      "static-stub",
+      "stub)"
+    ],
+    "default": null,
+    "description": "Allows or disallows fallback to recursion if forwarding has failed; it is always used in conjunction with the forwarders statement.",
+    "grammar": "forward ( first | only );",
+    "name": "forward",
+    "tags": [
+      "query"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (forward",
+      "primary",
+      "secondary",
+      "static-stub",
+      "stub)"
+    ],
+    "default": null,
+    "description": "Defines one or more hosts to which queries are forwarded.",
+    "grammar": "forwarders [ port <integer> ]&#160; { ( <ipv4_address> | <ipv6_address> ) [ port <integer> ]; ... };",
+    "name": "forwarders",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "integer",
+      "ipv4_address",
+      "ipv6_address"
+    ]
+  },
+  {
+    "blocks": [],
+    "default": null,
+    "description": "Sets the number of accumulated bytes in the output buffer before forcing a buffer flush.",
+    "grammar": null,
+    "name": "fstrm-set-buffer-hint",
+    "tags": [
+      "logging"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the number of seconds that unflushed data remains in the output buffer.",
+    "grammar": "fstrm-set-flush-timeout <integer>;",
+    "name": "fstrm-set-flush-timeout",
+    "tags": [
+      "logging"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the number of queue entries to allocate for each input queue.",
+    "grammar": "fstrm-set-input-queue-size <integer>;",
+    "name": "fstrm-set-input-queue-size",
+    "tags": [
+      "logging"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the number of outstanding queue entries allowed on an input queue before waking the I/O thread.",
+    "grammar": "fstrm-set-output-notify-threshold <integer>;",
+    "name": "fstrm-set-output-notify-threshold",
+    "tags": [
+      "logging"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the queuing semantics to use for queue objects.",
+    "grammar": "fstrm-set-output-queue-model ( mpsc | spsc );",
+    "name": "fstrm-set-output-queue-model",
+    "tags": [
+      "logging"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the number of queue entries allocated for each output queue.",
+    "grammar": "fstrm-set-output-queue-size <integer>;",
+    "name": "fstrm-set-output-queue-size",
+    "tags": [
+      "logging"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the number of seconds to wait between attempts to reopen a closed output stream.",
+    "grammar": "fstrm-set-reopen-interval <duration>;",
+    "name": "fstrm-set-reopen-interval",
+    "tags": [
+      "logging"
+    ],
+    "types": [
+      "duration"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the directory containing GeoIP database files.",
+    "grammar": "geoip-directory ( <quoted_string> | none );",
+    "name": "geoip-directory",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Deprecated.",
+    "grammar": "glue-cache <boolean>; // deprecated",
+    "name": "glue-cache",
+    "tags": [
+      "deprecated"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the interval at which the server performs zone maintenance tasks for all zones marked as dialup.",
+    "grammar": "heartbeat-interval <integer>;",
+    "name": "heartbeat-interval",
+    "tags": [
+      "zone"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the hostname of the server to return in response to a hostname.bind query.",
+    "grammar": "hostname ( <quoted_string> | none );",
+    "name": "hostname",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "topmost"
+    ],
+    "default": null,
+    "description": "Configures HTTP endpoints on which to listen for DNS-over-HTTPS (DoH) queries.",
+    "grammar": "http <string> {\n\tendpoints { <quoted_string>; ... };\n\tlistener-clients <integer>;\n\tstreams-per-connection <integer>;\n}; // may occur multiple times",
+    "name": "http",
+    "tags": [
+      "server",
+      "query"
+    ],
+    "types": [
+      "integer",
+      "quoted_string",
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Limits the number of active concurrent connections on a per-listener basis.",
+    "grammar": "http-listener-clients <integer>;",
+    "name": "http-listener-clients",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the TCP port number the server uses to receive and send unencrypted DNS traffic via HTTP.",
+    "grammar": "http-port <integer>;",
+    "name": "http-port",
+    "tags": [
+      "server",
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Limits the number of active concurrent HTTP/2 streams on a per-connection basis.",
+    "grammar": "http-streams-per-connection <integer>;",
+    "name": "http-streams-per-connection",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the TCP port number the server uses to receive and send DNS-over-HTTPS protocol traffic.",
+    "grammar": "https-port <integer>;",
+    "name": "https-port",
+    "tags": [
+      "server",
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "zone",
+      "zone (in-view)",
+      "view.zone"
+    ],
+    "default": null,
+    "description": "Specifies the view in which a given zone is defined.",
+    "grammar": null,
+    "name": "in-view",
+    "tags": [
+      "zone",
+      "view"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "controls",
+      "statistics-channels"
+    ],
+    "default": null,
+    "description": "Specifies a TCP socket as a control channel.",
+    "grammar": null,
+    "name": "inet",
+    "tags": [
+      "server"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "zone (primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Specifies whether BIND 9 maintains a separate signed version of a zone.",
+    "grammar": "inline-signing <boolean>;",
+    "name": "inline-signing",
+    "tags": [
+      "dnssec",
+      "zone"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the interval at which the server scans the network interface list.",
+    "grammar": "interface-interval <duration>;",
+    "name": "interface-interval",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "duration"
+    ]
+  },
+  {
+    "blocks": [
+      "options.rate-limit",
+      "view.rate-limit"
+    ],
+    "default": null,
+    "description": "Specifies the prefix lengths of IPv4 address blocks.",
+    "grammar": "ipv4-prefix-length <integer>;",
+    "name": "ipv4-prefix-length",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies the contact for the IPV4ONLY.ARPA zone created by dns64.",
+    "grammar": "ipv4only-contact <string>;",
+    "name": "ipv4only-contact",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Enables automatic IPv4 zones if a dns64 block is configured.",
+    "grammar": "ipv4only-enable <boolean>;",
+    "name": "ipv4only-enable",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies the name of the server for the IPV4ONLY.ARPA zone created by dns64.",
+    "grammar": "ipv4only-server <string>;",
+    "name": "ipv4only-server",
+    "tags": [
+      "server",
+      "query"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options.rate-limit",
+      "view.rate-limit"
+    ],
+    "default": null,
+    "description": "Specifies the prefix lengths of IPv6 address blocks.",
+    "grammar": "ipv6-prefix-length <integer>;",
+    "name": "ipv6-prefix-length",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Controls how IXFR transfers are calculated.",
+    "grammar": null,
+    "name": "ixfr-from-differences",
+    "tags": [
+      "transfer"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "zone (mirror",
+      "primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Allows the default journal's filename to be overridden.",
+    "grammar": "journal <quoted_string>;",
+    "name": "journal",
+    "tags": [
+      "zone"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Defines an address_match_list of addresses which do not accept reordered answers within a single TCP stream.",
+    "grammar": "keep-response-order { <address_match_element>; ... };",
+    "name": "keep-response-order",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "address_match_element"
+    ]
+  },
+  {
+    "blocks": [
+      "topmost",
+      "view"
+    ],
+    "default": null,
+    "description": "Defines a shared secret key for use with TSIG or the command channel.",
+    "grammar": "key <string> {\n\talgorithm <string>;\n\tsecret <string>;\n}; // may occur multiple times",
+    "name": "key",
+    "tags": [
+      "security"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Indicates the directory where public and private DNSSEC key files are found.",
+    "grammar": "key-directory <quoted_string>;",
+    "name": "key-directory",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "tls"
+    ],
+    "default": null,
+    "description": "Specifies the path to a file containing the private TLS key for a connection.",
+    "grammar": "key-file <quoted_string>;",
+    "name": "key-file",
+    "tags": [
+      "server",
+      "security"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "dnssec-policy",
+      "server",
+      "view.server"
+    ],
+    "default": null,
+    "description": "Specifies one or more server_key s to be used with a remote server.",
+    "grammar": null,
+    "name": "keys",
+    "tags": [
+      "server",
+      "security"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Sets the resolver's lame cache.",
+    "grammar": "lame-ttl <duration>;",
+    "name": "lame-ttl",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "duration"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the IPv4 addresses on which a server listens for DNS queries.",
+    "grammar": "listen-on [ port <integer> ] [ tls <string> ] [ http <string> ] { <address_match_element>; ... }; // may occur multiple times",
+    "name": "listen-on",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "address_match_element",
+      "integer",
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the IPv6 addresses on which a server listens for DNS queries.",
+    "grammar": "listen-on-v6 [ port <integer> ] [ tls <string> ] [ http <string> ] { <address_match_element>; ... }; // may occur multiple times",
+    "name": "listen-on-v6",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "address_match_element",
+      "integer",
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "http"
+    ],
+    "default": null,
+    "description": "Specifies a per-listener quota for active connections.",
+    "grammar": "listener-clients <integer>;",
+    "name": "listener-clients",
+    "tags": [
+      "server",
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Sets a maximum size for the memory map of the new-zone database in LMDB database format.",
+    "grammar": "lmdb-mapsize <sizeval>;",
+    "name": "lmdb-mapsize",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "sizeval"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the pathname of the file on which named attempts to acquire a file lock when starting for the first time.",
+    "grammar": "lock-file ( <quoted_string> | none );",
+    "name": "lock-file",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "options.rate-limit",
+      "view.rate-limit"
+    ],
+    "default": null,
+    "description": "Tests rate-limiting parameters without actually dropping any requests.",
+    "grammar": "log-only <boolean>;",
+    "name": "log-only",
+    "tags": [
+      "logging",
+      "query"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "topmost"
+    ],
+    "default": null,
+    "description": "Configures logging options for the name server.",
+    "grammar": "logging {\n\tcategory <string> { <string>; ... }; // may occur multiple times\n\tchannel <string> {\n\t\tbuffered <boolean>;\n\t\tfile <quoted_string> [ versions ( unlimited | <integer> ) ] [ size <size> ] [ suffix ( increment | timestamp ) ];\n\t\tnull;\n\t\tprint-category <boolean>;\n\t\tprint-severity <boolean>;\n\t\tprint-time ( iso8601 | iso8601-utc | local | <boolean> );\n\t\tseverity <log_severity>;\n\t\tstderr;\n\t\tsyslog [ <syslog_facility> ];\n\t}; // may occur multiple times\n};",
+    "name": "logging",
+    "tags": [
+      "logging"
+    ],
+    "types": [
+      "boolean",
+      "integer",
+      "log_severity",
+      "quoted_string",
+      "size",
+      "string",
+      "syslog_facility"
+    ]
+  },
+  {
+    "blocks": [
+      "topmost",
+      "view"
+    ],
+    "default": null,
+    "description": "Deprecated, use trust-anchors.",
+    "grammar": "managed-keys { <string> ( static-key | initial-key | static-ds | initial-ds ) <integer> <integer> <integer> <quoted_string>; ... }; // may occur multiple times, deprecated",
+    "name": "managed-keys",
+    "tags": [
+      "deprecated"
+    ],
+    "types": [
+      "integer",
+      "quoted_string",
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the directory in which to store the files that track managed DNSSEC keys.",
+    "grammar": "managed-keys-directory <quoted_string>;",
+    "name": "managed-keys-directory",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "options.dns64",
+      "view.dns64"
+    ],
+    "default": null,
+    "description": "Specifies an access control list (ACL) of IPv4 addresses that are to be mapped to the corresponding A RRset in dns64.",
+    "grammar": "mapped { <address_match_element>; ... };",
+    "name": "mapped",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "address_match_element"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "primary",
+      "redirect",
+      "secondary",
+      "stub)"
+    ],
+    "default": null,
+    "description": "Specifies the file format of zone files.",
+    "grammar": "masterfile-format ( raw | text );",
+    "name": "masterfile-format",
+    "tags": [
+      "zone",
+      "server"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "primary",
+      "redirect",
+      "secondary",
+      "stub)"
+    ],
+    "default": null,
+    "description": "Specifies the format of zone files during a dump, when the masterfile-format is text.",
+    "grammar": "masterfile-style ( full | relative );",
+    "name": "masterfile-style",
+    "tags": [
+      "server"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies a view of DNS namespace for a given subset of client IP addresses.",
+    "grammar": "match-clients { <address_match_element>; ... };",
+    "name": "match-clients",
+    "tags": [
+      "view"
+    ],
+    "types": [
+      "address_match_element"
+    ]
+  },
+  {
+    "blocks": [
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies a view of DNS namespace for a given subset of destination IP addresses.",
+    "grammar": "match-destinations { <address_match_element>; ... };",
+    "name": "match-destinations",
+    "tags": [
+      "view"
+    ],
+    "types": [
+      "address_match_element"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Allows IPv4-mapped IPv6 addresses to match address-match list entries for corresponding IPv4 addresses.",
+    "grammar": "match-mapped-addresses <boolean>;",
+    "name": "match-mapped-addresses",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies that only recursive requests can match this view of the DNS namespace.",
+    "grammar": "match-recursive-only <boolean>;",
+    "name": "match-recursive-only",
+    "tags": [
+      "view"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Sets the maximum amount of memory to use for an individual cache database and its associated metadata.",
+    "grammar": "max-cache-size ( default | unlimited | <sizeval> | <percentage> );",
+    "name": "max-cache-size",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "percentage",
+      "sizeval"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies the maximum time (in seconds) that the server caches ordinary (positive) answers.",
+    "grammar": "max-cache-ttl <duration>;",
+    "name": "max-cache-ttl",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "duration"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Sets the maximum number of simultaneous recursive clients accepted by the server for any given query before the server drops additional clients.",
+    "grammar": "max-clients-per-query <integer>;",
+    "name": "max-clients-per-query",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Sets the maximum size for IXFR responses to zone transfer requests.",
+    "grammar": "max-ixfr-ratio ( unlimited | <percentage> );",
+    "name": "max-ixfr-ratio",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "percentage"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Controls the size of journal files.",
+    "grammar": "max-journal-size ( default | unlimited | <sizeval> );",
+    "name": "max-journal-size",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "sizeval"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies the maximum retention time (in seconds) for storage of negative answers in the server's cache.",
+    "grammar": "max-ncache-ttl <duration>;",
+    "name": "max-ncache-ttl",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "duration"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "primary",
+      "redirect",
+      "secondary",
+      "static-stub",
+      "stub)"
+    ],
+    "default": null,
+    "description": "Sets the maximum number of records permitted in a zone.",
+    "grammar": "max-records <integer>;",
+    "name": "max-records",
+    "tags": [
+      "zone",
+      "server"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Sets the maximum number of levels of recursion permitted at any one time while servicing a recursive query.",
+    "grammar": "max-recursion-depth <integer>;",
+    "name": "max-recursion-depth",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Sets the maximum number of iterative queries while servicing a recursive query.",
+    "grammar": "max-recursion-queries <integer>;",
+    "name": "max-recursion-queries",
+    "tags": [
+      "server",
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "secondary",
+      "stub)"
+    ],
+    "default": null,
+    "description": "Limits the zone refresh interval to no less often than the specified value, in seconds.",
+    "grammar": "max-refresh-time <integer>;",
+    "name": "max-refresh-time",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "secondary",
+      "stub)"
+    ],
+    "default": null,
+    "description": "Limits the zone refresh retry interval to no less often than the specified value, in seconds.",
+    "grammar": "max-retry-time <integer>;",
+    "name": "max-retry-time",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the maximum RSA exponent size (in bits) when validating.",
+    "grammar": "max-rsa-exponent-size <integer>;",
+    "name": "max-rsa-exponent-size",
+    "tags": [
+      "dnssec",
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies the maximum time that the server retains records past their normal expiry, to return them as stale records.",
+    "grammar": "max-stale-ttl <duration>;",
+    "name": "max-stale-ttl",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "duration"
+    ]
+  },
+  {
+    "blocks": [
+      "options.rate-limit",
+      "view.rate-limit"
+    ],
+    "default": null,
+    "description": "Sets the maximum size of the table used to track requests and rate-limit responses.",
+    "grammar": "max-table-size <integer>;",
+    "name": "max-table-size",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "secondary",
+      "stub)"
+    ],
+    "default": null,
+    "description": "Specifies the number of minutes after which inbound zone transfers making no progress are terminated.",
+    "grammar": "max-transfer-idle-in <integer>;",
+    "name": "max-transfer-idle-in",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Specifies the number of minutes after which outbound zone transfers making no progress are terminated.",
+    "grammar": "max-transfer-idle-out <integer>;",
+    "name": "max-transfer-idle-out",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "secondary",
+      "stub)"
+    ],
+    "default": null,
+    "description": "Specifies the number of minutes after which inbound zone transfers are terminated.",
+    "grammar": "max-transfer-time-in <integer>;",
+    "name": "max-transfer-time-in",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Specifies the number of minutes after which outbound zone transfers are terminated.",
+    "grammar": "max-transfer-time-out <integer>;",
+    "name": "max-transfer-time-out",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "server",
+      "view",
+      "view.server"
+    ],
+    "default": null,
+    "description": "Sets the maximum EDNS UDP message size sent by named.",
+    "grammar": "max-udp-size <integer>;",
+    "name": "max-udp-size",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "dnssec-policy",
+      "options",
+      "view",
+      "zone (primary",
+      "redirect)"
+    ],
+    "default": null,
+    "description": "Specifies a maximum permissible time-to-live (TTL) value, in seconds.",
+    "grammar": null,
+    "name": "max-zone-ttl",
+    "tags": [
+      "zone",
+      "query"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Controls whether memory statistics are written to the file specified by memstatistics-file at exit.",
+    "grammar": "memstatistics <boolean>;",
+    "name": "memstatistics",
+    "tags": [
+      "logging",
+      "server"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the pathname of the file where the server writes memory usage statistics on exit.",
+    "grammar": "memstatistics-file <quoted_string>;",
+    "name": "memstatistics-file",
+    "tags": [
+      "logging"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Controls whether DNS name compression is used in responses to regular queries.",
+    "grammar": "message-compression <boolean>;",
+    "name": "message-compression",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies the minimum time (in seconds) that the server caches ordinary (positive) answers.",
+    "grammar": "min-cache-ttl <duration>;",
+    "name": "min-cache-ttl",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "duration"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies the minimum retention time (in seconds) for storage of negative answers in the server's cache.",
+    "grammar": "min-ncache-ttl <duration>;",
+    "name": "min-ncache-ttl",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "duration"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "secondary",
+      "stub)"
+    ],
+    "default": null,
+    "description": "Limits the zone refresh interval to no more often than the specified value, in seconds.",
+    "grammar": "min-refresh-time <integer>;",
+    "name": "min-refresh-time",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "secondary",
+      "stub)"
+    ],
+    "default": null,
+    "description": "Limits the zone refresh retry interval to no more often than the specified value, in seconds.",
+    "grammar": "min-retry-time <integer>;",
+    "name": "min-retry-time",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options.rate-limit",
+      "view.rate-limit"
+    ],
+    "default": null,
+    "description": "Sets the minimum size of the table used to track requests and rate-limit responses.",
+    "grammar": "min-table-size <integer>;",
+    "name": "min-table-size",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Controls whether the server replies with only one of the RRsets for a query name, when generating a positive response to a query of type ANY over UDP.",
+    "grammar": "minimal-any <boolean>;",
+    "name": "minimal-any",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Controls whether the server only adds records to the authority and additional data sections when they are required (e.g. delegations, negative responses). This improves server performance.",
+    "grammar": "minimal-responses ( no-auth | no-auth-recursive | <boolean> );",
+    "name": "minimal-responses",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "secondary",
+      "stub)"
+    ],
+    "default": null,
+    "description": "Controls whether serial number mismatch errors are logged.",
+    "grammar": "multi-master <boolean>;",
+    "name": "multi-master",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies the directory where configuration parameters are stored for zones added by rndc addzone.",
+    "grammar": "new-zones-directory <quoted_string>;",
+    "name": "new-zones-directory",
+    "tags": [
+      "zone"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies a list of addresses that require case-insensitive compression in responses.",
+    "grammar": "no-case-compress { <address_match_element>; ... };",
+    "name": "no-case-compress",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "address_match_element"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Sets the maximum size of UDP responses that are sent to queries without a valid server COOKIE.",
+    "grammar": "nocookie-udp-size <integer>;",
+    "name": "nocookie-udp-size",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options.rate-limit",
+      "view.rate-limit"
+    ],
+    "default": null,
+    "description": "Limits the number of empty (NODATA) responses for a valid domain name.",
+    "grammar": "nodata-per-second <integer>;",
+    "name": "nodata-per-second",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Controls whether NOTIFY messages are sent on zone changes.",
+    "grammar": "notify ( explicit | master-only | primary-only | <boolean> );",
+    "name": "notify",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Sets the delay (in seconds) between sending sets of NOTIFY messages for a zone.",
+    "grammar": "notify-delay <integer>;",
+    "name": "notify-delay",
+    "tags": [
+      "zone",
+      "transfer"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the rate at which NOTIFY requests are sent during normal zone maintenance operations.",
+    "grammar": "notify-rate <integer>;",
+    "name": "notify-rate",
+    "tags": [
+      "zone",
+      "transfer"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "server",
+      "view",
+      "zone (mirror",
+      "primary",
+      "secondary)",
+      "view.server"
+    ],
+    "default": null,
+    "description": "Defines the IPv4 address (and optional port) to be used for outgoing NOTIFY messages.",
+    "grammar": "notify-source ( <ipv4_address> | * );",
+    "name": "notify-source",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "ipv4_address"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "server",
+      "view",
+      "zone (mirror",
+      "primary",
+      "secondary)",
+      "view.server"
+    ],
+    "default": null,
+    "description": "Defines the IPv6 address (and optional port) to be used for outgoing NOTIFY messages.",
+    "grammar": "notify-source-v6 ( <ipv6_address> | * );",
+    "name": "notify-source-v6",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "ipv6_address"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Controls whether the name servers in the NS RRset are checked against the SOA MNAME.",
+    "grammar": "notify-to-soa <boolean>;",
+    "name": "notify-to-soa",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "dnssec-policy"
+    ],
+    "default": null,
+    "description": "Specifies the use of NSEC3 instead of NSEC, and sets NSEC3 parameters.",
+    "grammar": "nsec3param [ iterations <integer> ] [ optout <boolean> ] [ salt-length <integer> ];",
+    "name": "nsec3param",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "boolean",
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies the lifetime, in seconds, for negative trust anchors added via rndc nta.",
+    "grammar": "nta-lifetime <duration>;",
+    "name": "nta-lifetime",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "duration"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies the time interval for checking whether negative trust anchors added via rndc nta are still necessary.",
+    "grammar": "nta-recheck <duration>;",
+    "name": "nta-recheck",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "duration"
+    ]
+  },
+  {
+    "blocks": [
+      "logging.channel"
+    ],
+    "default": null,
+    "description": "Causes all messages sent to the logging channel to be discarded.",
+    "grammar": "null;",
+    "name": "null",
+    "tags": [
+      "logging"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Appends the specified suffix to the original query name, when replacing an NXDOMAIN with a redirect namespace.",
+    "grammar": "nxdomain-redirect <string>;",
+    "name": "nxdomain-redirect",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options.rate-limit",
+      "view.rate-limit"
+    ],
+    "default": null,
+    "description": "Limits the number of undefined subdomains for a valid domain name.",
+    "grammar": "nxdomains-per-second <integer>;",
+    "name": "nxdomains-per-second",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "topmost"
+    ],
+    "default": null,
+    "description": "Defines global options to be used by BIND 9.",
+    "grammar": "options {\n\tallow-new-zones <boolean>;\n\tallow-notify { <address_match_element>; ... };\n\tallow-query { <address_match_element>; ... };\n\tallow-query-cache { <address_match_element>; ... };\n\tallow-query-cache-on { <address_match_element>; ... };\n\tallow-query-on { <address_match_element>; ... };\n\tallow-recursion { <address_match_element>; ... };\n\tallow-recursion-on { <address_match_element>; ... };\n\tallow-transfer [ port <integer> ] [ transport <string> ] { <address_match_element>; ... };\n\tallow-update { <address_match_element>; ... };\n\tallow-update-forwarding { <address_match_element>; ... };\n\talso-notify [ port <integer> ]  { ( <remote-servers> | <ipv4_address> [ port <integer> ] | <ipv6_address> [ port <integer> ] ) [ key <string> ] [ tls <string> ]; ... };\n\talt-transfer-source ( <ipv4_address> | * ); // deprecated\n\talt-transfer-source-v6 ( <ipv6_address> | * ); // deprecated\n\tanswer-cookie <boolean>;\n\tattach-cache <string>;\n\tauth-nxdomain <boolean>;\n\tauto-dnssec ( allow | maintain | off ); // deprecated\n\tautomatic-interface-scan <boolean>;\n\tavoid-v4-udp-ports { <portrange>; ... }; // deprecated\n\tavoid-v6-udp-ports { <portrange>; ... }; // deprecated\n\tbindkeys-file <quoted_string>;\n\tblackhole { <address_match_element>; ... };\n\tcatalog-zones { zone <string> [ default-primaries [ port <integer> ]  { ( <remote-servers> | <ipv4_address> [ port <integer> ] | <ipv6_address> [ port <integer> ] ) [ key <string> ] [ tls <string> ]; ... } ] [ zone-directory <quoted_string> ] [ in-memory <boolean> ] [ min-update-interval <duration> ]; ... };\n\tcheck-dup-records ( fail | warn | ignore );\n\tcheck-integrity <boolean>;\n\tcheck-mx ( fail | warn | ignore );\n\tcheck-mx-cname ( fail | warn | ignore );\n\tcheck-names ( primary | master | secondary | slave | response ) ( fail | warn | ignore ); // may occur multiple times\n\tcheck-sibling <boolean>;\n\tcheck-spf ( warn | ignore );\n\tcheck-srv-cname ( fail | warn | ignore );\n\tcheck-wildcard <boolean>;\n\tclients-per-query <integer>;\n\tcookie-algorithm ( aes | siphash24 );\n\tcookie-secret <string>; // may occur multiple times\n\tcoresize ( default | unlimited | <sizeval> ); // deprecated\n\tdatasize ( default | unlimited | <sizeval> ); // deprecated\n\tdeny-answer-addresses { <address_match_element>; ... } [ except-from { <string>; ... } ];\n\tdeny-answer-aliases { <string>; ... } [ except-from { <string>; ... } ];\n\tdialup ( notify | notify-passive | passive | refresh | <boolean> );\n\tdirectory <quoted_string>;\n\tdisable-algorithms <string> { <string>; ... }; // may occur multiple times\n\tdisable-ds-digests <string> { <string>; ... }; // may occur multiple times\n\tdisable-empty-zone <string>; // may occur multiple times\n\tdns64 <netprefix> {\n\t\tbreak-dnssec <boolean>;\n\t\tclients { <address_match_element>; ... };\n\t\texclude { <address_match_element>; ... };\n\t\tmapped { <address_match_element>; ... };\n\t\trecursive-only <boolean>;\n\t\tsuffix <ipv6_address>;\n\t}; // may occur multiple times\n\tdns64-contact <string>;\n\tdns64-server <string>;\n\tdnskey-sig-validity <integer>;\n\tdnsrps-enable <boolean>;\n\tdnsrps-options { <unspecified-text> };\n\tdnssec-accept-expired <boolean>;\n\tdnssec-dnskey-kskonly <boolean>;\n\tdnssec-loadkeys-interval <integer>;\n\tdnssec-must-be-secure <string> <boolean>; // may occur multiple times\n\tdnssec-policy <string>;\n\tdnssec-secure-to-insecure <boolean>;\n\tdnssec-update-mode ( maintain | no-resign );\n\tdnssec-validation ( yes | no | auto );\n\tdnstap { ( all | auth | client | forwarder | resolver | update ) [ ( query | response ) ]; ... };\n\tdnstap-identity ( <quoted_string> | none | hostname );\n\tdnstap-output ( file | unix ) <quoted_string> [ size ( unlimited | <size> ) ] [ versions ( unlimited | <integer> ) ] [ suffix ( increment | timestamp ) ];\n\tdnstap-version ( <quoted_string> | none );\n\tdscp <integer>; // obsolete\n\tdual-stack-servers [ port <integer> ] { ( <quoted_string> [ port <integer> ] | <ipv4_address> [ port <integer> ] | <ipv6_address> [ port <integer> ] ); ... };\n\tdump-file <quoted_string>;\n\tedns-udp-size <integer>;\n\tempty-contact <string>;\n\tempty-server <string>;\n\tempty-zones-enable <boolean>;\n\tfetch-quota-params <integer> <fixedpoint> <fixedpoint> <fixedpoint>;\n\tfetches-per-server <integer> [ ( drop | fail ) ];\n\tfetches-per-zone <integer> [ ( drop | fail ) ];\n\tfiles ( default | unlimited | <sizeval> ); // deprecated\n\tflush-zones-on-shutdown <boolean>;\n\tforward ( first | only );\n\tforwarders [ port <integer> ]  { ( <ipv4_address> | <ipv6_address> ) [ port <integer> ]; ... };\n\tfstrm-set-buffer-hint <integer>;\n\tfstrm-set-flush-timeout <integer>;\n\tfstrm-set-input-queue-size <integer>;\n\tfstrm-set-output-notify-threshold <integer>;\n\tfstrm-set-output-queue-model ( mpsc | spsc );\n\tfstrm-set-output-queue-size <integer>;\n\tfstrm-set-reopen-interval <duration>;\n\tgeoip-directory ( <quoted_string> | none );\n\tglue-cache <boolean>; // deprecated\n\theartbeat-interval <integer>;\n\thostname ( <quoted_string> | none );\n\thttp-listener-clients <integer>;\n\thttp-port <integer>;\n\thttp-streams-per-connection <integer>;\n\thttps-port <integer>;\n\tinterface-interval <duration>;\n\tipv4only-contact <string>;\n\tipv4only-enable <boolean>;\n\tipv4only-server <string>;\n\tixfr-from-differences ( primary | master | secondary | slave | <boolean> );\n\tkeep-response-order { <address_match_element>; ... };\n\tkey-directory <quoted_string>;\n\tlame-ttl <duration>;\n\tlisten-on [ port <integer> ] [ tls <string> ] [ http <string> ] { <address_match_element>; ... }; // may occur multiple times\n\tlisten-on-v6 [ port <integer> ] [ tls <string> ] [ http <string> ] { <address_match_element>; ... }; // may occur multiple times\n\tlmdb-mapsize <sizeval>;\n\tlock-file ( <quoted_string> | none );\n\tmanaged-keys-directory <quoted_string>;\n\tmasterfile-format ( raw | text );\n\tmasterfile-style ( full | relative );\n\tmatch-mapped-addresses <boolean>;\n\tmax-cache-size ( default | unlimited | <sizeval> | <percentage> );\n\tmax-cache-ttl <duration>;\n\tmax-clients-per-query <integer>;\n\tmax-ixfr-ratio ( unlimited | <percentage> );\n\tmax-journal-size ( default | unlimited | <sizeval> );\n\tmax-ncache-ttl <duration>;\n\tmax-records <integer>;\n\tmax-recursion-depth <integer>;\n\tmax-recursion-queries <integer>;\n\tmax-refresh-time <integer>;\n\tmax-retry-time <integer>;\n\tmax-rsa-exponent-size <integer>;\n\tmax-stale-ttl <duration>;\n\tmax-transfer-idle-in <integer>;\n\tmax-transfer-idle-out <integer>;\n\tmax-transfer-time-in <integer>;\n\tmax-transfer-time-out <integer>;\n\tmax-udp-size <integer>;\n\tmax-zone-ttl ( unlimited | <duration> );\n\tmemstatistics <boolean>;\n\tmemstatistics-file <quoted_string>;\n\tmessage-compression <boolean>;\n\tmin-cache-ttl <duration>;\n\tmin-ncache-ttl <duration>;\n\tmin-refresh-time <integer>;\n\tmin-retry-time <integer>;\n\tminimal-any <boolean>;\n\tminimal-responses ( no-auth | no-auth-recursive | <boolean> );\n\tmulti-master <boolean>;\n\tnew-zones-directory <quoted_string>;\n\tno-case-compress { <address_match_element>; ... };\n\tnocookie-udp-size <integer>;\n\tnotify ( explicit | master-only | primary-only | <boolean> );\n\tnotify-delay <integer>;\n\tnotify-rate <integer>;\n\tnotify-source ( <ipv4_address> | * );\n\tnotify-source-v6 ( <ipv6_address> | * );\n\tnotify-to-soa <boolean>;\n\tnsec3-test-zone <boolean>; // test only\n\tnta-lifetime <duration>;\n\tnta-recheck <duration>;\n\tnxdomain-redirect <string>;\n\tparental-source ( <ipv4_address> | * );\n\tparental-source-v6 ( <ipv6_address> | * );\n\tpid-file ( <quoted_string> | none );\n\tport <integer>;\n\tpreferred-glue <string>;\n\tprefetch <integer> [ <integer> ];\n\tprovide-ixfr <boolean>;\n\tqname-minimization ( strict | relaxed | disabled | off );\n\tquery-source [ address ] ( <ipv4_address> | * );\n\tquery-source-v6 [ address ] ( <ipv6_address> | * );\n\tquerylog <boolean>;\n\trandom-device ( <quoted_string> | none ); // obsolete\n\trate-limit {\n\t\tall-per-second <integer>;\n\t\terrors-per-second <integer>;\n\t\texempt-clients { <address_match_element>; ... };\n\t\tipv4-prefix-length <integer>;\n\t\tipv6-prefix-length <integer>;\n\t\tlog-only <boolean>;\n\t\tmax-table-size <integer>;\n\t\tmin-table-size <integer>;\n\t\tnodata-per-second <integer>;\n\t\tnxdomains-per-second <integer>;\n\t\tqps-scale <integer>;\n\t\treferrals-per-second <integer>;\n\t\tresponses-per-second <integer>;\n\t\tslip <integer>;\n\t\twindow <integer>;\n\t};\n\trecursing-file <quoted_string>;\n\trecursion <boolean>;\n\trecursive-clients <integer>;\n\trequest-expire <boolean>;\n\trequest-ixfr <boolean>;\n\trequest-nsid <boolean>;\n\trequire-server-cookie <boolean>;\n\treserved-sockets <integer>; // deprecated\n\tresolver-nonbackoff-tries <integer>;\n\tresolver-query-timeout <integer>;\n\tresolver-retry-interval <integer>;\n\tresponse-padding { <address_match_element>; ... } block-size <integer>;\n\tresponse-policy { zone <string> [ add-soa <boolean> ] [ log <boolean> ] [ max-policy-ttl <duration> ] [ min-update-interval <duration> ] [ policy ( cname | disabled | drop | given | no-op | nodata | nxdomain | passthru | tcp-only <quoted_string> ) ] [ recursive-only <boolean> ] [ nsip-enable <boolean> ] [ nsdname-enable <boolean> ]; ... } [ add-soa <boolean> ] [ break-dnssec <boolean> ] [ max-policy-ttl <duration> ] [ min-update-interval <duration> ] [ min-ns-dots <integer> ] [ nsip-wait-recurse <boolean> ] [ nsdname-wait-recurse <boolean> ] [ qname-wait-recurse <boolean> ] [ recursive-only <boolean> ] [ nsip-enable <boolean> ] [ nsdname-enable <boolean> ] [ dnsrps-enable <boolean> ] [ dnsrps-options { <unspecified-text> } ];\n\treuseport <boolean>;\n\troot-delegation-only [ exclude { <string>; ... } ]; // deprecated\n\troot-key-sentinel <boolean>;\n\trrset-order { [ class <string> ] [ type <string> ] [ name <quoted_string> ] <string> <string>; ... };\n\tsecroots-file <quoted_string>;\n\tsend-cookie <boolean>;\n\tserial-query-rate <integer>;\n\tserial-update-method ( date | increment | unixtime );\n\tserver-id ( <quoted_string> | none | hostname );\n\tservfail-ttl <duration>;\n\tsession-keyalg <string>;\n\tsession-keyfile ( <quoted_string> | none );\n\tsession-keyname <string>;\n\tsig-signing-nodes <integer>;\n\tsig-signing-signatures <integer>;\n\tsig-signing-type <integer>;\n\tsig-validity-interval <integer> [ <integer> ];\n\tsortlist { <address_match_element>; ... };\n\tstacksize ( default | unlimited | <sizeval> ); // deprecated\n\tstale-answer-client-timeout ( disabled | off | <integer> );\n\tstale-answer-enable <boolean>;\n\tstale-answer-ttl <duration>;\n\tstale-cache-enable <boolean>;\n\tstale-refresh-time <duration>;\n\tstartup-notify-rate <integer>;\n\tstatistics-file <quoted_string>;\n\tsuppress-initial-notify <boolean>; // obsolete\n\tsynth-from-dnssec <boolean>;\n\ttcp-advertised-timeout <integer>;\n\ttcp-clients <integer>;\n\ttcp-idle-timeout <integer>;\n\ttcp-initial-timeout <integer>;\n\ttcp-keepalive-timeout <integer>;\n\ttcp-listen-queue <integer>;\n\ttcp-receive-buffer <integer>;\n\ttcp-send-buffer <integer>;\n\ttkey-dhkey <quoted_string> <integer>;\n\ttkey-domain <quoted_string>;\n\ttkey-gssapi-credential <quoted_string>;\n\ttkey-gssapi-keytab <quoted_string>;\n\ttls-port <integer>;\n\ttransfer-format ( many-answers | one-answer );\n\ttransfer-message-size <integer>;\n\ttransfer-source ( <ipv4_address> | * );\n\ttransfer-source-v6 ( <ipv6_address> | * );\n\ttransfers-in <integer>;\n\ttransfers-out <integer>;\n\ttransfers-per-ns <integer>;\n\ttrust-anchor-telemetry <boolean>; // experimental\n\ttry-tcp-refresh <boolean>;\n\tudp-receive-buffer <integer>;\n\tudp-send-buffer <integer>;\n\tupdate-check-ksk <boolean>;\n\tupdate-quota <integer>;\n\tuse-alt-transfer-source <boolean>; // deprecated\n\tuse-v4-udp-ports { <portrange>; ... }; // deprecated\n\tuse-v6-udp-ports { <portrange>; ... }; // deprecated\n\tv6-bias <integer>;\n\tvalidate-except { <string>; ... };\n\tversion ( <quoted_string> | none );\n\tzero-no-soa-ttl <boolean>;\n\tzero-no-soa-ttl-cache <boolean>;\n\tzone-statistics ( full | terse | none | <boolean> );\n};",
+    "name": "options",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "address_match_element",
+      "boolean",
+      "duration",
+      "fixedpoint",
+      "integer",
+      "ipv4_address",
+      "ipv6_address",
+      "netprefix",
+      "percentage",
+      "portrange",
+      "quoted_string",
+      "remote-servers",
+      "size",
+      "sizeval",
+      "string",
+      "unspecified-text"
+    ]
+  },
+  {
+    "blocks": [
+      "server",
+      "view.server"
+    ],
+    "default": null,
+    "description": "Adds EDNS Padding options to outgoing messages to increase the packet size.",
+    "grammar": "padding <integer>;",
+    "name": "padding",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "dnssec-policy"
+    ],
+    "default": null,
+    "description": "Sets the time to live (TTL) of the DS RRset used by the parent zone.",
+    "grammar": "parent-ds-ttl <duration>;",
+    "name": "parent-ds-ttl",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "duration"
+    ]
+  },
+  {
+    "blocks": [
+      "dnssec-policy"
+    ],
+    "default": null,
+    "description": "Sets the propagation delay from the time the parent zone is updated to when the new version is served by all of the parent zone's name servers.",
+    "grammar": "parent-propagation-delay <duration>;",
+    "name": "parent-propagation-delay",
+    "tags": [
+      "dnssec",
+      "zone"
+    ],
+    "types": [
+      "duration"
+    ]
+  },
+  {
+    "blocks": [
+      "topmost",
+      "zone (primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Defines a list of delegation agents to be used by primary and secondary zones.",
+    "grammar": null,
+    "name": "parental-agents",
+    "tags": [
+      "zone"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Specifies which local IPv4 source address is used to send parental DS queries.",
+    "grammar": "parental-source ( <ipv4_address> | * );",
+    "name": "parental-source",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "ipv4_address"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Specifies which local IPv6 source address is used to send parental DS queries.",
+    "grammar": "parental-source-v6 ( <ipv6_address> | * );",
+    "name": "parental-source-v6",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "ipv6_address"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the pathname of the file where the server writes its process ID.",
+    "grammar": "pid-file ( <quoted_string> | none );",
+    "name": "pid-file",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [],
+    "default": null,
+    "description": "Configures plugins in named.conf.",
+    "grammar": null,
+    "name": "plugin",
+    "tags": [
+      "server"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the UDP/TCP port number the server uses to receive and send DNS protocol traffic.",
+    "grammar": "port <integer>;",
+    "name": "port",
+    "tags": [
+      "server",
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "tls"
+    ],
+    "default": null,
+    "description": "Specifies that server ciphers should be preferred over client ones.",
+    "grammar": "prefer-server-ciphers <boolean>;",
+    "name": "prefer-server-ciphers",
+    "tags": [
+      "server",
+      "security"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Controls the order of glue records in an A or AAAA response.",
+    "grammar": "preferred-glue <string>;",
+    "name": "preferred-glue",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies the &quot;trigger&quot; time-to-live (TTL) value at which prefetch of the current query takes place.",
+    "grammar": "prefetch <integer> [ <integer> ];",
+    "name": "prefetch",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "topmost",
+      "zone (mirror",
+      "redirect",
+      "secondary",
+      "stub)"
+    ],
+    "default": null,
+    "description": "Defines one or more primary servers for a zone.",
+    "grammar": null,
+    "name": "primaries",
+    "tags": [
+      "zone"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "logging.channel"
+    ],
+    "default": null,
+    "description": "Includes the category in log messages.",
+    "grammar": "print-category <boolean>;",
+    "name": "print-category",
+    "tags": [
+      "logging"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "logging.channel"
+    ],
+    "default": null,
+    "description": "Includes the severity in log messages.",
+    "grammar": "print-severity <boolean>;",
+    "name": "print-severity",
+    "tags": [
+      "logging"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "logging.channel"
+    ],
+    "default": null,
+    "description": "Specifies the time format for log messages.",
+    "grammar": "print-time ( iso8601 | iso8601-utc | local | <boolean> );",
+    "name": "print-time",
+    "tags": [
+      "logging"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "tls"
+    ],
+    "default": null,
+    "description": "Specifies the allowed versions of the TLS protocol.",
+    "grammar": "protocols { <string>; ... };",
+    "name": "protocols",
+    "tags": [
+      "security"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "server",
+      "view",
+      "view.server"
+    ],
+    "default": null,
+    "description": "Controls whether a primary responds to an incremental zone request (IXFR) or only responds with a full zone transfer (AXFR).",
+    "grammar": "provide-ixfr <boolean>;",
+    "name": "provide-ixfr",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "dnssec-policy"
+    ],
+    "default": null,
+    "description": "Increases the amount of time between when keys are published and when they become active, to allow for unforeseen events.",
+    "grammar": "publish-safety <duration>;",
+    "name": "publish-safety",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "duration"
+    ]
+  },
+  {
+    "blocks": [
+      "dnssec-policy"
+    ],
+    "default": null,
+    "description": "Specifies the amount of time after which DNSSEC keys that have been deleted from the zone can be removed from disk.",
+    "grammar": "purge-keys <duration>;",
+    "name": "purge-keys",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "duration"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Controls QNAME minimization behavior in the BIND 9 resolver.",
+    "grammar": "qname-minimization ( strict | relaxed | disabled | off );",
+    "name": "qname-minimization",
+    "tags": [
+      "query"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options.rate-limit",
+      "view.rate-limit"
+    ],
+    "default": null,
+    "description": "Tightens defenses during DNS attacks by scaling back the ratio of the current query-per-second rate.",
+    "grammar": "qps-scale <integer>;",
+    "name": "qps-scale",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "server",
+      "view",
+      "view.server"
+    ],
+    "default": null,
+    "description": "Controls the IPv4 address from which queries are issued.",
+    "grammar": "query-source [ address ] ( <ipv4_address> | * );",
+    "name": "query-source",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "ipv4_address"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "server",
+      "view",
+      "view.server"
+    ],
+    "default": null,
+    "description": "Controls the IPv6 address from which queries are issued.",
+    "grammar": "query-source-v6 [ address ] ( <ipv6_address> | * );",
+    "name": "query-source-v6",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "ipv6_address"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies whether query logging should be active when named first starts.",
+    "grammar": "querylog <boolean>;",
+    "name": "querylog",
+    "tags": [
+      "logging",
+      "server"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Controls excessive UDP responses, to prevent BIND 9 from being used to amplify reflection denial-of-service (DoS) attacks.",
+    "grammar": "rate-limit {\n\tall-per-second <integer>;\n\terrors-per-second <integer>;\n\texempt-clients { <address_match_element>; ... };\n\tipv4-prefix-length <integer>;\n\tipv6-prefix-length <integer>;\n\tlog-only <boolean>;\n\tmax-table-size <integer>;\n\tmin-table-size <integer>;\n\tnodata-per-second <integer>;\n\tnxdomains-per-second <integer>;\n\tqps-scale <integer>;\n\treferrals-per-second <integer>;\n\tresponses-per-second <integer>;\n\tslip <integer>;\n\twindow <integer>;\n};",
+    "name": "rate-limit",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "address_match_element",
+      "boolean",
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the pathname of the file where the server dumps queries that are currently recursing via rndc recursing.",
+    "grammar": "recursing-file <quoted_string>;",
+    "name": "recursing-file",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Defines whether recursion and caching are allowed.",
+    "grammar": "recursion <boolean>;",
+    "name": "recursion",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the maximum number of concurrent recursive queries the server can perform.",
+    "grammar": "recursive-clients <integer>;",
+    "name": "recursive-clients",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options.dns64",
+      "view.dns64"
+    ],
+    "default": null,
+    "description": "Toggles whether dns64 synthesis occurs only for recursive queries.",
+    "grammar": "recursive-only <boolean>;",
+    "name": "recursive-only",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options.rate-limit",
+      "view.rate-limit"
+    ],
+    "default": null,
+    "description": "Limits the number of referrals or delegations to a server for a given domain.",
+    "grammar": "referrals-per-second <integer>;",
+    "name": "referrals-per-second",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "tls"
+    ],
+    "default": null,
+    "description": "Specifies the expected hostname in the TLS certificate of the remote server.",
+    "grammar": "remote-hostname <quoted_string>;",
+    "name": "remote-hostname",
+    "tags": [
+      "security"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "server",
+      "view",
+      "zone (mirror",
+      "secondary)",
+      "view.server"
+    ],
+    "default": null,
+    "description": "Specifies whether the local server requests the EDNS EXPIRE value, when acting as a secondary.",
+    "grammar": "request-expire <boolean>;",
+    "name": "request-expire",
+    "tags": [
+      "transfer",
+      "query"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "server",
+      "view",
+      "zone (mirror",
+      "secondary)",
+      "view.server"
+    ],
+    "default": null,
+    "description": "Controls whether a secondary requests an incremental zone transfer (IXFR) or a full zone transfer (AXFR).",
+    "grammar": "request-ixfr <boolean>;",
+    "name": "request-ixfr",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "server",
+      "view",
+      "view.server"
+    ],
+    "default": null,
+    "description": "Controls whether an empty EDNS(0) NSID (Name Server Identifier) option is sent with all queries to authoritative name servers during iterative resolution.",
+    "grammar": "request-nsid <boolean>;",
+    "name": "request-nsid",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Controls whether a valid server cookie is required before sending a full response to a UDP request.",
+    "grammar": "require-server-cookie <boolean>;",
+    "name": "require-server-cookie",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Deprecated.",
+    "grammar": "reserved-sockets <integer>; // deprecated",
+    "name": "reserved-sockets",
+    "tags": [
+      "deprecated"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies the number of retries before exponential backoff.",
+    "grammar": "resolver-nonbackoff-tries <integer>;",
+    "name": "resolver-nonbackoff-tries",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies the length of time, in milliseconds, that a resolver attempts to resolve a recursive query before failing.",
+    "grammar": "resolver-query-timeout <integer>;",
+    "name": "resolver-query-timeout",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Sets the base retry interval (in milliseconds).",
+    "grammar": "resolver-retry-interval <integer>;",
+    "name": "resolver-retry-interval",
+    "tags": [
+      "server",
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Adds an EDNS Padding option to encrypted messages, to reduce the chance of guessing the contents based on size.",
+    "grammar": "response-padding { <address_match_element>; ... } block-size <integer>;",
+    "name": "response-padding",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "address_match_element",
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies response policy zones for the view or among global options.",
+    "grammar": "response-policy { zone <string> [ add-soa <boolean> ] [ log <boolean> ] [ max-policy-ttl <duration> ] [ min-update-interval <duration> ] [ policy ( cname | disabled | drop | given | no-op | nodata | nxdomain | passthru | tcp-only <quoted_string> ) ] [ recursive-only <boolean> ] [ nsip-enable <boolean> ] [ nsdname-enable <boolean> ]; ... } [ add-soa <boolean> ] [ break-dnssec <boolean> ] [ max-policy-ttl <duration> ] [ min-update-interval <duration> ] [ min-ns-dots <integer> ] [ nsip-wait-recurse <boolean> ] [ nsdname-wait-recurse <boolean> ] [ qname-wait-recurse <boolean> ] [ recursive-only <boolean> ] [ nsip-enable <boolean> ] [ nsdname-enable <boolean> ] [ dnsrps-enable <boolean> ] [ dnsrps-options { <unspecified-text> } ];",
+    "name": "response-policy",
+    "tags": [
+      "zone",
+      "server",
+      "security",
+      "query"
+    ],
+    "types": [
+      "boolean",
+      "duration",
+      "integer",
+      "quoted_string",
+      "string",
+      "unspecified-text"
+    ]
+  },
+  {
+    "blocks": [
+      "options.rate-limit",
+      "view.rate-limit"
+    ],
+    "default": null,
+    "description": "Limits the number of non-empty responses for a valid domain name and record type.",
+    "grammar": "responses-per-second <integer>;",
+    "name": "responses-per-second",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "dnssec-policy"
+    ],
+    "default": null,
+    "description": "Increases the amount of time a key remains published after it is no longer active, to allow for unforeseen events.",
+    "grammar": "retire-safety <duration>;",
+    "name": "retire-safety",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "duration"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Enables kernel load-balancing of sockets.",
+    "grammar": "reuseport <boolean>;",
+    "name": "reuseport",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Turns on enforcement of delegation-only in top-level domains (TLDs) and root zones with an optional exclude list.",
+    "grammar": "root-delegation-only [ exclude { <string>; ... } ]; // deprecated",
+    "name": "root-delegation-only",
+    "tags": [
+      "deprecated"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Controls whether BIND 9 responds to root key sentinel probes.",
+    "grammar": "root-key-sentinel <boolean>;",
+    "name": "root-key-sentinel",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Defines the order in which equal RRs (RRsets) are returned.",
+    "grammar": "rrset-order { [ class <string> ] [ type <string> ] [ name <quoted_string> ] <string> <string>; ... };",
+    "name": "rrset-order",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "quoted_string",
+      "string"
+    ]
+  },
+  {
+    "blocks": [],
+    "default": null,
+    "description": "Specifies whether a Dynamically Loadable Zone (DLZ) module is queried for an answer to a query name.",
+    "grammar": null,
+    "name": "search",
+    "tags": [
+      "query"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "key",
+      "view.key"
+    ],
+    "default": null,
+    "description": "Defines a Base64-encoded string to be used as the secret by the algorithm.",
+    "grammar": "secret <string>;",
+    "name": "secret",
+    "tags": [
+      "security"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the pathname of the file where the server dumps security roots, when using rndc secroots.",
+    "grammar": "secroots-file <quoted_string>;",
+    "name": "secroots-file",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "server",
+      "view",
+      "view.server"
+    ],
+    "default": null,
+    "description": "Controls whether a COOKIE EDNS option is sent along with a query.",
+    "grammar": "send-cookie <boolean>;",
+    "name": "send-cookie",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Defines an upper limit on the number of queries per second issued by the server, when querying the SOA RRs used for zone transfers.",
+    "grammar": "serial-query-rate <integer>;",
+    "name": "serial-query-rate",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary)"
+    ],
+    "default": null,
+    "description": "Specifies the update method to be used for the zone serial number in the SOA record.",
+    "grammar": "serial-update-method ( date | increment | unixtime );",
+    "name": "serial-update-method",
+    "tags": [
+      "zone"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "topmost",
+      "view"
+    ],
+    "default": null,
+    "description": "Defines characteristics to be associated with a remote name server.",
+    "grammar": "server <netprefix> {\n\tbogus <boolean>;\n\tedns <boolean>;\n\tedns-udp-size <integer>;\n\tedns-version <integer>;\n\tkeys <server_key>;\n\tmax-udp-size <integer>;\n\tnotify-source ( <ipv4_address> | * );\n\tnotify-source-v6 ( <ipv6_address> | * );\n\tpadding <integer>;\n\tprovide-ixfr <boolean>;\n\tquery-source [ address ] ( <ipv4_address> | * );\n\tquery-source-v6 [ address ] ( <ipv6_address> | * );\n\trequest-expire <boolean>;\n\trequest-ixfr <boolean>;\n\trequest-nsid <boolean>;\n\tsend-cookie <boolean>;\n\ttcp-keepalive <boolean>;\n\ttcp-only <boolean>;\n\ttransfer-format ( many-answers | one-answer );\n\ttransfer-source ( <ipv4_address> | * );\n\ttransfer-source-v6 ( <ipv6_address> | * );\n\ttransfers <integer>;\n}; // may occur multiple times",
+    "name": "server",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "boolean",
+      "integer",
+      "ipv4_address",
+      "ipv6_address",
+      "netprefix",
+      "server_key"
+    ]
+  },
+  {
+    "blocks": [
+      "zone (static-stub)"
+    ],
+    "default": null,
+    "description": "Specifies a list of IP addresses to which queries should be sent in recursive resolution for a static-stub zone.",
+    "grammar": "server-addresses { ( <ipv4_address> | <ipv6_address> ); ... };",
+    "name": "server-addresses",
+    "tags": [
+      "zone",
+      "query"
+    ],
+    "types": [
+      "ipv4_address",
+      "ipv6_address"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the ID of the server to return in response to a ID.SERVER query.",
+    "grammar": "server-id ( <quoted_string> | none | hostname );",
+    "name": "server-id",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "zone (static-stub)"
+    ],
+    "default": null,
+    "description": "Specifies a list of domain names of name servers that act as authoritative servers of a static-stub zone.",
+    "grammar": "server-names { <string>; ... };",
+    "name": "server-names",
+    "tags": [
+      "zone"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Sets the length of time (in seconds) that a SERVFAIL response is cached.",
+    "grammar": "servfail-ttl <duration>;",
+    "name": "servfail-ttl",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "duration"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the algorithm to use for the TSIG session key.",
+    "grammar": "session-keyalg <string>;",
+    "name": "session-keyalg",
+    "tags": [
+      "security"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the pathname of the file where a TSIG session key is written, when generated by named for use by nsupdate -l.",
+    "grammar": "session-keyfile ( <quoted_string> | none );",
+    "name": "session-keyfile",
+    "tags": [
+      "security"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the key name for the TSIG session key.",
+    "grammar": "session-keyname <string>;",
+    "name": "session-keyname",
+    "tags": [
+      "security"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "tls"
+    ],
+    "default": null,
+    "description": "Enables or disables session resumption through TLS session tickets.",
+    "grammar": "session-tickets <boolean>;",
+    "name": "session-tickets",
+    "tags": [
+      "security"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "logging.channel"
+    ],
+    "default": null,
+    "description": "Defines the priority level of log messages.",
+    "grammar": "severity <log_severity>;",
+    "name": "severity",
+    "tags": [
+      "logging"
+    ],
+    "types": [
+      "log_severity"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Specifies the maximum number of nodes to be examined in each quantum, when signing a zone with a new DNSKEY.",
+    "grammar": "sig-signing-nodes <integer>;",
+    "name": "sig-signing-nodes",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Specifies the threshold for the number of signatures that terminates processing a quantum, when signing a zone with a new DNSKEY.",
+    "grammar": "sig-signing-signatures <integer>;",
+    "name": "sig-signing-signatures",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Specifies a private RDATA type to use when generating signing-state records.",
+    "grammar": "sig-signing-type <integer>;",
+    "name": "sig-signing-type",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Specifies the maximum number of days that RRSIGs generated by named are valid.",
+    "grammar": "sig-validity-interval <integer> [ <integer> ];",
+    "name": "sig-validity-interval",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "dnssec-policy"
+    ],
+    "default": null,
+    "description": "Specifies how frequently an RRSIG record is refreshed.",
+    "grammar": "signatures-refresh <duration>;",
+    "name": "signatures-refresh",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "duration"
+    ]
+  },
+  {
+    "blocks": [
+      "dnssec-policy"
+    ],
+    "default": null,
+    "description": "Indicates the validity period of an RRSIG record.",
+    "grammar": "signatures-validity <duration>;",
+    "name": "signatures-validity",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "duration"
+    ]
+  },
+  {
+    "blocks": [
+      "dnssec-policy"
+    ],
+    "default": null,
+    "description": "Indicates the validity period of DNSKEY records.",
+    "grammar": "signatures-validity-dnskey <duration>;",
+    "name": "signatures-validity-dnskey",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "duration"
+    ]
+  },
+  {
+    "blocks": [
+      "options.rate-limit",
+      "view.rate-limit"
+    ],
+    "default": null,
+    "description": "Sets the number of &quot;slipped&quot; responses to minimize the use of forged source addresses for an attack.",
+    "grammar": "slip <integer>;",
+    "name": "slip",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Controls the ordering of RRs returned to the client, based on the client's IP address.",
+    "grammar": "sortlist { <address_match_element>; ... };",
+    "name": "sortlist",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "address_match_element"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the maximum amount of stack memory that can be used by the server.",
+    "grammar": "stacksize ( default | unlimited | <sizeval> ); // deprecated",
+    "name": "stacksize",
+    "tags": [
+      "deprecated"
+    ],
+    "types": [
+      "sizeval"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Defines the amount of time (in milliseconds) that named waits before attempting to answer a query with a stale RRset from cache.",
+    "grammar": "stale-answer-client-timeout ( disabled | off | <integer> );",
+    "name": "stale-answer-client-timeout",
+    "tags": [
+      "server",
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Enables the returning of &quot;stale&quot; cached answers when the name servers for a zone are not answering.",
+    "grammar": "stale-answer-enable <boolean>;",
+    "name": "stale-answer-enable",
+    "tags": [
+      "server",
+      "query"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies the time to live (TTL) to be returned on stale answers, in seconds.",
+    "grammar": "stale-answer-ttl <duration>;",
+    "name": "stale-answer-ttl",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "duration"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Enables the retention of &quot;stale&quot; cached answers.",
+    "grammar": "stale-cache-enable <boolean>;",
+    "name": "stale-cache-enable",
+    "tags": [
+      "server",
+      "query"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Sets the time window for the return of &quot;stale&quot; cached answers before the next attempt to contact, if the name servers for a given zone are not responding.",
+    "grammar": "stale-refresh-time <duration>;",
+    "name": "stale-refresh-time",
+    "tags": [
+      "server",
+      "query"
+    ],
+    "types": [
+      "duration"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the rate at which NOTIFY requests are sent when the name server is first starting, or when new zones have been added.",
+    "grammar": "startup-notify-rate <integer>;",
+    "name": "startup-notify-rate",
+    "tags": [
+      "zone",
+      "transfer"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "topmost"
+    ],
+    "default": null,
+    "description": "Specifies the communication channels to be used by system administrators to access statistics information on the name server.",
+    "grammar": "statistics-channels {\n\tinet ( <ipv4_address> | <ipv6_address> | * ) [ port ( <integer> | * ) ] [ allow { <address_match_element>; ... } ]; // may occur multiple times\n}; // may occur multiple times",
+    "name": "statistics-channels",
+    "tags": [
+      "logging"
+    ],
+    "types": [
+      "address_match_element",
+      "integer",
+      "ipv4_address",
+      "ipv6_address"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the pathname of the file where the server appends statistics, when using rndc stats.",
+    "grammar": "statistics-file <quoted_string>;",
+    "name": "statistics-file",
+    "tags": [
+      "logging",
+      "server"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "logging.channel"
+    ],
+    "default": null,
+    "description": "Directs the logging channel output to the server's standard error stream.",
+    "grammar": "stderr;",
+    "name": "stderr",
+    "tags": [
+      "logging"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "http"
+    ],
+    "default": null,
+    "description": "Specifies the maximum number of concurrent HTTP/2 streams over an HTTP/2 connection.",
+    "grammar": "streams-per-connection <integer>;",
+    "name": "streams-per-connection",
+    "tags": [
+      "server",
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options.dns64",
+      "view.dns64"
+    ],
+    "default": null,
+    "description": "Defines trailing bits for mapped IPv4 address bits in dns64.",
+    "grammar": "suffix <ipv6_address>;",
+    "name": "suffix",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "ipv6_address"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Enables support for RFC 8198, Aggressive Use of DNSSEC-Validated Cache.",
+    "grammar": "synth-from-dnssec <boolean>;",
+    "name": "synth-from-dnssec",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "logging.channel"
+    ],
+    "default": null,
+    "description": "Directs the logging channel to the system log.",
+    "grammar": "syslog [ <syslog_facility> ];",
+    "name": "syslog",
+    "tags": [
+      "logging"
+    ],
+    "types": [
+      "syslog_facility"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the timeout value (in milliseconds) that the server sends in responses containing the EDNS TCP keepalive option.",
+    "grammar": "tcp-advertised-timeout <integer>;",
+    "name": "tcp-advertised-timeout",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the maximum number of simultaneous client TCP connections accepted by the server.",
+    "grammar": "tcp-clients <integer>;",
+    "name": "tcp-clients",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the amount of time (in milliseconds) that the server waits on an idle TCP connection before closing it, if the EDNS TCP keepalive option is not in use.",
+    "grammar": "tcp-idle-timeout <integer>;",
+    "name": "tcp-idle-timeout",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the amount of time (in milliseconds) that the server waits on a new TCP connection for the first message from the client.",
+    "grammar": "tcp-initial-timeout <integer>;",
+    "name": "tcp-initial-timeout",
+    "tags": [
+      "server",
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "server",
+      "view.server"
+    ],
+    "default": null,
+    "description": "Adds EDNS TCP keepalive to messages sent over TCP.",
+    "grammar": "tcp-keepalive <boolean>;",
+    "name": "tcp-keepalive",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the amount of time (in milliseconds) that the server waits on an idle TCP connection before closing it, if the EDNS TCP keepalive option is in use.",
+    "grammar": "tcp-keepalive-timeout <integer>;",
+    "name": "tcp-keepalive-timeout",
+    "tags": [
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the listen-queue depth.",
+    "grammar": "tcp-listen-queue <integer>;",
+    "name": "tcp-listen-queue",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "server",
+      "view.server"
+    ],
+    "default": null,
+    "description": "Sets the transport protocol to TCP.",
+    "grammar": "tcp-only <boolean>;",
+    "name": "tcp-only",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the operating system's receive buffer size for TCP sockets.",
+    "grammar": "tcp-receive-buffer <integer>;",
+    "name": "tcp-receive-buffer",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the operating system's send buffer size for TCP sockets.",
+    "grammar": "tcp-send-buffer <integer>;",
+    "name": "tcp-send-buffer",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the Diffie-Hellman key used by the server to generate shared keys.",
+    "grammar": "tkey-dhkey <quoted_string> <integer>;",
+    "name": "tkey-dhkey",
+    "tags": [
+      "security"
+    ],
+    "types": [
+      "integer",
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the domain appended to the names of all shared keys generated with TKEY.",
+    "grammar": "tkey-domain <quoted_string>;",
+    "name": "tkey-domain",
+    "tags": [
+      "security"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the security credential for authentication keys requested by the GSS-TSIG protocol.",
+    "grammar": "tkey-gssapi-credential <quoted_string>;",
+    "name": "tkey-gssapi-credential",
+    "tags": [
+      "security"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the KRB5 keytab file to use for GSS-TSIG updates.",
+    "grammar": "tkey-gssapi-keytab <quoted_string>;",
+    "name": "tkey-gssapi-keytab",
+    "tags": [
+      "security"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "topmost"
+    ],
+    "default": null,
+    "description": "Configures a TLS connection.",
+    "grammar": "tls <string> {\n\tca-file <quoted_string>;\n\tcert-file <quoted_string>;\n\tciphers <string>;\n\tdhparam-file <quoted_string>;\n\tkey-file <quoted_string>;\n\tprefer-server-ciphers <boolean>;\n\tprotocols { <string>; ... };\n\tremote-hostname <quoted_string>;\n\tsession-tickets <boolean>;\n}; // may occur multiple times",
+    "name": "tls",
+    "tags": [
+      "security"
+    ],
+    "types": [
+      "boolean",
+      "quoted_string",
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the TCP port number the server uses to receive and send DNS-over-TLS protocol traffic.",
+    "grammar": "tls-port <integer>;",
+    "name": "tls-port",
+    "tags": [
+      "server",
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "server",
+      "view",
+      "view.server"
+    ],
+    "default": null,
+    "description": "Controls whether multiple records can be packed into a message during zone transfers.",
+    "grammar": "transfer-format ( many-answers | one-answer );",
+    "name": "transfer-format",
+    "tags": [
+      "transfer"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Limits the uncompressed size of DNS messages used in zone transfers over TCP.",
+    "grammar": "transfer-message-size <integer>;",
+    "name": "transfer-message-size",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "server",
+      "view",
+      "zone (mirror",
+      "secondary",
+      "stub)",
+      "view.server"
+    ],
+    "default": null,
+    "description": "Defines which local IPv4 address(es) are bound to TCP connections used to fetch zones transferred inbound by the server.",
+    "grammar": "transfer-source ( <ipv4_address> | * );",
+    "name": "transfer-source",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "ipv4_address"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "server",
+      "view",
+      "zone (mirror",
+      "secondary",
+      "stub)",
+      "view.server"
+    ],
+    "default": null,
+    "description": "Defines which local IPv6 address(es) are bound to TCP connections used to fetch zones transferred inbound by the server.",
+    "grammar": "transfer-source-v6 ( <ipv6_address> | * );",
+    "name": "transfer-source-v6",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "ipv6_address"
+    ]
+  },
+  {
+    "blocks": [
+      "server",
+      "view.server"
+    ],
+    "default": null,
+    "description": "Limits the number of concurrent inbound zone transfers from a server.",
+    "grammar": "transfers <integer>;",
+    "name": "transfers",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Limits the number of concurrent inbound zone transfers.",
+    "grammar": "transfers-in <integer>;",
+    "name": "transfers-in",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Limits the number of concurrent outbound zone transfers.",
+    "grammar": "transfers-out <integer>;",
+    "name": "transfers-out",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Limits the number of concurrent inbound zone transfers from a remote server.",
+    "grammar": "transfers-per-ns <integer>;",
+    "name": "transfers-per-ns",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Instructs named to send specially formed queries once per day to domains for which trust anchors have been configured.",
+    "grammar": "trust-anchor-telemetry <boolean>; // experimental",
+    "name": "trust-anchor-telemetry",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "topmost",
+      "view"
+    ],
+    "default": null,
+    "description": "Defines DNSSEC trust anchors.",
+    "grammar": "trust-anchors { <string> ( static-key | initial-key | static-ds | initial-ds ) <integer> <integer> <integer> <quoted_string>; ... }; // may occur multiple times",
+    "name": "trust-anchors",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "integer",
+      "quoted_string",
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "topmost",
+      "view"
+    ],
+    "default": null,
+    "description": "Deprecated, use trust-anchors.",
+    "grammar": "trusted-keys { <string> <integer> <integer> <integer> <quoted_string>; ... }; // may occur multiple times, deprecated",
+    "name": "trusted-keys",
+    "tags": [
+      "deprecated"
+    ],
+    "types": [
+      "integer",
+      "quoted_string",
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Specifies that BIND 9 should attempt to refresh a zone using TCP if UDP queries fail.",
+    "grammar": "try-tcp-refresh <boolean>;",
+    "name": "try-tcp-refresh",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "zone",
+      "view.zone"
+    ],
+    "default": null,
+    "description": "Specifies the kind of zone in a given configuration.",
+    "grammar": "zone <string> [ <class> ] {\n\ttype delegation-only;\n};",
+    "name": "type",
+    "tags": [
+      "zone"
+    ],
+    "types": [
+      "class",
+      "string"
+    ]
+  },
+  {
+    "blocks": [],
+    "default": null,
+    "description": "Enforces the delegation-only status of infrastructure zones (COM, NET, ORG, etc.).",
+    "grammar": null,
+    "name": "type delegation-only",
+    "tags": [
+      "deprecated"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [],
+    "default": null,
+    "description": "Contains forwarding statements that apply to queries within a given domain.",
+    "grammar": null,
+    "name": "type forward",
+    "tags": [
+      "zone"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [],
+    "default": null,
+    "description": "Contains the initial set of root name servers to be used at BIND 9 startup.",
+    "grammar": null,
+    "name": "type hint",
+    "tags": [
+      "zone"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [],
+    "default": null,
+    "description": "Contains a DNSSEC-validated duplicate of the main data for a zone.",
+    "grammar": null,
+    "name": "type mirror",
+    "tags": [
+      "zone"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [],
+    "default": null,
+    "description": "Contains the main copy of the data for a zone.",
+    "grammar": null,
+    "name": "type primary",
+    "tags": [
+      "zone"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [],
+    "default": null,
+    "description": "Contains information to answer queries when normal resolution would return NXDOMAIN.",
+    "grammar": null,
+    "name": "type redirect",
+    "tags": [
+      "zone"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [],
+    "default": null,
+    "description": "Contains a duplicate of the data for a zone that has been transferred from a primary server.",
+    "grammar": null,
+    "name": "type secondary",
+    "tags": [
+      "zone"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [],
+    "default": null,
+    "description": "Contains a duplicate of the NS records of a primary zone, but statically configured rather than transferred from a primary server.",
+    "grammar": null,
+    "name": "type static-stub",
+    "tags": [
+      "zone"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [],
+    "default": null,
+    "description": "Contains a duplicate of the NS records of a primary zone.",
+    "grammar": null,
+    "name": "type stub",
+    "tags": [
+      "zone"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the operating system's receive buffer size for UDP sockets.",
+    "grammar": "udp-receive-buffer <integer>;",
+    "name": "udp-receive-buffer",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Sets the operating system's send buffer size for UDP sockets.",
+    "grammar": "udp-send-buffer <integer>;",
+    "name": "udp-send-buffer",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "controls"
+    ],
+    "default": null,
+    "description": "Specifies a Unix domain socket as a control channel.",
+    "grammar": "unix <quoted_string> perm <integer> owner <integer> group <integer> [ keys { <string>; ... } ] [ read-only <boolean> ]; // may occur multiple times",
+    "name": "unix",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "boolean",
+      "integer",
+      "quoted_string",
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Specifies whether to check the KSK bit to determine how a key should be used, when generating RRSIGs for a secure zone.",
+    "grammar": "update-check-ksk <boolean>;",
+    "name": "update-check-ksk",
+    "tags": [
+      "dnssec",
+      "zone"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "zone (primary)"
+    ],
+    "default": null,
+    "description": "Sets fine-grained rules to allow or deny dynamic updates (DDNS), based on requester identity, updated content, etc.",
+    "grammar": "update-policy ( local | { ( deny | grant ) <string> ( 6to4-self | external | krb5-self | krb5-selfsub | krb5-subdomain | krb5-subdomain-self-rhs | ms-self | ms-selfsub | ms-subdomain | ms-subdomain-self-rhs | name | self | selfsub | selfwild | subdomain | tcp-self | wildcard | zonesub ) [ <string> ] <rrtypelist>; ... } );",
+    "name": "update-policy",
+    "tags": [
+      "transfer"
+    ],
+    "types": [
+      "rrtypelist",
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the maximum number of concurrent DNS UPDATE messages that can be processed by the server.",
+    "grammar": "update-quota <integer>;",
+    "name": "update-quota",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "secondary",
+      "stub)"
+    ],
+    "default": null,
+    "description": "Indicates whether alt-transfer-source and alt-transfer-source-v6 can be used.",
+    "grammar": "use-alt-transfer-source <boolean>; // deprecated",
+    "name": "use-alt-transfer-source",
+    "tags": [
+      "deprecated"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies a list of ports that are valid sources for UDP/IPv4 messages.",
+    "grammar": "use-v4-udp-ports { <portrange>; ... }; // deprecated",
+    "name": "use-v4-udp-ports",
+    "tags": [
+      "deprecated"
+    ],
+    "types": [
+      "portrange"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies a list of ports that are valid sources for UDP/IPv6 messages.",
+    "grammar": "use-v6-udp-ports { <portrange>; ... }; // deprecated",
+    "name": "use-v6-udp-ports",
+    "tags": [
+      "deprecated"
+    ],
+    "types": [
+      "portrange"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Indicates the number of milliseconds of preference to give to IPv6 name servers.",
+    "grammar": "v6-bias <integer>;",
+    "name": "v6-bias",
+    "tags": [
+      "server",
+      "query"
+    ],
+    "types": [
+      "integer"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies a list of domain names at and beneath which DNSSEC validation should not be performed.",
+    "grammar": "validate-except { <string>; ... };",
+    "name": "validate-except",
+    "tags": [
+      "dnssec"
+    ],
+    "types": [
+      "string"
+    ]
+  },
+  {
+    "blocks": [
+      "options"
+    ],
+    "default": null,
+    "description": "Specifies the version number of the server to return in response to a version.bind query.",
+    "grammar": "version ( <quoted_string> | none );",
+    "name": "version",
+    "tags": [
+      "server"
+    ],
+    "types": [
+      "quoted_string"
+    ]
+  },
+  {
+    "blocks": [
+      "topmost"
+    ],
+    "default": null,
+    "description": "Allows a name server to answer a DNS query differently depending on who is asking.",
+    "grammar": "view <string> [ <class> ] {\n\tallow-new-zones <boolean>;\n\tallow-notify { <address_match_element>; ... };\n\tallow-query { <address_match_element>; ... };\n\tallow-query-cache { <address_match_element>; ... };\n\tallow-query-cache-on { <address_match_element>; ... };\n\tallow-query-on { <address_match_element>; ... };\n\tallow-recursion { <address_match_element>; ... };\n\tallow-recursion-on { <address_match_element>; ... };\n\tallow-transfer [ port <integer> ] [ transport <string> ] { <address_match_element>; ... };\n\tallow-update { <address_match_element>; ... };\n\tallow-update-forwarding { <address_match_element>; ... };\n\talso-notify [ port <integer> ]  { ( <remote-servers> | <ipv4_address> [ port <integer> ] | <ipv6_address> [ port <integer> ] ) [ key <string> ] [ tls <string> ]; ... };\n\talt-transfer-source ( <ipv4_address> | * ); // deprecated\n\talt-transfer-source-v6 ( <ipv6_address> | * ); // deprecated\n\tattach-cache <string>;\n\tauth-nxdomain <boolean>;\n\tauto-dnssec ( allow | maintain | off ); // deprecated\n\tcatalog-zones { zone <string> [ default-primaries [ port <integer> ]  { ( <remote-servers> | <ipv4_address> [ port <integer> ] | <ipv6_address> [ port <integer> ] ) [ key <string> ] [ tls <string> ]; ... } ] [ zone-directory <quoted_string> ] [ in-memory <boolean> ] [ min-update-interval <duration> ]; ... };\n\tcheck-dup-records ( fail | warn | ignore );\n\tcheck-integrity <boolean>;\n\tcheck-mx ( fail | warn | ignore );\n\tcheck-mx-cname ( fail | warn | ignore );\n\tcheck-names ( primary | master | secondary | slave | response ) ( fail | warn | ignore ); // may occur multiple times\n\tcheck-sibling <boolean>;\n\tcheck-spf ( warn | ignore );\n\tcheck-srv-cname ( fail | warn | ignore );\n\tcheck-wildcard <boolean>;\n\tclients-per-query <integer>;\n\tdeny-answer-addresses { <address_match_element>; ... } [ except-from { <string>; ... } ];\n\tdeny-answer-aliases { <string>; ... } [ except-from { <string>; ... } ];\n\tdialup ( notify | notify-passive | passive | refresh | <boolean> );\n\tdisable-algorithms <string> { <string>; ... }; // may occur multiple times\n\tdisable-ds-digests <string> { <string>; ... }; // may occur multiple times\n\tdisable-empty-zone <string>; // may occur multiple times\n\tdlz <string> {\n\t\tdatabase <string>;\n\t\tsearch <boolean>;\n\t}; // may occur multiple times\n\tdns64 <netprefix> {\n\t\tbreak-dnssec <boolean>;\n\t\tclients { <address_match_element>; ... };\n\t\texclude { <address_match_element>; ... };\n\t\tmapped { <address_match_element>; ... };\n\t\trecursive-only <boolean>;\n\t\tsuffix <ipv6_address>;\n\t}; // may occur multiple times\n\tdns64-contact <string>;\n\tdns64-server <string>;\n\tdnskey-sig-validity <integer>;\n\tdnsrps-enable <boolean>;\n\tdnsrps-options { <unspecified-text> };\n\tdnssec-accept-expired <boolean>;\n\tdnssec-dnskey-kskonly <boolean>;\n\tdnssec-loadkeys-interval <integer>;\n\tdnssec-must-be-secure <string> <boolean>; // may occur multiple times\n\tdnssec-policy <string>;\n\tdnssec-secure-to-insecure <boolean>;\n\tdnssec-update-mode ( maintain | no-resign );\n\tdnssec-validation ( yes | no | auto );\n\tdnstap { ( all | auth | client | forwarder | resolver | update ) [ ( query | response ) ]; ... };\n\tdual-stack-servers [ port <integer> ] { ( <quoted_string> [ port <integer> ] | <ipv4_address> [ port <integer> ] | <ipv6_address> [ port <integer> ] ); ... };\n\tdyndb <string> <quoted_string> { <unspecified-text> }; // may occur multiple times\n\tedns-udp-size <integer>;\n\tempty-contact <string>;\n\tempty-server <string>;\n\tempty-zones-enable <boolean>;\n\tfetch-quota-params <integer> <fixedpoint> <fixedpoint> <fixedpoint>;\n\tfetches-per-server <integer> [ ( drop | fail ) ];\n\tfetches-per-zone <integer> [ ( drop | fail ) ];\n\tforward ( first | only );\n\tforwarders [ port <integer> ]  { ( <ipv4_address> | <ipv6_address> ) [ port <integer> ]; ... };\n\tglue-cache <boolean>; // deprecated\n\tipv4only-contact <string>;\n\tipv4only-enable <boolean>;\n\tipv4only-server <string>;\n\tixfr-from-differences ( primary | master | secondary | slave | <boolean> );\n\tkey <string> {\n\t\talgorithm <string>;\n\t\tsecret <string>;\n\t}; // may occur multiple times\n\tkey-directory <quoted_string>;\n\tlame-ttl <duration>;\n\tlmdb-mapsize <sizeval>;\n\tmanaged-keys { <string> ( static-key | initial-key | static-ds | initial-ds ) <integer> <integer> <integer> <quoted_string>; ... }; // may occur multiple times, deprecated\n\tmasterfile-format ( raw | text );\n\tmasterfile-style ( full | relative );\n\tmatch-clients { <address_match_element>; ... };\n\tmatch-destinations { <address_match_element>; ... };\n\tmatch-recursive-only <boolean>;\n\tmax-cache-size ( default | unlimited | <sizeval> | <percentage> );\n\tmax-cache-ttl <duration>;\n\tmax-clients-per-query <integer>;\n\tmax-ixfr-ratio ( unlimited | <percentage> );\n\tmax-journal-size ( default | unlimited | <sizeval> );\n\tmax-ncache-ttl <duration>;\n\tmax-records <integer>;\n\tmax-recursion-depth <integer>;\n\tmax-recursion-queries <integer>;\n\tmax-refresh-time <integer>;\n\tmax-retry-time <integer>;\n\tmax-stale-ttl <duration>;\n\tmax-transfer-idle-in <integer>;\n\tmax-transfer-idle-out <integer>;\n\tmax-transfer-time-in <integer>;\n\tmax-transfer-time-out <integer>;\n\tmax-udp-size <integer>;\n\tmax-zone-ttl ( unlimited | <duration> );\n\tmessage-compression <boolean>;\n\tmin-cache-ttl <duration>;\n\tmin-ncache-ttl <duration>;\n\tmin-refresh-time <integer>;\n\tmin-retry-time <integer>;\n\tminimal-any <boolean>;\n\tminimal-responses ( no-auth | no-auth-recursive | <boolean> );\n\tmulti-master <boolean>;\n\tnew-zones-directory <quoted_string>;\n\tno-case-compress { <address_match_element>; ... };\n\tnocookie-udp-size <integer>;\n\tnotify ( explicit | master-only | primary-only | <boolean> );\n\tnotify-delay <integer>;\n\tnotify-source ( <ipv4_address> | * );\n\tnotify-source-v6 ( <ipv6_address> | * );\n\tnotify-to-soa <boolean>;\n\tnsec3-test-zone <boolean>; // test only\n\tnta-lifetime <duration>;\n\tnta-recheck <duration>;\n\tnxdomain-redirect <string>;\n\tparental-source ( <ipv4_address> | * );\n\tparental-source-v6 ( <ipv6_address> | * );\n\tplugin ( query ) <string> [ { <unspecified-text> } ]; // may occur multiple times\n\tpreferred-glue <string>;\n\tprefetch <integer> [ <integer> ];\n\tprovide-ixfr <boolean>;\n\tqname-minimization ( strict | relaxed | disabled | off );\n\tquery-source [ address ] ( <ipv4_address> | * );\n\tquery-source-v6 [ address ] ( <ipv6_address> | * );\n\trate-limit {\n\t\tall-per-second <integer>;\n\t\terrors-per-second <integer>;\n\t\texempt-clients { <address_match_element>; ... };\n\t\tipv4-prefix-length <integer>;\n\t\tipv6-prefix-length <integer>;\n\t\tlog-only <boolean>;\n\t\tmax-table-size <integer>;\n\t\tmin-table-size <integer>;\n\t\tnodata-per-second <integer>;\n\t\tnxdomains-per-second <integer>;\n\t\tqps-scale <integer>;\n\t\treferrals-per-second <integer>;\n\t\tresponses-per-second <integer>;\n\t\tslip <integer>;\n\t\twindow <integer>;\n\t};\n\trecursion <boolean>;\n\trequest-expire <boolean>;\n\trequest-ixfr <boolean>;\n\trequest-nsid <boolean>;\n\trequire-server-cookie <boolean>;\n\tresolver-nonbackoff-tries <integer>;\n\tresolver-query-timeout <integer>;\n\tresolver-retry-interval <integer>;\n\tresponse-padding { <address_match_element>; ... } block-size <integer>;\n\tresponse-policy { zone <string> [ add-soa <boolean> ] [ log <boolean> ] [ max-policy-ttl <duration> ] [ min-update-interval <duration> ] [ policy ( cname | disabled | drop | given | no-op | nodata | nxdomain | passthru | tcp-only <quoted_string> ) ] [ recursive-only <boolean> ] [ nsip-enable <boolean> ] [ nsdname-enable <boolean> ]; ... } [ add-soa <boolean> ] [ break-dnssec <boolean> ] [ max-policy-ttl <duration> ] [ min-update-interval <duration> ] [ min-ns-dots <integer> ] [ nsip-wait-recurse <boolean> ] [ nsdname-wait-recurse <boolean> ] [ qname-wait-recurse <boolean> ] [ recursive-only <boolean> ] [ nsip-enable <boolean> ] [ nsdname-enable <boolean> ] [ dnsrps-enable <boolean> ] [ dnsrps-options { <unspecified-text> } ];\n\troot-delegation-only [ exclude { <string>; ... } ]; // deprecated\n\troot-key-sentinel <boolean>;\n\trrset-order { [ class <string> ] [ type <string> ] [ name <quoted_string> ] <string> <string>; ... };\n\tsend-cookie <boolean>;\n\tserial-update-method ( date | increment | unixtime );\n\tserver <netprefix> {\n\t\tbogus <boolean>;\n\t\tedns <boolean>;\n\t\tedns-udp-size <integer>;\n\t\tedns-version <integer>;\n\t\tkeys <server_key>;\n\t\tmax-udp-size <integer>;\n\t\tnotify-source ( <ipv4_address> | * );\n\t\tnotify-source-v6 ( <ipv6_address> | * );\n\t\tpadding <integer>;\n\t\tprovide-ixfr <boolean>;\n\t\tquery-source [ address ] ( <ipv4_address> | * );\n\t\tquery-source-v6 [ address ] ( <ipv6_address> | * );\n\t\trequest-expire <boolean>;\n\t\trequest-ixfr <boolean>;\n\t\trequest-nsid <boolean>;\n\t\tsend-cookie <boolean>;\n\t\ttcp-keepalive <boolean>;\n\t\ttcp-only <boolean>;\n\t\ttransfer-format ( many-answers | one-answer );\n\t\ttransfer-source ( <ipv4_address> | * );\n\t\ttransfer-source-v6 ( <ipv6_address> | * );\n\t\ttransfers <integer>;\n\t}; // may occur multiple times\n\tservfail-ttl <duration>;\n\tsig-signing-nodes <integer>;\n\tsig-signing-signatures <integer>;\n\tsig-signing-type <integer>;\n\tsig-validity-interval <integer> [ <integer> ];\n\tsortlist { <address_match_element>; ... };\n\tstale-answer-client-timeout ( disabled | off | <integer> );\n\tstale-answer-enable <boolean>;\n\tstale-answer-ttl <duration>;\n\tstale-cache-enable <boolean>;\n\tstale-refresh-time <duration>;\n\tsuppress-initial-notify <boolean>; // obsolete\n\tsynth-from-dnssec <boolean>;\n\ttransfer-format ( many-answers | one-answer );\n\ttransfer-source ( <ipv4_address> | * );\n\ttransfer-source-v6 ( <ipv6_address> | * );\n\ttrust-anchor-telemetry <boolean>; // experimental\n\ttrust-anchors { <string> ( static-key | initial-key | static-ds | initial-ds ) <integer> <integer> <integer> <quoted_string>; ... }; // may occur multiple times\n\ttrusted-keys { <string> <integer> <integer> <integer> <quoted_string>; ... }; // may occur multiple times, deprecated\n\ttry-tcp-refresh <boolean>;\n\tupdate-check-ksk <boolean>;\n\tuse-alt-transfer-source <boolean>; // deprecated\n\tv6-bias <integer>;\n\tvalidate-except { <string>; ... };\n\tzero-no-soa-ttl <boolean>;\n\tzero-no-soa-ttl-cache <boolean>;\n \tzone <string> [ <class> ] {\n\t\tin-view <string>;\n\t};\n\tzone <string> [ <class> ] {\n\t\ttype delegation-only;\n\t};\n\tzone <string> [ <class> ] {\n\t\ttype forward;\n\t\tdelegation-only <boolean>; // deprecated\n\t\tforward ( first | only );\n\t\tforwarders [ port <integer> ]  { ( <ipv4_address> | <ipv6_address> ) [ port <integer> ]; ... };\n\t};\n\tzone <string> [ <class> ] {\n\t\ttype hint;\n\t\tcheck-names ( fail | warn | ignore );\n\t\tdelegation-only <boolean>; // deprecated\n\t\tfile <quoted_string>;\n\t};\n\tzone <string> [ <class> ] {\n\t\ttype mirror;\n\t\tallow-notify { <address_match_element>; ... };\n\t\tallow-query { <address_match_element>; ... };\n\t\tallow-query-on { <address_match_element>; ... };\n\t\tallow-transfer [ port <integer> ] [ transport <string> ] { <address_match_element>; ... };\n\t\tallow-update-forwarding { <address_match_element>; ... };\n\t\talso-notify [ port <integer> ]  { ( <remote-servers> | <ipv4_address> [ port <integer> ] | <ipv6_address> [ port <integer> ] ) [ key <string> ] [ tls <string> ]; ... };\n\t\talt-transfer-source ( <ipv4_address> | * ); // deprecated\n\t\talt-transfer-source-v6 ( <ipv6_address> | * ); // deprecated\n\t\tcheck-names ( fail | warn | ignore );\n\t\tdatabase <string>;\n\t\tfile <quoted_string>;\n\t\tixfr-from-differences <boolean>;\n\t\tjournal <quoted_string>;\n\t\tmasterfile-format ( raw | text );\n\t\tmasterfile-style ( full | relative );\n\t\tmax-ixfr-ratio ( unlimited | <percentage> );\n\t\tmax-journal-size ( default | unlimited | <sizeval> );\n\t\tmax-records <integer>;\n\t\tmax-refresh-time <integer>;\n\t\tmax-retry-time <integer>;\n\t\tmax-transfer-idle-in <integer>;\n\t\tmax-transfer-idle-out <integer>;\n\t\tmax-transfer-time-in <integer>;\n\t\tmax-transfer-time-out <integer>;\n\t\tmin-refresh-time <integer>;\n\t\tmin-retry-time <integer>;\n\t\tmulti-master <boolean>;\n\t\tnotify ( explicit | master-only | primary-only | <boolean> );\n\t\tnotify-delay <integer>;\n\t\tnotify-source ( <ipv4_address> | * );\n\t\tnotify-source-v6 ( <ipv6_address> | * );\n\t\tprimaries [ port <integer> ]  { ( <remote-servers> | <ipv4_address> [ port <integer> ] | <ipv6_address> [ port <integer> ] ) [ key <string> ] [ tls <string> ]; ... };\n\t\trequest-expire <boolean>;\n\t\trequest-ixfr <boolean>;\n\t\ttransfer-source ( <ipv4_address> | * );\n\t\ttransfer-source-v6 ( <ipv6_address> | * );\n\t\ttry-tcp-refresh <boolean>;\n\t\tuse-alt-transfer-source <boolean>; // deprecated\n\t\tzero-no-soa-ttl <boolean>;\n\t\tzone-statistics ( full | terse | none | <boolean> );\n\t};\n\tzone <string> [ <class> ] {\n\t\ttype primary;\n\t\tallow-query { <address_match_element>; ... };\n\t\tallow-query-on { <address_match_element>; ... };\n\t\tallow-transfer [ port <integer> ] [ transport <string> ] { <address_match_element>; ... };\n\t\tallow-update { <address_match_element>; ... };\n\t\talso-notify [ port <integer> ]  { ( <remote-servers> | <ipv4_address> [ port <integer> ] | <ipv6_address> [ port <integer> ] ) [ key <string> ] [ tls <string> ]; ... };\n\t\talt-transfer-source ( <ipv4_address> | * ); // deprecated\n\t\talt-transfer-source-v6 ( <ipv6_address> | * ); // deprecated\n\t\tauto-dnssec ( allow | maintain | off ); // deprecated\n\t\tcheck-dup-records ( fail | warn | ignore );\n\t\tcheck-integrity <boolean>;\n\t\tcheck-mx ( fail | warn | ignore );\n\t\tcheck-mx-cname ( fail | warn | ignore );\n\t\tcheck-names ( fail | warn | ignore );\n\t\tcheck-sibling <boolean>;\n\t\tcheck-spf ( warn | ignore );\n\t\tcheck-srv-cname ( fail | warn | ignore );\n\t\tcheck-wildcard <boolean>;\n\t\tdatabase <string>;\n\t\tdialup ( notify | notify-passive | passive | refresh | <boolean> );\n\t\tdlz <string>;\n\t\tdnskey-sig-validity <integer>;\n\t\tdnssec-dnskey-kskonly <boolean>;\n\t\tdnssec-loadkeys-interval <integer>;\n\t\tdnssec-policy <string>;\n\t\tdnssec-secure-to-insecure <boolean>;\n\t\tdnssec-update-mode ( maintain | no-resign );\n\t\tfile <quoted_string>;\n\t\tforward ( first | only );\n\t\tforwarders [ port <integer> ]  { ( <ipv4_address> | <ipv6_address> ) [ port <integer> ]; ... };\n\t\tinline-signing <boolean>;\n\t\tixfr-from-differences <boolean>;\n\t\tjournal <quoted_string>;\n\t\tkey-directory <quoted_string>;\n\t\tmasterfile-format ( raw | text );\n\t\tmasterfile-style ( full | relative );\n\t\tmax-ixfr-ratio ( unlimited | <percentage> );\n\t\tmax-journal-size ( default | unlimited | <sizeval> );\n\t\tmax-records <integer>;\n\t\tmax-transfer-idle-out <integer>;\n\t\tmax-transfer-time-out <integer>;\n\t\tmax-zone-ttl ( unlimited | <duration> );\n\t\tnotify ( explicit | master-only | primary-only | <boolean> );\n\t\tnotify-delay <integer>;\n\t\tnotify-source ( <ipv4_address> | * );\n\t\tnotify-source-v6 ( <ipv6_address> | * );\n\t\tnotify-to-soa <boolean>;\n\t\tnsec3-test-zone <boolean>; // test only\n\t\tparental-agents [ port <integer> ]  { ( <remote-servers> | <ipv4_address> [ port <integer> ] | <ipv6_address> [ port <integer> ] ) [ key <string> ] [ tls <string> ]; ... };\n\t\tparental-source ( <ipv4_address> | * );\n\t\tparental-source-v6 ( <ipv6_address> | * );\n\t\tserial-update-method ( date | increment | unixtime );\n\t\tsig-signing-nodes <integer>;\n\t\tsig-signing-signatures <integer>;\n\t\tsig-signing-type <integer>;\n\t\tsig-validity-interval <integer> [ <integer> ];\n\t\tupdate-check-ksk <boolean>;\n\t\tupdate-policy ( local | { ( deny | grant ) <string> ( 6to4-self | external | krb5-self | krb5-selfsub | krb5-subdomain | krb5-subdomain-self-rhs | ms-self | ms-selfsub | ms-subdomain | ms-subdomain-self-rhs | name | self | selfsub | selfwild | subdomain | tcp-self | wildcard | zonesub ) [ <string> ] <rrtypelist>; ... } );\n\t\tzero-no-soa-ttl <boolean>;\n\t\tzone-statistics ( full | terse | none | <boolean> );\n\t};\n\tzone <string> [ <class> ] {\n\t\ttype redirect;\n\t\tallow-query { <address_match_element>; ... };\n\t\tallow-query-on { <address_match_element>; ... };\n\t\tdlz <string>;\n\t\tfile <quoted_string>;\n\t\tmasterfile-format ( raw | text );\n\t\tmasterfile-style ( full | relative );\n\t\tmax-records <integer>;\n\t\tmax-zone-ttl ( unlimited | <duration> );\n\t\tprimaries [ port <integer> ]  { ( <remote-servers> | <ipv4_address> [ port <integer> ] | <ipv6_address> [ port <integer> ] ) [ key <string> ] [ tls <string> ]; ... };\n\t\tzone-statistics ( full | terse | none | <boolean> );\n\t};\n\tzone <string> [ <class> ] {\n\t\ttype secondary;\n\t\tallow-notify { <address_match_element>; ... };\n\t\tallow-query { <address_match_element>; ... };\n\t\tallow-query-on { <address_match_element>; ... };\n\t\tallow-transfer [ port <integer> ] [ transport <string> ] { <address_match_element>; ... };\n\t\tallow-update-forwarding { <address_match_element>; ... };\n\t\talso-notify [ port <integer> ]  { ( <remote-servers> | <ipv4_address> [ port <integer> ] | <ipv6_address> [ port <integer> ] ) [ key <string> ] [ tls <string> ]; ... };\n\t\talt-transfer-source ( <ipv4_address> | * ); // deprecated\n\t\talt-transfer-source-v6 ( <ipv6_address> | * ); // deprecated\n\t\tauto-dnssec ( allow | maintain | off ); // deprecated\n\t\tcheck-names ( fail | warn | ignore );\n\t\tdatabase <string>;\n\t\tdialup ( notify | notify-passive | passive | refresh | <boolean> );\n\t\tdlz <string>;\n\t\tdnskey-sig-validity <integer>;\n\t\tdnssec-dnskey-kskonly <boolean>;\n\t\tdnssec-loadkeys-interval <integer>;\n\t\tdnssec-policy <string>;\n\t\tdnssec-update-mode ( maintain | no-resign );\n\t\tfile <quoted_string>;\n\t\tforward ( first | only );\n\t\tforwarders [ port <integer> ]  { ( <ipv4_address> | <ipv6_address> ) [ port <integer> ]; ... };\n\t\tinline-signing <boolean>;\n\t\tixfr-from-differences <boolean>;\n\t\tjournal <quoted_string>;\n\t\tkey-directory <quoted_string>;\n\t\tmasterfile-format ( raw | text );\n\t\tmasterfile-style ( full | relative );\n\t\tmax-ixfr-ratio ( unlimited | <percentage> );\n\t\tmax-journal-size ( default | unlimited | <sizeval> );\n\t\tmax-records <integer>;\n\t\tmax-refresh-time <integer>;\n\t\tmax-retry-time <integer>;\n\t\tmax-transfer-idle-in <integer>;\n\t\tmax-transfer-idle-out <integer>;\n\t\tmax-transfer-time-in <integer>;\n\t\tmax-transfer-time-out <integer>;\n\t\tmin-refresh-time <integer>;\n\t\tmin-retry-time <integer>;\n\t\tmulti-master <boolean>;\n\t\tnotify ( explicit | master-only | primary-only | <boolean> );\n\t\tnotify-delay <integer>;\n\t\tnotify-source ( <ipv4_address> | * );\n\t\tnotify-source-v6 ( <ipv6_address> | * );\n\t\tnotify-to-soa <boolean>;\n\t\tnsec3-test-zone <boolean>; // test only\n\t\tparental-agents [ port <integer> ]  { ( <remote-servers> | <ipv4_address> [ port <integer> ] | <ipv6_address> [ port <integer> ] ) [ key <string> ] [ tls <string> ]; ... };\n\t\tparental-source ( <ipv4_address> | * );\n\t\tparental-source-v6 ( <ipv6_address> | * );\n\t\tprimaries [ port <integer> ]  { ( <remote-servers> | <ipv4_address> [ port <integer> ] | <ipv6_address> [ port <integer> ] ) [ key <string> ] [ tls <string> ]; ... };\n\t\trequest-expire <boolean>;\n\t\trequest-ixfr <boolean>;\n\t\tsig-signing-nodes <integer>;\n\t\tsig-signing-signatures <integer>;\n\t\tsig-signing-type <integer>;\n\t\tsig-validity-interval <integer> [ <integer> ];\n\t\ttransfer-source ( <ipv4_address> | * );\n\t\ttransfer-source-v6 ( <ipv6_address> | * );\n\t\ttry-tcp-refresh <boolean>;\n\t\tupdate-check-ksk <boolean>;\n\t\tuse-alt-transfer-source <boolean>; // deprecated\n\t\tzero-no-soa-ttl <boolean>;\n\t\tzone-statistics ( full | terse | none | <boolean> );\n\t};\n\tzone <string> [ <class> ] {\n\t\ttype static-stub;\n\t\tallow-query { <address_match_element>; ... };\n\t\tallow-query-on { <address_match_element>; ... };\n\t\tforward ( first | only );\n\t\tforwarders [ port <integer> ]  { ( <ipv4_address> | <ipv6_address> ) [ port <integer> ]; ... };\n\t\tmax-records <integer>;\n\t\tserver-addresses { ( <ipv4_address> | <ipv6_address> ); ... };\n\t\tserver-names { <string>; ... };\n\t\tzone-statistics ( full | terse | none | <boolean> );\n\t};\n\tzone <string> [ <class> ] {\n\t\ttype stub;\n\t\tallow-query { <address_match_element>; ... };\n\t\tallow-query-on { <address_match_element>; ... };\n\t\tcheck-names ( fail | warn | ignore );\n\t\tdatabase <string>;\n\t\tdelegation-only <boolean>; // deprecated\n\t\tdialup ( notify | notify-passive | passive | refresh | <boolean> );\n\t\tfile <quoted_string>;\n\t\tforward ( first | only );\n\t\tforwarders [ port <integer> ]  { ( <ipv4_address> | <ipv6_address> ) [ port <integer> ]; ... };\n\t\tmasterfile-format ( raw | text );\n\t\tmasterfile-style ( full | relative );\n\t\tmax-records <integer>;\n\t\tmax-refresh-time <integer>;\n\t\tmax-retry-time <integer>;\n\t\tmax-transfer-idle-in <integer>;\n\t\tmax-transfer-time-in <integer>;\n\t\tmin-refresh-time <integer>;\n\t\tmin-retry-time <integer>;\n\t\tmulti-master <boolean>;\n\t\tprimaries [ port <integer> ]  { ( <remote-servers> | <ipv4_address> [ port <integer> ] | <ipv6_address> [ port <integer> ] ) [ key <string> ] [ tls <string> ]; ... };\n\t\ttransfer-source ( <ipv4_address> | * );\n\t\ttransfer-source-v6 ( <ipv6_address> | * );\n\t\tuse-alt-transfer-source <boolean>; // deprecated\n\t\tzone-statistics ( full | terse | none | <boolean> );\n\t};\n\n\tzone-statistics ( full | terse | none | <boolean> );\n}; // may occur multiple times",
+    "name": "view",
+    "tags": [
+      "view"
+    ],
+    "types": [
+      "address_match_element",
+      "boolean",
+      "class",
+      "duration",
+      "fixedpoint",
+      "integer",
+      "ipv4_address",
+      "ipv6_address",
+      "netprefix",
+      "percentage",
+      "quoted_string",
+      "remote-servers",
+      "rrtypelist",
+      "server_key",
+      "sizeval",
+      "string",
+      "unspecified-text"
+    ]
+  },
+  {
+    "blocks": [],
+    "default": null,
+    "description": "Specifies the length of time during which responses are tracked.",
+    "grammar": null,
+    "name": "window",
+    "tags": [
+      "query"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "primary",
+      "secondary)"
+    ],
+    "default": null,
+    "description": "Specifies whether to set the time to live (TTL) of the SOA record to zero, when returning authoritative negative responses to SOA queries.",
+    "grammar": "zero-no-soa-ttl <boolean>;",
+    "name": "zero-no-soa-ttl",
+    "tags": [
+      "zone",
+      "server",
+      "query"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view"
+    ],
+    "default": null,
+    "description": "Sets the time to live (TTL) to zero when caching a negative response to an SOA query.",
+    "grammar": "zero-no-soa-ttl-cache <boolean>;",
+    "name": "zero-no-soa-ttl-cache",
+    "tags": [
+      "zone",
+      "server",
+      "query"
+    ],
+    "types": [
+      "boolean"
+    ]
+  },
+  {
+    "blocks": [
+      "topmost",
+      "view"
+    ],
+    "default": null,
+    "description": "Specifies the zone in a BIND 9 configuration.",
+    "grammar": null,
+    "name": "zone",
+    "tags": [
+      "zone"
+    ],
+    "types": []
+  },
+  {
+    "blocks": [
+      "dnssec-policy"
+    ],
+    "default": null,
+    "description": "Sets the propagation delay from the time a zone is first updated to when the new version of the zone is served by all secondary servers.",
+    "grammar": "zone-propagation-delay <duration>;",
+    "name": "zone-propagation-delay",
+    "tags": [
+      "dnssec",
+      "zone"
+    ],
+    "types": [
+      "duration"
+    ]
+  },
+  {
+    "blocks": [
+      "options",
+      "view",
+      "zone (mirror",
+      "primary",
+      "redirect",
+      "secondary",
+      "static-stub",
+      "stub)"
+    ],
+    "default": null,
+    "description": "Controls the level of statistics gathered for all zones.",
+    "grammar": "zone-statistics ( full | terse | none | <boolean> );",
+    "name": "zone-statistics",
+    "tags": [
+      "zone",
+      "logging"
+    ],
+    "types": [
+      "boolean"
+    ]
+  }
+]
