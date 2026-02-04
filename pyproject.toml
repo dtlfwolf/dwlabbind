@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dwlabbind"
+version = "0.0.0"
+description = "BIND statement classes and config parser"
+requires-python = ">=3.10"
+
+[project.scripts]
+dwlabbind = "dwlabbind.runner:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
