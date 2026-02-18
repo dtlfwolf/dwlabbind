@@ -21,10 +21,10 @@ handlers:
 
 loggers:
   dwlabbind.bind_conf:
-    level: DEBUG
+    level: INFO
     handlers: [console, file_handler]
     propagate: no
 
 root:
-  level: DEBUG
+  level: INFO
   handlers: [console, file_handler]
