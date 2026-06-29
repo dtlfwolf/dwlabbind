@@ -46,6 +46,7 @@ PACKAGE_MANAGED_ZONE_BASENAMES = {
 
 class BindOperationError(RuntimeError):
     def __init__(self, code: str, message: str, hint: Optional[str] = None, status: int = 400) -> None:
+        """Initialize the instance."""
         super().__init__(message)
         self.code = code
         self.hint = hint
@@ -53,6 +54,7 @@ class BindOperationError(RuntimeError):
 
 
 def _statement_class_for_name(name: str):
+    """Internal helper."""
     function_name = sys._getframe().f_code.co_name
     function_name=__PACKAGE_NAME__+"."+function_name
     logger.debug("Entering function "+str(function_name))
@@ -67,6 +69,7 @@ def _statement_class_for_name(name: str):
     
 
 def _extract_statement_body(text: str) -> str:
+    """Internal helper."""
     function_name = sys._getframe().f_code.co_name
     function_name=__PACKAGE_NAME__+"."+function_name
     logger.debug("Entering function "+str(function_name))
@@ -77,6 +80,7 @@ def _extract_statement_body(text: str) -> str:
 
 
 def _split_statement_texts(body: str) -> list[str]:
+    """Internal helper."""
     function_name = sys._getframe().f_code.co_name
     function_name=__PACKAGE_NAME__+"."+function_name
     logger.debug("Entering function "+str(function_name))
@@ -118,6 +122,7 @@ def _split_statement_texts(body: str) -> list[str]:
 
 
 def _find_outer_block_start(text: str) -> int:
+    """Internal helper."""
     function_name = sys._getframe().f_code.co_name
     function_name=__PACKAGE_NAME__+"."+function_name
     logger.debug("Entering function "+str(function_name))
@@ -142,6 +147,7 @@ def _find_outer_block_start(text: str) -> int:
 
 
 def _collapse_singletons(value: object) -> object:
+    """Internal helper."""
     if isinstance(value, list):
         mapped = [_collapse_singletons(item) for item in value]
         if len(mapped) == 1:
@@ -160,6 +166,7 @@ class Statement:
         value: Optional[str] = None,
         statements: Optional[List[object]] = None,   
     ) -> None:
+        """Initialize the instance."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -171,6 +178,7 @@ class Statement:
         logger.debug("Leaving function "+str(function_name))
 
     def set_value(self, value: Optional[str]) -> None:
+        """Set value."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -179,6 +187,7 @@ class Statement:
 
         logger.debug("Leaving function "+str(function_name))
     def grammar_check(self, text: str) -> bool:
+        """Grammar check."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -189,6 +198,7 @@ class Statement:
         return True
     @classmethod
     def allowed_statements(cls) -> List[str]:
+        """Allowed statements."""
         function_name = sys._getframe().f_code.co_name
         class_name="Statement"
         function_name=class_name+"."+function_name
@@ -197,6 +207,7 @@ class Statement:
         return list(cls.ALLOWED_STATEMENTS)
 
     def _statement_name(self, statement: object) -> str:
+        """Internal helper."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -211,6 +222,7 @@ class Statement:
         return str(name)
 
     def _ensure_allowed(self, name: str) -> None:
+        """Internal helper."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -220,6 +232,7 @@ class Statement:
 
         logger.debug("Leaving function "+str(function_name))
     def insert_statement(self, statement: object) -> None:
+        """Insert statement."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -230,6 +243,7 @@ class Statement:
 
         logger.debug("Leaving function "+str(function_name))
     def update_statement(self, statement: object, index: int = 0) -> None:
+        """Update statement."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -242,6 +256,7 @@ class Statement:
 
         logger.debug("Leaving function "+str(function_name))
     def delete_statement(self, statement: object, index: int = 0) -> None:
+        """Delete statement."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -257,6 +272,7 @@ class Statement:
 
     @classmethod
     def fromText(cls, text: str):
+        """From Text."""
         function_name = sys._getframe().f_code.co_name
         class_name="Statement"
         function_name=class_name+"."+function_name
@@ -294,6 +310,7 @@ class Statement:
         return cls(value=value, statements=statements)
 
     def to_dict(self) -> dict:
+        """Serialize the current object into a plain dict payload."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -320,6 +337,7 @@ class Statement:
         return payload
 
     def toText(self, indent: int = 0, indent_step: int = 4) -> str:
+        """To Text."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -351,6 +369,7 @@ class Statement:
 
     @classmethod
     def from_dict(cls, data: dict) -> "Statement":
+        """From dict."""
         function_name = sys._getframe().f_code.co_name
         class_name="Statement"
         function_name=class_name+"."+function_name
@@ -1878,6 +1897,7 @@ class Zone (Statement):
 
     @classmethod
     def fromText(cls, text: str):
+        """From Text."""
         # If called on a concrete subtype, use base Statement parsing directly.
         if cls is not Zone:
             return Statement.fromText.__func__(cls, text)
@@ -2197,19 +2217,23 @@ class ZoneFileStatement:
     ALLOWED_STATEMENTS: List[str] = []
 
     def __init__(self, value: str, statements: Optional[List[object]] = None) -> None:
+        """Initialize the instance."""
         self.value = value
         self._statements = statements or []
 
     @classmethod
     def allowed_statements(cls) -> List[str]:
+        """Allowed statements."""
         return list(cls.ALLOWED_STATEMENTS)
 
     @classmethod
     def fromText(cls, text: str) -> "ZoneFileStatement":
+        """From Text."""
         cleaned = (text or "").rstrip()
         return cls(value=cleaned)
 
     def to_dict(self) -> dict:
+        """Serialize the current object into a plain dict payload."""
         payload = {
             "statement": self.statement_name,
             "value": self.value,
@@ -2231,6 +2255,7 @@ class ZoneDirectiveTtl(ZoneFileStatement):
 
     @classmethod
     def fromText(cls, text: str) -> "ZoneDirectiveTtl":
+        """From Text."""
         cleaned = (text or "").strip()
         value = cleaned
         upper = cleaned.upper()
@@ -2269,6 +2294,7 @@ class ZoneResourceRecord(ZoneFileStatement):
         rdata: Optional[str] = None,
         statements: Optional[List[object]] = None,
     ) -> None:
+        """Initialize the instance."""
         super().__init__(value=value, statements=statements)
         self.owner = owner
         self.ttl = ttl
@@ -2278,14 +2304,17 @@ class ZoneResourceRecord(ZoneFileStatement):
 
     @classmethod
     def _is_ttl_token(cls, token: str) -> bool:
+        """Internal helper."""
         return bool(re.fullmatch(r"[0-9]+[wdhmsWDHMS]*", token))
 
     @classmethod
     def _tokenize(cls, text: str) -> List[str]:
+        """Internal helper."""
         return text.replace("(", " ").replace(")", " ").split()
 
     @classmethod
     def fromText(cls, text: str) -> "ZoneResourceRecord":
+        """From Text."""
         # Keep leading whitespace: it carries "owner omitted" semantics in zone files.
         cleaned = (text or "").rstrip()
         tokens = cls._tokenize(cleaned)
@@ -2352,6 +2381,7 @@ class ZoneResourceRecord(ZoneFileStatement):
         )
 
     def to_dict(self) -> dict:
+        """Serialize the current object into a plain dict payload."""
         payload = super().to_dict()
         if self.owner is not None:
             payload["owner"] = self.owner
@@ -2385,6 +2415,7 @@ class ZoneResourceRecordSOA(ZoneResourceRecord):
         expire: Optional[str] = None,
         minimum: Optional[str] = None,
     ) -> None:
+        """Initialize the instance."""
         super().__init__(
             value=value,
             owner=owner,
@@ -2411,6 +2442,7 @@ class ZoneResourceRecordSOA(ZoneResourceRecord):
         rr_type: str,
         rdata_tokens: List[str],
     ) -> "ZoneResourceRecordSOA":
+        """From components."""
         mname = rname = serial = refresh = retry = expire = minimum = None
         if len(rdata_tokens) >= 7:
             mname = rdata_tokens[0]
@@ -2438,6 +2470,7 @@ class ZoneResourceRecordSOA(ZoneResourceRecord):
         )
 
     def to_dict(self) -> dict:
+        """Serialize the current object into a plain dict payload."""
         payload = super().to_dict()
         payload.update(
             {
@@ -2463,6 +2496,7 @@ class ZoneFileStatementScanner:
     }
 
     def __init__(self, text: str) -> None:
+        """Initialize the instance."""
         self._text = text or ""
         self._statements: List[ZoneFileStatement] = []
         for raw in self._scan_statements(self._text):
@@ -2472,9 +2506,11 @@ class ZoneFileStatementScanner:
 
     @property
     def statements(self) -> List[ZoneFileStatement]:
+        """Statements."""
         return self._statements
 
     def _scan_statements(self, text: str) -> List[str]:
+        """Internal helper."""
         results: List[str] = []
         current: List[str] = []
         paren_depth = 0
@@ -2505,6 +2541,7 @@ class ZoneFileStatementScanner:
         return results
 
     def _strip_zone_comment(self, line: str) -> str:
+        """Internal helper."""
         in_quote = False
         escape = False
         out: List[str] = []
@@ -2527,6 +2564,7 @@ class ZoneFileStatementScanner:
         return "".join(out)
 
     def _statement_from_text(self, statement_text: str) -> Optional[ZoneFileStatement]:
+        """Internal helper."""
         if not statement_text:
             return None
         stripped = statement_text.lstrip()
@@ -2540,6 +2578,44 @@ class ZoneFileStatementScanner:
             return None
         return ZoneResourceRecord.fromText(statement_text)
 
+
+class BindFixedHostsFile:
+    def __init__(
+        self,
+        file_path: str,
+        statements: Optional[List[ZoneFileStatement]] = None,
+    ) -> None:
+        """Model one generated FixedHosts include file and its RR statements."""
+        self.file_path = file_path
+        self.statements: List[ZoneFileStatement] = list(statements or [])
+
+    def set_file_path(self, file_path: str) -> None:
+        """Set file path."""
+        self.file_path = file_path
+
+    def to_dict(self) -> dict:
+        """Serialize the current object into a plain dict payload."""
+        return {
+            "file_path": self.file_path,
+            "statements": [item.to_dict() for item in self.statements],
+        }
+
+    def load_from_disk(self) -> None:
+        """Load and append existing statements from disk, if file exists."""
+        if not self.file_path or not os.path.exists(self.file_path):
+            return
+        try:
+            with open(self.file_path, "r", encoding="utf-8") as handle:
+                raw = handle.read()
+        except Exception:
+            return
+        scanner = ZoneFileStatementScanner(text=raw)
+        for statement in scanner.statements:
+            if isinstance(statement, ZoneDirectiveInclude):
+                continue
+            self.statements.append(statement)
+
+
 class BindZoneFile:
     NON_RR_ZONE_TYPES = {"forward", "delegation-only", "in-view"}
 
@@ -2552,18 +2628,41 @@ class BindZoneFile:
         ddns_enabled: bool = False,
         externally_managed: bool = False,
     ) -> None:
+        """Initialize the instance."""
         self.zone_name = zone_name
         self.file_path = file_path
         self.zone_file_statements = statements or []
         self.zone_type = (zone_type or "").strip().lower()
         self.ddns_enabled = ddns_enabled
         self.externally_managed = externally_managed
-        self.fixed_hosts_file_path = f"{self.file_path}.FixedHosts"
-        self.fixed_host_statements: List[ZoneFileStatement] = []
+        self.fixed_hosts = BindFixedHostsFile(file_path=f"{self.file_path}.FixedHosts")
         self._fixed_hosts_insert_index: Optional[int] = None
         self._split_fixed_hosts()
+        self._load_existing_fixed_hosts_file()
+        self._dedupe_fixed_host_statements()
+
+    @property
+    def fixed_hosts_file_path(self) -> str:
+        """Path to the generated FixedHosts include file."""
+        return self.fixed_hosts.file_path
+
+    @fixed_hosts_file_path.setter
+    def fixed_hosts_file_path(self, value: str) -> None:
+        """Set fixed-host include file path."""
+        self.fixed_hosts.set_file_path(value)
+
+    @property
+    def fixed_host_statements(self) -> List[ZoneFileStatement]:
+        """Fixed-host RR statements moved into the include file."""
+        return self.fixed_hosts.statements
+
+    @fixed_host_statements.setter
+    def fixed_host_statements(self, value: List[ZoneFileStatement]) -> None:
+        """Replace fixed-host RR statements."""
+        self.fixed_hosts.statements = list(value or [])
 
     def to_dict(self) -> dict:
+        """Serialize the current object into a plain dict payload."""
         include_origin = self._include_origin()
         include_value = f"\"{self.fixed_hosts_file_path}\""
         if include_origin:
@@ -2576,6 +2675,7 @@ class BindZoneFile:
             "externally_managed": self.externally_managed,
             "statements": [item.to_dict() for item in self.zone_file_statements],
             "fixed_hosts_file_path": self.fixed_hosts_file_path,
+            "fixed_hosts": self.fixed_hosts.to_dict(),
             "static_hosts_include": {
                 "statement": "$INCLUDE",
                 "value": include_value,
@@ -2585,14 +2685,17 @@ class BindZoneFile:
         }
 
     def set_file_path(self, file_path: str) -> None:
+        """Set file path."""
         self.file_path = file_path
-        self.fixed_hosts_file_path = f"{self.file_path}.FixedHosts"
+        self.fixed_hosts.set_file_path(f"{self.file_path}.FixedHosts")
 
     def _is_reverse_zone(self) -> bool:
+        """Internal helper."""
         name = (self.zone_name or "").strip(".").lower()
         return name.endswith("in-addr.arpa") or name.endswith("ip6.arpa")
 
     def _include_origin(self) -> str:
+        """Internal helper."""
         zone = (self.zone_name or "").strip()
         if not zone:
             return ""
@@ -2601,6 +2704,7 @@ class BindZoneFile:
         return f"{zone.rstrip('.')}."
 
     def _is_fixed_host_rr(self, statement: ZoneFileStatement) -> bool:
+        """Internal helper."""
         if not isinstance(statement, ZoneResourceRecord):
             return False
         rr_type = (getattr(statement, "rr_type", None) or "").upper()
@@ -2609,6 +2713,7 @@ class BindZoneFile:
         return rr_type in {"A", "AAAA"}
 
     def _split_fixed_hosts(self) -> None:
+        """Internal helper."""
         # DDNS-enabled zones keep all RRs in the discovered zone file.
         if self.ddns_enabled:
             return
@@ -2631,20 +2736,105 @@ class BindZoneFile:
         self.fixed_host_statements = fixed
         self._fixed_hosts_insert_index = first_fixed_index
 
+    def _load_existing_fixed_hosts_file(self) -> None:
+        """Internal helper."""
+        self.fixed_hosts.load_from_disk()
+
+    def _normalize_rr_target(self, rr_type: str, rdata: Optional[str]) -> str:
+        """Internal helper."""
+        text = (rdata or "").strip()
+        if not text:
+            return ""
+        token = text.split()[0]
+        if rr_type == "PTR":
+            return token.rstrip(".").lower()
+        return token.lower()
+
+    def _statement_identity(self, statement: ZoneFileStatement) -> str:
+        """Internal helper."""
+        if isinstance(statement, ZoneResourceRecord):
+            rr_type = (statement.rr_type or "").upper()
+            owner = (statement.owner or "").strip().rstrip(".").lower()
+            if owner == "@":
+                owner = (self.zone_name or "").strip().rstrip(".").lower()
+            if owner and "." not in owner:
+                zone_base = (self.zone_name or "").strip().rstrip(".").lower()
+                if zone_base:
+                    owner = f"{owner}.{zone_base}"
+            target = self._normalize_rr_target(rr_type, statement.rdata)
+            return f"RR|{rr_type}|{owner}|{target}"
+        return f"RAW|{self._serialize_statement(statement)}"
+
+    def _dedupe_fixed_host_statements(self) -> None:
+        """Internal helper."""
+        unique: List[ZoneFileStatement] = []
+        seen: set[str] = set()
+        for statement in self.fixed_host_statements:
+            key = self._statement_identity(statement)
+            if key in seen:
+                continue
+            seen.add(key)
+            unique.append(statement)
+        self.fixed_host_statements = unique
+
     def _serialize_statement(self, statement: ZoneFileStatement) -> str:
+        """Internal helper."""
         raw_value = (getattr(statement, "value", "") or "")
         if isinstance(statement, ZoneResourceRecord):
-            # Preserve leading whitespace for owner-omitted RR lines.
-            return raw_value.rstrip()
+            rr_type = (statement.rr_type or "").upper()
+            owner = statement.owner
+            # Preserve exact text only for owner-omitted records.
+            if not rr_type or owner is None:
+                return raw_value.rstrip()
+            owner_text = (owner or "").strip()
+            if owner_text == "." and (self.zone_name or "").strip("."):
+                owner_text = "@"
+            elif owner_text:
+                owner_text = self._relative_owner_for_zone(owner_text)
+            if not owner_text:
+                owner_text = "@"
+            parts: List[str] = [owner_text]
+            if statement.ttl:
+                parts.append(statement.ttl)
+            if statement.dns_class:
+                parts.append(statement.dns_class)
+            parts.append(rr_type)
+            if rr_type == "SOA":
+                soa_tokens = []
+                if isinstance(statement, ZoneResourceRecordSOA):
+                    soa_tokens = [
+                        statement.mname or "",
+                        statement.rname or "",
+                        statement.serial or "",
+                        statement.refresh or "",
+                        statement.retry or "",
+                        statement.expire or "",
+                        statement.minimum or "",
+                    ]
+                    soa_tokens = [item for item in soa_tokens if item]
+                if not soa_tokens and statement.rdata:
+                    soa_tokens = statement.rdata.split()
+                if len(soa_tokens) >= 7:
+                    head = " ".join(soa_tokens[:2])
+                    tail = " ".join(soa_tokens[2:7])
+                    parts.append(f"{head} ({tail})")
+                elif statement.rdata:
+                    parts.append(statement.rdata.strip())
+            elif statement.rdata:
+                parts.append(statement.rdata.strip())
+            return " ".join(parts).strip()
         value = raw_value.strip()
         if isinstance(statement, ZoneDirectiveTtl):
             if value.upper().startswith("$TTL"):
                 return value
             return f"$TTL {value}".strip()
         if isinstance(statement, ZoneDirectiveOrigin):
-            if value.upper().startswith("$ORIGIN"):
-                return value
-            return f"$ORIGIN {value}".strip()
+            origin_value = value
+            if origin_value.upper().startswith("$ORIGIN"):
+                origin_value = origin_value[7:].strip()
+            if origin_value == "." and (self.zone_name or "").strip("."):
+                origin_value = f"{self.zone_name.rstrip('.')}."
+            return f"$ORIGIN {origin_value}".strip()
         if isinstance(statement, ZoneDirectiveInclude):
             if value.upper().startswith("$INCLUDE"):
                 return value
@@ -2655,7 +2845,82 @@ class BindZoneFile:
             return f"$GENERATE {value}".strip()
         return value
 
+    def _relative_owner_for_zone(self, owner: str) -> str:
+        """Internal helper."""
+        text = (owner or "").strip()
+        if not text or text == "@":
+            return text
+        zone = (self.zone_name or "").strip().rstrip(".")
+        if not zone:
+            return text
+        owner_base = text.rstrip(".")
+        owner_lower = owner_base.lower()
+        zone_lower = zone.lower()
+        if owner_lower == zone_lower:
+            return "@"
+        suffix = "." + zone_lower
+        if owner_lower.endswith(suffix):
+            return owner_base[: -len(suffix)]
+        return text
+
+    def _serialize_fixed_host_statement(self, statement: ZoneFileStatement) -> str:
+        """Internal helper."""
+        if not isinstance(statement, ZoneResourceRecord):
+            return self._serialize_statement(statement)
+        rr_type = (statement.rr_type or "").upper()
+        if not rr_type:
+            return self._serialize_statement(statement)
+
+        owner = statement.owner or ""
+        owner = self._relative_owner_for_zone(owner)
+        if not owner:
+            owner = "@"
+
+        parts: List[str] = [owner]
+        if statement.ttl:
+            parts.append(statement.ttl)
+        if statement.dns_class:
+            parts.append(statement.dns_class)
+        parts.append(rr_type)
+
+        rdata = (statement.rdata or "").strip()
+        if rr_type == "PTR" and rdata:
+            tokens = rdata.split()
+            if tokens:
+                target = tokens[0]
+                if not target.endswith("."):
+                    target = f"{target}."
+                tokens[0] = target
+            rdata = " ".join(tokens)
+        if rdata:
+            parts.append(rdata)
+        return " ".join(parts).strip()
+
+    def _include_target_path(self, include_value: str, zone_file_path: str) -> Optional[str]:
+        """Internal helper."""
+        text = (include_value or "").strip()
+        if not text:
+            return None
+        if text.upper().startswith("$INCLUDE"):
+            text = text[8:].strip()
+        if not text:
+            return None
+        if text.startswith('"'):
+            end_quote = text.find('"', 1)
+            if end_quote <= 0:
+                return None
+            target = text[1:end_quote]
+        else:
+            target = text.split(None, 1)[0]
+        if not target:
+            return None
+        if os.path.isabs(target):
+            return os.path.abspath(target)
+        base_dir = os.path.dirname(zone_file_path)
+        return os.path.abspath(os.path.join(base_dir, target))
+
     def toFile(self, path: Optional[str] = None) -> str:
+        """Write zone file and fixed-host include file to disk."""
         output_path = path or self.file_path
         if not output_path:
             raise ValueError("No output path provided for zone file")
@@ -2668,6 +2933,9 @@ class BindZoneFile:
         default_ttl_written = False
         include_inserted = False
         include_line = None
+        canonical_fixed_include = os.path.abspath(self.fixed_hosts_file_path)
+        canonical_fixed_basename = os.path.basename(canonical_fixed_include)
+        fixed_include_seen = False
         if self.fixed_host_statements:
             include_line = f'$INCLUDE "{self.fixed_hosts_file_path}"'
             include_origin = self._include_origin()
@@ -2695,6 +2963,29 @@ class BindZoneFile:
                 insert_idx = len(self.zone_file_statements)
 
         for idx, statement in enumerate(self.zone_file_statements):
+            if isinstance(statement, ZoneDirectiveInclude):
+                include_target = self._include_target_path(
+                    include_value=getattr(statement, "value", ""),
+                    zone_file_path=output_path,
+                )
+                include_basename = os.path.basename(include_target or "")
+                is_fixed_include = (
+                    include_target == canonical_fixed_include
+                    or (
+                        include_basename
+                        and include_basename == canonical_fixed_basename
+                        and include_basename.lower().endswith(".fixedhosts")
+                    )
+                )
+                if is_fixed_include:
+                    if fixed_include_seen:
+                        continue
+                    fixed_include_seen = True
+                    # Rewrite any legacy fixed-host include to the current canonical include.
+                    if include_line is not None:
+                        lines.append(include_line)
+                        include_inserted = True
+                    continue
             if (
                 include_line is not None
                 and not include_inserted
@@ -2722,7 +3013,7 @@ class BindZoneFile:
         if self.fixed_host_statements:
             fixed_lines: List[str] = []
             for statement in self.fixed_host_statements:
-                rendered = self._serialize_statement(statement)
+                rendered = self._serialize_fixed_host_statement(statement)
                 if rendered:
                     fixed_lines.append(rendered)
             fixed_content = "\n".join(fixed_lines)
@@ -2758,6 +3049,7 @@ class BindServer:
         name: str,
         statements: Optional[Statement] = None,
     ) -> None:
+        """Initialize the instance."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -2772,6 +3064,7 @@ class BindServer:
 
     @classmethod
     def fromConfFile(cls, filename: Optional[str] = None) -> "BindServer":
+        """Load named.conf (and includes/zones) into a BindServer model."""
         function_name = sys._getframe().f_code.co_name
         class_name=cls.__name__
         function_name=class_name+"."+function_name
@@ -2779,7 +3072,12 @@ class BindServer:
 
         path = filename or "/etc/bind/named.conf"
         if not os.path.exists(path):
-            raise FileNotFoundError(path)
+            raise BindOperationError(
+                "CONFIG_NOT_FOUND",
+                f"Configuration file not found: {path}",
+                "Check whether named.conf was moved to named.conf.working-on or provide --named-conf.",
+                status=404,
+            )
         server = cls(name=path)
         server.source_path = path
         server._parse_named_conf(path)
@@ -2788,6 +3086,7 @@ class BindServer:
         return server
 
     def to_dict(self) -> dict:
+        """Serialize the current object into a plain dict payload."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -2814,6 +3113,7 @@ class BindServer:
         return payload
 
     def backup(self, output_tar: str) -> str:
+        """Archive all referenced config and zone files into a tar file."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -2832,6 +3132,7 @@ class BindServer:
         return output_tar
 
     def _parse_named_conf(self, path: str) -> None:
+        """Internal helper."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -2845,6 +3146,7 @@ class BindServer:
         logger.debug("Leaving function "+str(function_name))
 
     def _collect_config_files(self, path: str, base_dir: str) -> List[str]:
+        """Internal helper."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -2875,6 +3177,7 @@ class BindServer:
         return files
 
     def _parse_files(self, files: List[str], base_dir: str) -> None:
+        """Internal helper."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -2895,6 +3198,7 @@ class BindServer:
         logger.debug("Leaving function "+str(function_name))
 
     def _read_file(self, path: str, seen_files: set[str]) -> str:
+        """Internal helper."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -2913,6 +3217,7 @@ class BindServer:
         return fileContent
 
     def _strip_comments(self, text: str) -> str:
+        """Internal helper."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -2926,6 +3231,7 @@ class BindServer:
         return text
 
     def _extract_includes(self, text: str, base_dir: str) -> List[str]:
+        """Internal helper."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -2942,6 +3248,7 @@ class BindServer:
         return includes
 
     def _collect_referenced_files(self) -> List[str]:
+        """Internal helper."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -2961,6 +3268,7 @@ class BindServer:
         return files
 
     def _load_zone_files(self, base_dir: str) -> None:
+        """Internal helper."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -3006,6 +3314,7 @@ class BindServer:
         logger.debug("Leaving function "+str(function_name))
 
     def _extract_zone_file_path(self, zone_stmt: Statement) -> Optional[str]:
+        """Internal helper."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -3028,6 +3337,7 @@ class BindServer:
         return None
 
     def _normalize_zone_name(self, value: Optional[str]) -> str:
+        """Internal helper."""
         if value is None:
             return ""
         cleaned = str(value).strip()
@@ -3036,6 +3346,7 @@ class BindServer:
         return cleaned
 
     def _extract_zone_type(self, zone_stmt: Statement) -> str:
+        """Internal helper."""
         for child in getattr(zone_stmt, "_statements", []):
             if getattr(child, "statement_name", "") != "type":
                 continue
@@ -3046,6 +3357,7 @@ class BindServer:
         return ""
 
     def _zone_has_ddns_updates(self, zone_stmt: Statement) -> bool:
+        """Internal helper."""
         for child in getattr(zone_stmt, "_statements", []):
             child_name = getattr(child, "statement_name", "")
             if child_name in {"allow-update", "update-policy"}:
@@ -3053,6 +3365,7 @@ class BindServer:
         return False
 
     def _parse_zone_file_statements(self, text: str) -> List[ZoneFileStatement]:
+        """Internal helper."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -3065,11 +3378,13 @@ class BindServer:
         return results
 
     def _normalize_name_for_filename(self, value: str) -> str:
+        """Internal helper."""
         cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", (value or "").strip())
         cleaned = cleaned.strip("._")
         return cleaned or "unnamed"
 
     def _extract_allow_update_key_names(self, zone_stmt: Statement) -> List[str]:
+        """Internal helper."""
         keys: List[str] = []
         for child in getattr(zone_stmt, "_statements", []):
             if getattr(child, "statement_name", "") != "allow-update":
@@ -3085,18 +3400,21 @@ class BindServer:
         return keys
 
     def _set_zone_file_statement_path(self, zone_stmt: Statement, new_path: str) -> None:
+        """Internal helper."""
         for child in getattr(zone_stmt, "_statements", []):
             if getattr(child, "statement_name", "") == "file":
                 child.value = f"\"{new_path}\""
                 return
 
     def _find_zone_file_object(self, zone_name: str) -> Optional[BindZoneFile]:
+        """Internal helper."""
         for zone_file in self._zone_files:
             if self._normalize_zone_name(zone_file.zone_name) == zone_name:
                 return zone_file
         return None
 
     def _normalize_fqdn(self, fqdn: str) -> str:
+        """Internal helper."""
         cleaned = (fqdn or "").strip().rstrip(".").lower()
         if not cleaned:
             raise BindOperationError("INVALID_FQDN", "FQDN is required.", "Provide a non-empty hostname, e.g. host.example.com")
@@ -3112,19 +3430,23 @@ class BindServer:
         return cleaned
 
     def _normalized_zone_name(self, zone_name: str) -> str:
+        """Internal helper."""
         return (zone_name or "").strip().strip(".").lower()
 
     def _zone_name_fits(self, record_name: str, zone_name: str) -> bool:
+        """Internal helper."""
         if zone_name == "":
             return True
         return record_name == zone_name or record_name.endswith("." + zone_name)
 
     def _zone_name_score(self, zone_name: str) -> int:
+        """Internal helper."""
         if not zone_name:
             return 0
         return len(zone_name.split("."))
 
     def _best_matching_zone(self, record_name: str, reverse: bool) -> Optional[BindZoneFile]:
+        """Internal helper."""
         best: Optional[BindZoneFile] = None
         best_score = -1
         for zone in self._zone_files:
@@ -3142,6 +3464,7 @@ class BindServer:
         return best
 
     def _owner_for_zone(self, record_name: str, zone_name: str) -> str:
+        """Internal helper."""
         if zone_name == "":
             return record_name + "."
         if record_name == zone_name:
@@ -3156,6 +3479,7 @@ class BindServer:
         )
 
     def _rr_owner_fqdn(self, owner: Optional[str], zone_name: str) -> Optional[str]:
+        """Internal helper."""
         if owner is None:
             return None
         text = owner.strip()
@@ -3171,6 +3495,7 @@ class BindServer:
         return text.lower()
 
     def _rr_target_normalized(self, rr_type: str, rdata: Optional[str]) -> str:
+        """Internal helper."""
         text = (rdata or "").strip()
         if not text:
             return ""
@@ -3186,6 +3511,7 @@ class BindServer:
         rr_type: str,
         target_normalized: str,
     ) -> bool:
+        """Internal helper."""
         for source in (zone_file.zone_file_statements, zone_file.fixed_host_statements):
             for stmt in source:
                 if not isinstance(stmt, ZoneResourceRecord):
@@ -3208,6 +3534,7 @@ class BindServer:
         ip_text: str,
         reverse_name: str,
     ) -> List[dict]:
+        """Internal helper."""
         conflicts: List[dict] = []
         ip_norm = ip_text.lower()
         for attr_name in ("zone_file_statements", "fixed_host_statements"):
@@ -3261,6 +3588,7 @@ class BindServer:
         return conflicts
 
     def _remove_conflicts(self, zone_file: BindZoneFile, conflicts: List[dict]) -> None:
+        """Internal helper."""
         per_source: Dict[str, List[int]] = {}
         for item in conflicts:
             per_source.setdefault(item["source_attr"], []).append(item["index"])
@@ -3271,6 +3599,7 @@ class BindServer:
                     source.pop(idx)
 
     def _validate_zone_file_record(self, zone_file: BindZoneFile) -> None:
+        """Internal helper."""
         check_zone_types = {"master", "primary", "slave", "secondary", "mirror", "stub", "static-stub", "redirect"}
         zone_type = (zone_file.zone_type or "").lower()
         if zone_type and zone_type not in check_zone_types:
@@ -3307,6 +3636,7 @@ class BindServer:
             )
 
     def _restore_file_snapshots(self, snapshots: Dict[str, Optional[bytes]]) -> None:
+        """Internal helper."""
         for path, content in snapshots.items():
             if content is None:
                 if os.path.lexists(path):
@@ -3317,6 +3647,7 @@ class BindServer:
                 handle.write(content)
 
     def _write_and_validate_zone_files(self, zone_files: List[BindZoneFile]) -> None:
+        """Internal helper."""
         snapshots: Dict[str, Optional[bytes]] = {}
         unique_paths: List[str] = []
         for zone_file in zone_files:
@@ -3346,6 +3677,7 @@ class BindServer:
         force: bool = False,
         persist: bool = True,
     ) -> dict:
+        """Add or migrate a fixed host mapping (forward + reverse)."""
         fqdn_abs = self._normalize_fqdn(fqdn)
         fqdn_target = fqdn_abs + "."
         try:
@@ -3490,13 +3822,143 @@ class BindServer:
             "persist": persist,
         }
 
+    def delete_fixed_host(
+        self,
+        fqdn: str,
+        ip_address: Optional[str] = None,
+        persist: bool = True,
+        force: bool = False,
+    ) -> dict:
+        """Delete fixed host mappings (forward and reverse) for an FQDN."""
+        del force  # Reserved for future behavior parity with add_fixed_host.
+
+        fqdn_abs = self._normalize_fqdn(fqdn)
+        short_host = fqdn_abs.split(".", 1)[0]
+        target_ip_norm: Optional[str] = None
+        if ip_address is not None:
+            try:
+                target_ip_norm = str(ipaddress.ip_address(ip_address.strip())).lower()
+            except ValueError:
+                raise BindOperationError(
+                    "INVALID_IP_ADDRESS",
+                    f"Invalid IP address '{ip_address}'.",
+                    "Use a valid IPv4 or IPv6 address.",
+                )
+
+        forward_zone = self._best_matching_zone(record_name=fqdn_abs, reverse=False)
+        if forward_zone is None:
+            raise BindOperationError(
+                "FORWARD_ZONE_NOT_FOUND",
+                f"No matching forward zone found for '{fqdn_abs}'.",
+                status=404,
+            )
+
+        touched_zones: List[BindZoneFile] = [forward_zone]
+        snapshots = {
+            id(forward_zone): {
+                "zone_file_statements": list(forward_zone.zone_file_statements),
+                "fixed_host_statements": list(forward_zone.fixed_host_statements),
+            }
+        }
+
+        forward_removals: List[dict] = []
+        removed_ip_values: List[str] = []
+        for attr_name in ("zone_file_statements", "fixed_host_statements"):
+            source = getattr(forward_zone, attr_name)
+            for idx, stmt in enumerate(source):
+                if not isinstance(stmt, ZoneResourceRecord):
+                    continue
+                rr_type = (stmt.rr_type or "").upper()
+                if rr_type not in {"A", "AAAA"}:
+                    continue
+                owner_fqdn = self._rr_owner_fqdn(stmt.owner, forward_zone.zone_name) or ""
+                if owner_fqdn != fqdn_abs:
+                    continue
+                target_norm = self._rr_target_normalized(rr_type, stmt.rdata)
+                if target_ip_norm is not None and target_norm != target_ip_norm:
+                    continue
+                forward_removals.append({"source_attr": attr_name, "index": idx})
+                if target_norm:
+                    removed_ip_values.append(target_norm)
+
+        if not forward_removals:
+            raise BindOperationError(
+                "HOST_NOT_FOUND",
+                f"No host mapping found for '{fqdn_abs}'.",
+                status=404,
+            )
+
+        self._remove_conflicts(forward_zone, forward_removals)
+
+        reverse_removed = 0
+        ip_candidates = [target_ip_norm] if target_ip_norm is not None else removed_ip_values
+        ptr_targets = {fqdn_abs, short_host}
+        seen_reverse = set()
+        for ip_text in ip_candidates:
+            if not ip_text:
+                continue
+            try:
+                ip_obj = ipaddress.ip_address(ip_text)
+            except ValueError:
+                continue
+            reverse_name = ip_obj.reverse_pointer.lower()
+            reverse_zone = self._best_matching_zone(record_name=reverse_name, reverse=True)
+            if reverse_zone is None:
+                continue
+            if id(reverse_zone) not in snapshots:
+                snapshots[id(reverse_zone)] = {
+                    "zone_file_statements": list(reverse_zone.zone_file_statements),
+                    "fixed_host_statements": list(reverse_zone.fixed_host_statements),
+                }
+            if id(reverse_zone) not in seen_reverse:
+                touched_zones.append(reverse_zone)
+                seen_reverse.add(id(reverse_zone))
+
+            reverse_removals: List[dict] = []
+            for attr_name in ("zone_file_statements", "fixed_host_statements"):
+                source = getattr(reverse_zone, attr_name)
+                for idx, stmt in enumerate(source):
+                    if not isinstance(stmt, ZoneResourceRecord):
+                        continue
+                    rr_type = (stmt.rr_type or "").upper()
+                    if rr_type != "PTR":
+                        continue
+                    owner_fqdn = self._rr_owner_fqdn(stmt.owner, reverse_zone.zone_name) or ""
+                    target_norm = self._rr_target_normalized(rr_type, stmt.rdata)
+                    if owner_fqdn == reverse_name and target_norm in ptr_targets:
+                        reverse_removals.append({"source_attr": attr_name, "index": idx})
+            if reverse_removals:
+                reverse_removed += len(reverse_removals)
+                self._remove_conflicts(reverse_zone, reverse_removals)
+
+        try:
+            if persist:
+                self._write_and_validate_zone_files(touched_zones)
+        except Exception:
+            for zone in touched_zones:
+                snap = snapshots[id(zone)]
+                zone.zone_file_statements = list(snap["zone_file_statements"])
+                zone.fixed_host_statements = list(snap["fixed_host_statements"])
+            raise
+
+        return {
+            "fqdn": fqdn_abs + ".",
+            "ip": target_ip_norm,
+            "forward_zone": forward_zone.zone_name,
+            "removed_forward_records": len(forward_removals),
+            "removed_reverse_records": reverse_removed,
+            "persist": persist,
+        }
+
     def _zone_group_name(self, zone_stmt: Statement, zone_name: str) -> str:
+        """Internal helper."""
         keys = self._extract_allow_update_key_names(zone_stmt)
         if keys:
             return keys[0]
         return zone_name
 
     def _is_package_managed_zone(self, zone_name: str, zone_path: str) -> bool:
+        """Internal helper."""
         normalized_zone = self._normalize_zone_name(zone_name)
         basename = os.path.basename(zone_path or "")
         if normalized_zone in PACKAGE_MANAGED_ZONE_NAMES:
@@ -3508,9 +3970,11 @@ class BindServer:
         return False
 
     def _normalize_domain_name(self, domain_name: str) -> str:
+        """Internal helper."""
         return self._normalize_fqdn(domain_name)
 
     def _normalize_label(self, label: str, field_name: str) -> str:
+        """Internal helper."""
         cleaned = (label or "").strip().lower().rstrip(".")
         if not cleaned:
             raise BindOperationError("INVALID_INPUT", f"{field_name} is required.")
@@ -3521,6 +3985,7 @@ class BindServer:
         return cleaned
 
     def _zone_names_in_use(self) -> set[str]:
+        """Internal helper."""
         names: set[str] = set()
         for stmt in self._statements:
             if getattr(stmt, "statement_name", "") != "zone":
@@ -3529,6 +3994,7 @@ class BindServer:
         return names
 
     def _remove_zone_definition(self, zone_name: str) -> None:
+        """Internal helper."""
         target = self._normalize_zone_name(zone_name)
         self._statements = [
             stmt
@@ -3545,12 +4011,14 @@ class BindServer:
         ]
 
     def _find_first_options(self) -> Optional[Statement]:
+        """Internal helper."""
         for stmt in self._statements:
             if getattr(stmt, "statement_name", "") == "options":
                 return stmt
         return None
 
     def _ensure_allow_recursion_default(self) -> None:
+        """Internal helper."""
         options_stmt = self._find_first_options()
         if options_stmt is None:
             options_stmt = Options(statements=[])
@@ -3561,6 +4029,7 @@ class BindServer:
         options_stmt._statements.append(AllowRecursion(value="{ localhost; }"))
 
     def _ensure_update_key(self, key_name: str) -> None:
+        """Internal helper."""
         key_value = f"\"{key_name}\""
         for stmt in self._statements:
             if getattr(stmt, "statement_name", "") != "key":
@@ -3578,6 +4047,7 @@ class BindServer:
         self._statements.append(key_stmt)
 
     def _reverse_zone_from_ipv4(self, iface: ipaddress.IPv4Interface) -> tuple[str, str]:
+        """Internal helper."""
         prefix = int(iface.network.prefixlen)
         if prefix not in {8, 16, 24}:
             raise BindOperationError(
@@ -3602,6 +4072,7 @@ class BindServer:
         enable_allow_recursion: bool = True,
         enable_allow_update: bool = True,
     ) -> dict:
+        """Create forward/reverse zone definitions from minimal input parameters."""
         domain = self._normalize_domain_name(domain_name)
         base_host = self._normalize_label(base_hostname, "base hostname")
         try:
@@ -3701,6 +4172,7 @@ class BindServer:
         }
 
     def _render_statements_text(self, statements: List[Statement]) -> str:
+        """Internal helper."""
         lines: List[str] = []
         for stmt in statements:
             if hasattr(stmt, "toText"):
@@ -3713,6 +4185,7 @@ class BindServer:
         return content
 
     def _build_layout(self, named_etc: str, named_var: str) -> dict:
+        """Internal helper."""
         dwlab_etc = os.path.join(named_etc, "dwlab")
         keys_dir = os.path.join(dwlab_etc, "keys")
         zones_dir = os.path.join(named_var, "dwlab")
@@ -3827,6 +4300,7 @@ class BindServer:
         }
 
     def _write_layout_to_disk(self, layout: dict) -> None:
+        """Internal helper."""
         for path, content in layout["files"].items():
             directory = os.path.dirname(path)
             if directory:
@@ -3837,9 +4311,16 @@ class BindServer:
         for zone_file in self._zone_files:
             if zone_file.externally_managed:
                 continue
+            # Keep zone/fixed-host include paths aligned with the current target layout.
+            target_zone_path = os.path.join(
+                layout["zones_dir"],
+                f"{self._normalize_name_for_filename(zone_file.zone_name)}.zone",
+            )
+            zone_file.set_file_path(target_zone_path)
             zone_file.toFile()
 
     def _validate_layout(self, layout: dict) -> None:
+        """Internal helper."""
         named_checkconf = shutil.which("named-checkconf")
         named_checkzone = shutil.which("named-checkzone")
         if not named_checkconf:
@@ -3883,7 +4364,9 @@ class BindServer:
         named_etc: str = "/etc/bind",
         named_var: str = "/var/lib/bind",
         force: bool = False,
+        keep_stage_on_error: bool = False,
     ) -> str:
+        """Generate, validate, and activate managed BIND configuration files."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -3904,6 +4387,7 @@ class BindServer:
                     original_zone_stmt_file_values[id(child)] = getattr(child, "value", None)
                     break
 
+        failed = False
         try:
             stage_layout = self._build_layout(stage_etc, stage_var)
             self._write_layout_to_disk(stage_layout)
@@ -3953,6 +4437,9 @@ class BindServer:
 
             logger.debug("Leaving function "+str(function_name))
             return target_conf
+        except Exception:
+            failed = True
+            raise
         finally:
             for stmt in self._statements:
                 if getattr(stmt, "statement_name", "") != "zone":
@@ -3969,10 +4456,14 @@ class BindServer:
                     zone_file.file_path = original_zone_paths[zid]
                 if zid in original_fixed_paths:
                     zone_file.fixed_hosts_file_path = original_fixed_paths[zid]
-            shutil.rmtree(stage_root, ignore_errors=True)
+            if keep_stage_on_error and failed:
+                logger.warning("Keeping stage directory for debugging: %s", stage_root)
+            else:
+                shutil.rmtree(stage_root, ignore_errors=True)
 
 class BindStatementScanner:
     def __init__(self, allowed: Optional[set[str]], cleaned: str) -> List[object]:
+        """Initialize the instance."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -4002,6 +4493,7 @@ class BindStatementScanner:
         
     @property
     def statements(self) -> List[object]:
+        """Statements."""
         return self._statements 
 
 
@@ -4010,6 +4502,7 @@ class BindStatementScanner:
             text: str, 
             allowed: Optional[set[str]] = None
         ) -> List[Statement]:
+        """Internal helper."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
         function_name=class_name+"."+function_name
@@ -4081,160 +4574,439 @@ class BindStatementScanner:
         return results
 
 def backup_named_conf(named_conf: str, output_tar: str) -> str:
-    function_name = sys._getframe().f_code.co_name
-    package_name = __PACKAGE_NAME__
-    function_name=package_name+"."+function_name
-    logger.debug("Entering function "+str(function_name))
-
-    server = BindServer.fromConfFile(named_conf)
-
-    logger.debug("Leaving function "+str(function_name))
-    return server.backup(output_tar)
+    """Back up a named.conf tree via the configuration manager."""
+    manager = BindConfigurationManager()
+    return manager.backup_named_conf(named_conf, output_tar)
 
 
-def _backup_files_from_archive(archive_path: str) -> set[str]:
-    files: set[str] = set()
-    with tarfile.open(archive_path, "r") as tar:
-        for member in tar.getmembers():
-            if not (member.isfile() or member.issym() or member.islnk()):
-                continue
-            relative = member.name.lstrip("/")
-            normalized = os.path.normpath("/" + relative)
-            files.add(normalized)
-    return files
+class BindConfigurationManager:
+    def __init__(self) -> None:
+        """Initialize the instance."""
+        self._xml_serializer = BindServerXmlSerializer()
 
+    def _write_server_xml(self, server: BindServer, path: str) -> None:
+        """Internal helper."""
+        self._xml_serializer.write_server_xml(server, path)
 
-def _restore_from_backup_archive(archive_path: str) -> None:
-    with tarfile.open(archive_path, "r") as tar:
-        for member in tar.getmembers():
-            if not (member.isfile() or member.issym() or member.islnk()):
-                continue
-            relative = member.name.lstrip("/")
-            target_path = os.path.normpath("/" + relative)
-            if not target_path.startswith("/"):
-                continue
-            os.makedirs(os.path.dirname(target_path), exist_ok=True)
-            if os.path.lexists(target_path):
-                if os.path.isdir(target_path) and not os.path.islink(target_path):
-                    shutil.rmtree(target_path)
-                else:
-                    os.remove(target_path)
-            if member.issym() or member.islnk():
-                link_target = member.linkname
-                os.symlink(link_target, target_path)
-                continue
-            source = tar.extractfile(member)
-            if source is None:
-                continue
-            with source, open(target_path, "wb") as handle:
-                handle.write(source.read())
-
-
-def _is_under_path(path: str, root: str) -> bool:
-    root_abs = os.path.abspath(root)
-    path_abs = os.path.abspath(path)
-    try:
-        common = os.path.commonpath([path_abs, root_abs])
-    except ValueError:
-        return False
-    return common == root_abs
-
-
-def _is_package_managed_path(path: str) -> bool:
-    apath = os.path.abspath(path)
-    if apath.startswith("/usr/share/dns/"):
-        return True
-    basename = os.path.basename(apath)
-    if basename in PACKAGE_MANAGED_CONFIG_BASENAMES:
-        return True
-    if basename in PACKAGE_MANAGED_ZONE_BASENAMES:
-        return True
-    return False
-
-
-def _remove_unreferenced_backed_up_files(
-    archive_path: str,
-    active_refs: set[str],
-    named_etc: str,
-    named_var: str,
-) -> list[str]:
-    removed: list[str] = []
-    backup_files = _backup_files_from_archive(archive_path)
-    keep_files = set(os.path.abspath(path) for path in active_refs)
-    keep_files.add(os.path.abspath(os.path.join(named_etc, "named.conf")))
-    for path in sorted(backup_files):
-        apath = os.path.abspath(path)
-        if apath in keep_files:
-            continue
-        if _is_package_managed_path(apath):
-            continue
-        if not (_is_under_path(apath, named_etc) or _is_under_path(apath, named_var)):
-            continue
-        if not os.path.lexists(apath):
-            continue
-        if os.path.isdir(apath) and not os.path.islink(apath):
-            continue
-        os.remove(apath)
-        removed.append(apath)
-    return removed
-
-
-def _cleanup_generated_definitions(
-    named_etc: str,
-    named_var: str,
-    xml_path: str,
-    keep_files: set[str],
-) -> None:
-    generated_files = [
-        os.path.join(named_etc, "dwlab.named.conf"),
-        os.path.join(named_etc, "named.conf"),
-        os.path.join(named_etc, "named.conf.working-on"),
-        xml_path,
-    ]
-    for path in generated_files:
-        apath = os.path.abspath(path)
-        if apath in keep_files:
-            continue
-        if not os.path.lexists(apath):
-            continue
-        if os.path.isdir(apath) and not os.path.islink(apath):
-            continue
-        os.remove(apath)
-
-    for root in (os.path.join(named_etc, "dwlab"), os.path.join(named_var, "dwlab")):
-        if not os.path.isdir(root):
-            continue
-        for current, _, files in os.walk(root, topdown=False):
-            for filename in files:
-                candidate = os.path.abspath(os.path.join(current, filename))
-                if candidate in keep_files:
+    def _backup_files_from_archive(self, archive_path: str) -> set[str]:
+        """Internal helper."""
+        files: set[str] = set()
+        with tarfile.open(archive_path, "r") as tar:
+            for member in tar.getmembers():
+                if not (member.isfile() or member.issym() or member.islnk()):
                     continue
-                if os.path.lexists(candidate):
-                    os.remove(candidate)
-            if not os.listdir(current):
-                os.rmdir(current)
+                relative = member.name.lstrip("/")
+                normalized = os.path.normpath("/" + relative)
+                files.add(normalized)
+        return files
+
+    def _restore_from_backup_archive(self, archive_path: str) -> None:
+        """Internal helper."""
+        with tarfile.open(archive_path, "r") as tar:
+            for member in tar.getmembers():
+                if not (member.isfile() or member.issym() or member.islnk()):
+                    continue
+                relative = member.name.lstrip("/")
+                target_path = os.path.normpath("/" + relative)
+                if not target_path.startswith("/"):
+                    continue
+                if self._is_package_managed_path(target_path):
+                    continue
+                os.makedirs(os.path.dirname(target_path), exist_ok=True)
+                try:
+                    if os.path.lexists(target_path):
+                        if os.path.isdir(target_path) and not os.path.islink(target_path):
+                            shutil.rmtree(target_path)
+                        else:
+                            os.remove(target_path)
+                    if member.issym() or member.islnk():
+                        link_target = member.linkname
+                        os.symlink(link_target, target_path)
+                        continue
+                    source = tar.extractfile(member)
+                    if source is None:
+                        continue
+                    with source, open(target_path, "wb") as handle:
+                        handle.write(source.read())
+                except PermissionError:
+                    logger.warning("Rollback skipped '%s' due to permission error.", target_path)
+                    continue
+
+    def _is_under_path(self, path: str, root: str) -> bool:
+        """Internal helper."""
+        root_abs = os.path.abspath(root)
+        path_abs = os.path.abspath(path)
+        try:
+            common = os.path.commonpath([path_abs, root_abs])
+        except ValueError:
+            return False
+        return common == root_abs
+
+    def _is_package_managed_path(self, path: str) -> bool:
+        """Internal helper."""
+        apath = os.path.abspath(path)
+        if apath.startswith("/usr/share/dns/"):
+            return True
+        basename = os.path.basename(apath)
+        if basename in PACKAGE_MANAGED_CONFIG_BASENAMES:
+            return True
+        if basename in PACKAGE_MANAGED_ZONE_BASENAMES:
+            return True
+        return False
+
+    def _remove_unreferenced_backed_up_files(
+        self,
+        archive_path: str,
+        active_refs: set[str],
+        named_etc: str,
+        named_var: str,
+    ) -> list[str]:
+        """Internal helper."""
+        removed: list[str] = []
+        backup_files = self._backup_files_from_archive(archive_path)
+        keep_files = set(os.path.abspath(path) for path in active_refs)
+        keep_files.add(os.path.abspath(os.path.join(named_etc, "named.conf")))
+        for path in sorted(backup_files):
+            apath = os.path.abspath(path)
+            if apath in keep_files:
+                continue
+            if self._is_package_managed_path(apath):
+                continue
+            if not (self._is_under_path(apath, named_etc) or self._is_under_path(apath, named_var)):
+                continue
+            if not os.path.lexists(apath):
+                continue
+            if os.path.isdir(apath) and not os.path.islink(apath):
+                continue
+            os.remove(apath)
+            removed.append(apath)
+        return removed
+
+    def _cleanup_generated_definitions(
+        self,
+        named_etc: str,
+        named_var: str,
+        xml_path: str,
+        keep_files: set[str],
+    ) -> None:
+        """Internal helper."""
+        generated_files = [
+            os.path.join(named_etc, "dwlab.named.conf"),
+            os.path.join(named_etc, "named.conf"),
+            os.path.join(named_etc, "named.conf.working-on"),
+            xml_path,
+        ]
+        for path in generated_files:
+            apath = os.path.abspath(path)
+            if apath in keep_files:
+                continue
+            if not os.path.lexists(apath):
+                continue
+            if os.path.isdir(apath) and not os.path.islink(apath):
+                continue
+            os.remove(apath)
+
+        for root in (os.path.join(named_etc, "dwlab"), os.path.join(named_var, "dwlab")):
+            if not os.path.isdir(root):
+                continue
+            for current, _, files in os.walk(root, topdown=False):
+                for filename in files:
+                    candidate = os.path.abspath(os.path.join(current, filename))
+                    if candidate in keep_files:
+                        continue
+                    if os.path.lexists(candidate):
+                        os.remove(candidate)
+                if not os.listdir(current):
+                    os.rmdir(current)
+
+    def backup_named_conf(self, named_conf: str, output_tar: str) -> str:
+        """Back up a named.conf tree via the configuration manager."""
+        function_name = sys._getframe().f_code.co_name
+        package_name = __PACKAGE_NAME__
+        function_name=package_name+"."+function_name
+        logger.debug("Entering function "+str(function_name))
+
+        server = BindServer.fromConfFile(named_conf)
+
+        logger.debug("Leaving function "+str(function_name))
+        return server.backup(output_tar)
+
+    def import_named_conf(self, named_conf: str) -> str:
+        """Import named.conf and write the current model as dwlabbind.xml."""
+        function_name = sys._getframe().f_code.co_name
+        package_name = __PACKAGE_NAME__
+        function_name=package_name+"."+function_name
+        logger.debug("Entering function "+str(function_name))
+
+        server = BindServer.fromConfFile(named_conf)
+        logger.info("Referenced files:")
+        for ref in server._collect_referenced_files():
+            logger.info(f" - {ref}")
+        base_dir = os.path.dirname(server.source_path or "")
+        output_path = os.path.join(base_dir, "dwlabbind.xml")
+        bindServerDict=server.to_dict()
+        bindServerSettings=dwlabSettings(data=bindServerDict)
+        yaml_path=os.path.join(os.path.dirname(__file__), "bind_server_settings.yaml")
+        logger.debug(f"Write YAML settings from {yaml_path}")
+        self._write_server_xml(server, output_path)
+
+        logger.debug("Leaving function "+str(function_name))
+        return output_path
+
+    def add_fixed_host_entry(
+        self,
+        named_conf: str,
+        fqdn: str,
+        ip_address: str,
+        ttl: Optional[str] = None,
+        force: bool = False,
+        persist: bool = True,
+    ) -> dict:
+        """Apply add-fixed-host logic to a loaded named.conf model."""
+        function_name = sys._getframe().f_code.co_name
+        package_name = __PACKAGE_NAME__
+        function_name=package_name+"."+function_name
+        logger.debug("Entering function "+str(function_name))
+
+        server = BindServer.fromConfFile(named_conf)
+        result = server.add_fixed_host(
+            fqdn=fqdn,
+            ip_address=ip_address,
+            ttl=ttl,
+            force=force,
+            persist=persist,
+        )
+
+        logger.debug("Leaving function "+str(function_name))
+        return result
+
+    def add_fixed_host_and_write(
+        self,
+        named_conf: str,
+        fqdn: str,
+        ip_address: str,
+        ttl: Optional[str] = None,
+        force: bool = False,
+        named_etc: Optional[str] = None,
+        named_var: Optional[str] = None,
+    ) -> dict:
+        """Apply fixed-host change, update XML, and write managed config."""
+        function_name = sys._getframe().f_code.co_name
+        package_name = __PACKAGE_NAME__
+        function_name=package_name+"."+function_name
+        logger.debug("Entering function "+str(function_name))
+
+        server = BindServer.fromConfFile(named_conf)
+        host_result = server.add_fixed_host(
+            fqdn=fqdn,
+            ip_address=ip_address,
+            ttl=ttl,
+            force=force,
+            persist=False,
+        )
+
+        base_dir = os.path.dirname(server.source_path or named_conf)
+        xml_path = os.path.join(base_dir, "dwlabbind.xml")
+        self._write_server_xml(server, xml_path)
+
+        etc_path = named_etc or os.path.dirname(named_conf)
+        var_path = named_var or "/var/lib/bind"
+        conf_path = server.toConfFile(named_etc=etc_path, named_var=var_path, force=force)
+
+        logger.debug("Leaving function "+str(function_name))
+        return {
+            **host_result,
+            "xml": xml_path,
+            "conf": conf_path,
+        }
+
+    def delete_fixed_host_entry(
+        self,
+        named_conf: str,
+        fqdn: str,
+        ip_address: Optional[str] = None,
+        persist: bool = True,
+        force: bool = False,
+    ) -> dict:
+        """Delete a fixed host mapping from a loaded named.conf model."""
+        server = BindServer.fromConfFile(named_conf)
+        return server.delete_fixed_host(
+            fqdn=fqdn,
+            ip_address=ip_address,
+            persist=persist,
+            force=force,
+        )
+
+    def delete_fixed_host_and_write(
+        self,
+        named_conf: str,
+        fqdn: str,
+        ip_address: Optional[str] = None,
+        force: bool = False,
+        named_etc: Optional[str] = None,
+        named_var: Optional[str] = None,
+    ) -> dict:
+        """Delete fixed-host mapping, update XML, and write managed config."""
+        server = BindServer.fromConfFile(named_conf)
+        delete_result = server.delete_fixed_host(
+            fqdn=fqdn,
+            ip_address=ip_address,
+            persist=False,
+            force=force,
+        )
+
+        base_dir = os.path.dirname(server.source_path or named_conf)
+        xml_path = os.path.join(base_dir, "dwlabbind.xml")
+        self._write_server_xml(server, xml_path)
+
+        etc_path = named_etc or os.path.dirname(named_conf)
+        var_path = named_var or "/var/lib/bind"
+        conf_path = server.toConfFile(named_etc=etc_path, named_var=var_path, force=force)
+
+        return {
+            **delete_result,
+            "xml": xml_path,
+            "conf": conf_path,
+        }
+
+    def create_zone_and_write(
+        self,
+        named_conf: str,
+        domain_name: str,
+        dns_server_cidr: str,
+        base_hostname: str,
+        force: bool = False,
+        named_etc: Optional[str] = None,
+        named_var: Optional[str] = None,
+        enable_allow_recursion: bool = True,
+        enable_allow_update: bool = True,
+    ) -> dict:
+        """Apply minimal-zone creation, update XML, and write managed config."""
+        function_name = sys._getframe().f_code.co_name
+        package_name = __PACKAGE_NAME__
+        function_name=package_name+"."+function_name
+        logger.debug("Entering function "+str(function_name))
+
+        server = BindServer.fromConfFile(named_conf)
+        zone_result = server.create_zone_minimal(
+            domain_name=domain_name,
+            dns_server_cidr=dns_server_cidr,
+            base_hostname=base_hostname,
+            force=force,
+            enable_allow_recursion=enable_allow_recursion,
+            enable_allow_update=enable_allow_update,
+        )
+
+        base_dir = os.path.dirname(server.source_path or named_conf)
+        xml_path = os.path.join(base_dir, "dwlabbind.xml")
+        self._write_server_xml(server, xml_path)
+
+        etc_path = named_etc or os.path.dirname(named_conf)
+        var_path = named_var or "/var/lib/bind"
+        conf_path = server.toConfFile(named_etc=etc_path, named_var=var_path, force=force)
+
+        logger.debug("Leaving function "+str(function_name))
+        return {
+            **zone_result,
+            "xml": xml_path,
+            "conf": conf_path,
+        }
+
+    def initialize_named_conf(
+        self,
+        named_conf: str,
+        xml_input: Optional[str] = None,
+        backup_output: Optional[str] = None,
+        named_etc: Optional[str] = None,
+        named_var: Optional[str] = None,
+        force: bool = False,
+        cleanup: bool = True,
+        keep_stage_on_error: bool = False,
+    ) -> dict:
+        """Backup, import, render XML, write managed config, and optional cleanup."""
+        function_name = sys._getframe().f_code.co_name
+        package_name = __PACKAGE_NAME__
+        function_name=package_name+"."+function_name
+        logger.debug("Entering function "+str(function_name))
+
+        discovered_server = BindServer.fromConfFile(named_conf)
+        server = discovered_server
+        if xml_input:
+            server = self._xml_serializer.read_server_xml(xml_input)
+            if not getattr(server, "source_path", None):
+                server.source_path = named_conf
+            if not getattr(server, "_source_files", None):
+                server._source_files = list(getattr(discovered_server, "_source_files", []))
+        if backup_output:
+            archive_target = backup_output
+        else:
+            backup_dir = os.path.dirname(named_conf) or "/etc/bind"
+            ts = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            archive_target = os.path.join(backup_dir, f"named.dwlab.conf.{ts}.tar")
+        archive_path = discovered_server.backup(archive_target)
+        logger.info("Backup archive created: %s", archive_path)
+
+        etc_path = named_etc or os.path.dirname(named_conf)
+        var_path = named_var or "/var/lib/bind"
+        base_dir = os.path.dirname(named_conf)
+        xml_path = os.path.join(base_dir, "dwlabbind.xml")
+        conf_path = ""
+        try:
+            self._write_server_xml(server, xml_path)
+            conf_path = server.toConfFile(
+                named_etc=etc_path,
+                named_var=var_path,
+                force=force,
+                keep_stage_on_error=keep_stage_on_error,
+            )
+            if cleanup:
+                rendered = BindServer.fromConfFile(conf_path)
+                active_refs = set(rendered._collect_referenced_files())
+                removed = self._remove_unreferenced_backed_up_files(
+                    archive_path=archive_path,
+                    active_refs=active_refs,
+                    named_etc=etc_path,
+                    named_var=var_path,
+                )
+                if removed:
+                    logger.info(
+                        "Cleanup removed %d unreferenced legacy BIND file(s) after initialize.",
+                        len(removed),
+                    )
+                    for removed_path in removed:
+                        logger.info("Cleanup deleted file: %s", removed_path)
+        except Exception as exc:
+            logger.error(
+                "Initialize failed after backup. Rolling back from archive '%s': %s",
+                archive_path,
+                exc,
+            )
+            keep_files = self._backup_files_from_archive(archive_path)
+            try:
+                self._cleanup_generated_definitions(
+                    named_etc=etc_path,
+                    named_var=var_path,
+                    xml_path=xml_path,
+                    keep_files=keep_files,
+                )
+                self._restore_from_backup_archive(archive_path)
+                logger.warning("Rollback from backup archive completed.")
+            except Exception as rollback_exc:
+                logger.error("Rollback failed: %s", rollback_exc)
+            raise
+
+        logger.debug("Leaving function "+str(function_name))
+        return {
+            "archive": archive_path,
+            "xml": xml_path,
+            "conf": conf_path,
+        }
 
 
 def import_named_conf(named_conf: str) -> str:
-    function_name = sys._getframe().f_code.co_name
-    package_name = __PACKAGE_NAME__
-    function_name=package_name+"."+function_name
-    logger.debug("Entering function "+str(function_name))
-
-    server = BindServer.fromConfFile(named_conf)
-    logger.info("Referenced files:")
-    for ref in server._collect_referenced_files():
-        logger.info(f" - {ref}")
-    base_dir = os.path.dirname(server.source_path or "")
-    output_path = os.path.join(base_dir, "dwlabbind.xml")
-    bindServerDict=server.to_dict()
-    bindServerSettings=dwlabSettings(data=bindServerDict)
-    yaml_path=os.path.join(os.path.dirname(__file__), "bind_server_settings.yaml")
-    logger.debug(f"Write YAML settings from {yaml_path}")
-    _write_server_xml(server, output_path)
-
-    logger.debug("Leaving function "+str(function_name))
-    return output_path
+    """Import named.conf and write the current model as dwlabbind.xml."""
+    manager = BindConfigurationManager()
+    return manager.import_named_conf(named_conf)
 
 
 def add_fixed_host_entry(
@@ -4245,22 +5017,16 @@ def add_fixed_host_entry(
     force: bool = False,
     persist: bool = True,
 ) -> dict:
-    function_name = sys._getframe().f_code.co_name
-    package_name = __PACKAGE_NAME__
-    function_name=package_name+"."+function_name
-    logger.debug("Entering function "+str(function_name))
-
-    server = BindServer.fromConfFile(named_conf)
-    result = server.add_fixed_host(
+    """Apply add-fixed-host logic to a loaded named.conf model."""
+    manager = BindConfigurationManager()
+    return manager.add_fixed_host_entry(
+        named_conf=named_conf,
         fqdn=fqdn,
         ip_address=ip_address,
         ttl=ttl,
         force=force,
         persist=persist,
     )
-
-    logger.debug("Leaving function "+str(function_name))
-    return result
 
 
 def add_fixed_host_and_write(
@@ -4272,34 +5038,53 @@ def add_fixed_host_and_write(
     named_etc: Optional[str] = None,
     named_var: Optional[str] = None,
 ) -> dict:
-    function_name = sys._getframe().f_code.co_name
-    package_name = __PACKAGE_NAME__
-    function_name=package_name+"."+function_name
-    logger.debug("Entering function "+str(function_name))
-
-    server = BindServer.fromConfFile(named_conf)
-    host_result = server.add_fixed_host(
+    """Apply fixed-host change, update XML, and write managed config."""
+    manager = BindConfigurationManager()
+    return manager.add_fixed_host_and_write(
+        named_conf=named_conf,
         fqdn=fqdn,
         ip_address=ip_address,
         ttl=ttl,
         force=force,
-        persist=False,
+        named_etc=named_etc,
+        named_var=named_var,
     )
 
-    base_dir = os.path.dirname(server.source_path or named_conf)
-    xml_path = os.path.join(base_dir, "dwlabbind.xml")
-    _write_server_xml(server, xml_path)
 
-    etc_path = named_etc or os.path.dirname(named_conf)
-    var_path = named_var or "/var/lib/bind"
-    conf_path = server.toConfFile(named_etc=etc_path, named_var=var_path, force=force)
+def delete_fixed_host_entry(
+    named_conf: str,
+    fqdn: str,
+    ip_address: Optional[str] = None,
+    persist: bool = True,
+    force: bool = False,
+) -> dict:
+    manager = BindConfigurationManager()
+    return manager.delete_fixed_host_entry(
+        named_conf=named_conf,
+        fqdn=fqdn,
+        ip_address=ip_address,
+        persist=persist,
+        force=force,
+    )
 
-    logger.debug("Leaving function "+str(function_name))
-    return {
-        **host_result,
-        "xml": xml_path,
-        "conf": conf_path,
-    }
+
+def delete_fixed_host_and_write(
+    named_conf: str,
+    fqdn: str,
+    ip_address: Optional[str] = None,
+    force: bool = False,
+    named_etc: Optional[str] = None,
+    named_var: Optional[str] = None,
+) -> dict:
+    manager = BindConfigurationManager()
+    return manager.delete_fixed_host_and_write(
+        named_conf=named_conf,
+        fqdn=fqdn,
+        ip_address=ip_address,
+        force=force,
+        named_etc=named_etc,
+        named_var=named_var,
+    )
 
 
 def create_zone_and_write(
@@ -4313,264 +5098,429 @@ def create_zone_and_write(
     enable_allow_recursion: bool = True,
     enable_allow_update: bool = True,
 ) -> dict:
-    function_name = sys._getframe().f_code.co_name
-    package_name = __PACKAGE_NAME__
-    function_name=package_name+"."+function_name
-    logger.debug("Entering function "+str(function_name))
-
-    server = BindServer.fromConfFile(named_conf)
-    zone_result = server.create_zone_minimal(
+    """Apply minimal-zone creation, update XML, and write managed config."""
+    manager = BindConfigurationManager()
+    return manager.create_zone_and_write(
+        named_conf=named_conf,
         domain_name=domain_name,
         dns_server_cidr=dns_server_cidr,
         base_hostname=base_hostname,
         force=force,
+        named_etc=named_etc,
+        named_var=named_var,
         enable_allow_recursion=enable_allow_recursion,
         enable_allow_update=enable_allow_update,
     )
 
-    base_dir = os.path.dirname(server.source_path or named_conf)
-    xml_path = os.path.join(base_dir, "dwlabbind.xml")
-    _write_server_xml(server, xml_path)
-
-    etc_path = named_etc or os.path.dirname(named_conf)
-    var_path = named_var or "/var/lib/bind"
-    conf_path = server.toConfFile(named_etc=etc_path, named_var=var_path, force=force)
-
-    logger.debug("Leaving function "+str(function_name))
-    return {
-        **zone_result,
-        "xml": xml_path,
-        "conf": conf_path,
-    }
-
 
 def initialize_named_conf(
     named_conf: str,
+    xml_input: Optional[str] = None,
     backup_output: Optional[str] = None,
     named_etc: Optional[str] = None,
     named_var: Optional[str] = None,
     force: bool = False,
     cleanup: bool = True,
+    keep_stage_on_error: bool = False,
 ) -> dict:
-    function_name = sys._getframe().f_code.co_name
-    package_name = __PACKAGE_NAME__
-    function_name=package_name+"."+function_name
-    logger.debug("Entering function "+str(function_name))
+    """Backup, import, render XML, write managed config, and optional cleanup."""
+    manager = BindConfigurationManager()
+    return manager.initialize_named_conf(
+        named_conf=named_conf,
+        xml_input=xml_input,
+        backup_output=backup_output,
+        named_etc=named_etc,
+        named_var=named_var,
+        force=force,
+        cleanup=cleanup,
+        keep_stage_on_error=keep_stage_on_error,
+    )
 
-    server = BindServer.fromConfFile(named_conf)
-    if backup_output:
-        archive_target = backup_output
-    else:
-        backup_dir = os.path.dirname(named_conf) or "/etc/bind"
-        ts = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        archive_target = os.path.join(backup_dir, f"named.dwlab.conf.{ts}.tar")
-    archive_path = server.backup(archive_target)
 
-    etc_path = named_etc or os.path.dirname(named_conf)
-    var_path = named_var or "/var/lib/bind"
-    base_dir = os.path.dirname(server.source_path or named_conf)
-    xml_path = os.path.join(base_dir, "dwlabbind.xml")
-    conf_path = ""
-    try:
-        _write_server_xml(server, xml_path)
-        conf_path = server.toConfFile(named_etc=etc_path, named_var=var_path, force=force)
-        if cleanup:
-            rendered = BindServer.fromConfFile(conf_path)
-            active_refs = set(rendered._collect_referenced_files())
-            removed = _remove_unreferenced_backed_up_files(
-                archive_path=archive_path,
-                active_refs=active_refs,
-                named_etc=etc_path,
-                named_var=var_path,
-            )
-            if removed:
-                logger.info(
-                    "Cleanup removed %d unreferenced legacy BIND file(s) after initialize.",
-                    len(removed),
-                )
-                for removed_path in removed:
-                    logger.info("Cleanup deleted file: %s", removed_path)
-    except Exception as exc:
-        logger.error(
-            "Initialize failed after backup. Rolling back from archive '%s': %s",
-            archive_path,
-            exc,
-        )
-        keep_files = _backup_files_from_archive(archive_path)
+class BindServerXmlSerializer:
+    def _plural_statement_name(self, name: str) -> str:
+        """Internal helper."""
+        if name == "key":
+            return "keys"
+        if name == "zone":
+            return "zones"
+        if name.endswith("y"):
+            return name[:-1] + "ies"
+        return name + "s"
+
+    def _normalize_text_value(self, value: object) -> str:
+        """Internal helper."""
+        text = str(value)
+        return " ".join(text.replace("\r\n", "\n").replace("\r", "\n").split())
+
+    def _text_of(self, node: Optional[ET.Element]) -> Optional[str]:
+        """Internal helper."""
+        if node is None or node.text is None:
+            return None
+        text = node.text.strip()
+        return text if text else None
+
+    def _statement_from_xml_node(self, node: ET.Element) -> Optional[Statement]:
+        """Internal helper."""
+        stmt_name = (node.tag or "").strip()
+        if not stmt_name:
+            return None
+        stmt_cls = _statement_class_for_name(stmt_name) or Statement
+        value = self._text_of(node.find("value"))
+        children: List[Statement] = []
+        statements_el = node.find("statements")
+        if statements_el is not None:
+            for child in list(statements_el):
+                parsed = self._statement_from_xml_node(child)
+                if parsed is not None:
+                    children.append(parsed)
         try:
-            _cleanup_generated_definitions(
-                named_etc=etc_path,
-                named_var=var_path,
-                xml_path=xml_path,
-                keep_files=keep_files,
-            )
-            _restore_from_backup_archive(archive_path)
-            logger.warning("Rollback from backup archive completed.")
-        except Exception as rollback_exc:
-            logger.error("Rollback failed: %s", rollback_exc)
-        raise
+            return stmt_cls(value=value, statements=children)
+        except TypeError:
+            try:
+                return stmt_cls(value=value)
+            except TypeError:
+                return stmt_cls()
 
-    logger.debug("Leaving function "+str(function_name))
-    return {
-        "archive": archive_path,
-        "xml": xml_path,
-        "conf": conf_path,
-    }
+    def _zone_file_statement_from_xml_node(
+        self,
+        node: ET.Element,
+        zone_name: str = "",
+    ) -> Optional[ZoneFileStatement]:
+        """Internal helper."""
+        tag = (node.tag or "").strip().lower()
+        value = self._text_of(node.find("value"))
+        if tag == "defaultttl":
+            tag = "ttl"
+        rr_tags = {item.lower() for item in ZoneResourceRecord.RR_TYPES}
+        rr_tags.add("soa")
+        if tag == "origin":
+            payload = value or ""
+            if payload == "." and (zone_name or "").strip("."):
+                payload = f"{zone_name.rstrip('.')}."
+            if not payload.upper().startswith("$ORIGIN"):
+                payload = f"$ORIGIN {payload}".strip()
+            return ZoneDirectiveOrigin.fromText(payload)
+        if tag == "ttl":
+            payload = value or ""
+            if not payload.upper().startswith("$TTL"):
+                payload = f"$TTL {payload}".strip()
+            return ZoneDirectiveTtl.fromText(payload)
+        if tag == "include":
+            payload = value or ""
+            if not payload.upper().startswith("$INCLUDE"):
+                payload = f"$INCLUDE {payload}".strip()
+            return ZoneDirectiveInclude.fromText(payload)
+        if tag == "generate":
+            payload = value or ""
+            if not payload.upper().startswith("$GENERATE"):
+                payload = f"$GENERATE {payload}".strip()
+            return ZoneDirectiveGenerate.fromText(payload)
+        if tag in {"rr", "soa"} or tag in rr_tags:
+            if value:
+                parsed = ZoneResourceRecord.fromText(value)
+                if isinstance(parsed, ZoneResourceRecord) and getattr(parsed, "rr_type", None):
+                    owner = parsed.owner or self._text_of(node.find("owner")) or ""
+                    if owner == "." and (zone_name or "").strip("."):
+                        owner = "@"
+                    zone_base = (zone_name or "").strip().rstrip(".").lower()
+                    if owner and zone_base and owner.rstrip(".").lower() == zone_base:
+                        owner = "@"
+                    ttl = parsed.ttl or self._text_of(node.find("ttl")) or ""
+                    dns_class = parsed.dns_class or self._text_of(node.find("class")) or ""
+                    rr_type = (parsed.rr_type or self._text_of(node.find("rr_type")) or tag).upper()
+                    rdata = parsed.rdata or self._text_of(node.find("rdata")) or ""
+                    if rr_type == "SOA" and not rdata:
+                        soa_parts = [
+                            self._text_of(node.find("mname")) or "",
+                            self._text_of(node.find("rname")) or "",
+                            self._text_of(node.find("serial")) or "",
+                            self._text_of(node.find("refresh")) or "",
+                            self._text_of(node.find("retry")) or "",
+                            self._text_of(node.find("expire")) or "",
+                            self._text_of(node.find("minimum")) or "",
+                        ]
+                        rdata = " ".join(part for part in soa_parts if part).strip()
+                    if not owner:
+                        owner = "@"
+                    row = " ".join(part for part in [owner, ttl, dns_class, rr_type, rdata] if part).strip()
+                    return ZoneResourceRecord.fromText(row)
+            owner = self._text_of(node.find("owner")) or ""
+            ttl = self._text_of(node.find("ttl")) or ""
+            dns_class = self._text_of(node.find("class")) or ""
+            rr_type = (self._text_of(node.find("rr_type")) or tag).upper()
+            rdata = self._text_of(node.find("rdata")) or ""
+            if owner == "." and (zone_name or "").strip("."):
+                owner = "@"
+            zone_base = (zone_name or "").strip().rstrip(".").lower()
+            if owner and zone_base and owner.rstrip(".").lower() == zone_base:
+                owner = "@"
+            if not rdata and value and rr_type:
+                tokenized = ZoneResourceRecord._tokenize(value)
+                if rr_type in tokenized:
+                    rr_idx = tokenized.index(rr_type)
+                    rdata = " ".join(tokenized[rr_idx + 1 :]).strip()
+            if rr_type == "SOA" and not rdata:
+                soa_parts = [
+                    self._text_of(node.find("mname")) or "",
+                    self._text_of(node.find("rname")) or "",
+                    self._text_of(node.find("serial")) or "",
+                    self._text_of(node.find("refresh")) or "",
+                    self._text_of(node.find("retry")) or "",
+                    self._text_of(node.find("expire")) or "",
+                    self._text_of(node.find("minimum")) or "",
+                ]
+                rdata = " ".join(part for part in soa_parts if part).strip()
+            if not owner:
+                owner = "@"
+            row = " ".join(part for part in [owner, ttl, dns_class, rr_type, rdata] if part).strip()
+            return ZoneResourceRecord.fromText(row)
+        if value is not None:
+            return ZoneFileStatement.fromText(value)
+        return None
 
-
-def _plural_statement_name(name: str) -> str:
-    if name == "key":
-        return "keys"
-    if name == "zone":
-        return "zones"
-    if name.endswith("y"):
-        return name[:-1] + "ies"
-    return name + "s"
-
-
-def _normalize_text_value(value: object) -> str:
-    text = str(value)
-    # Normalize CRLF/LF and collapse repeated whitespace to a single space.
-    return " ".join(text.replace("\r\n", "\n").replace("\r", "\n").split())
-
-
-def _append_statement_xml(parent: ET.Element, statement: object) -> None:
-    if not hasattr(statement, "statement_name"):
-        raw_el = ET.SubElement(parent, "raw")
-        raw_el.text = _normalize_text_value(statement)
-        return
-    node = ET.SubElement(parent, str(statement.statement_name))
-    value = getattr(statement, "value", None)
-    if value is not None:
-        value_el = ET.SubElement(node, "value")
-        value_el.text = _normalize_text_value(value)
-    children = getattr(statement, "_statements", None) or []
-    if children:
-        statements_el = ET.SubElement(node, "statements")
-        for child in children:
-            _append_statement_xml(statements_el, child)
-
-
-def _append_zone_file_statement_xml(
-    parent: ET.Element,
-    statement: ZoneFileStatement,
-    position: Optional[int] = None,
-    node_name_override: Optional[str] = None,
-) -> None:
-    payload = statement.to_dict() if hasattr(statement, "to_dict") else {"raw": str(statement)}
-    name = node_name_override or str(payload.get("statement", "raw")).lower().replace("$", "")
-    if not name:
-        name = "raw"
-    node = ET.SubElement(parent, name)
-    if position is not None:
-        node.set("position", str(position))
-    for key, value in payload.items():
-        if key == "statement":
-            continue
-        if value is None:
-            continue
-        if isinstance(value, list):
-            list_el = ET.SubElement(node, key)
-            for item in value:
-                item_el = ET.SubElement(list_el, "item")
-                item_el.text = _normalize_text_value(item)
-            continue
-        if isinstance(value, dict):
-            obj_el = ET.SubElement(node, key)
-            for sub_key, sub_value in value.items():
-                if sub_value is None:
+    def _parse_zone_file_statements(
+        self,
+        parent: Optional[ET.Element],
+        zone_name: str = "",
+    ) -> List[ZoneFileStatement]:
+        """Internal helper."""
+        if parent is None:
+            return []
+        staged: List[tuple[int, ZoneFileStatement]] = []
+        tail: List[ZoneFileStatement] = []
+        for child in list(parent):
+            stmt = self._zone_file_statement_from_xml_node(child, zone_name=zone_name)
+            if stmt is None:
+                continue
+            pos_text = child.get("position")
+            if pos_text is not None:
+                try:
+                    staged.append((int(pos_text), stmt))
                     continue
-                sub_el = ET.SubElement(obj_el, str(sub_key))
-                sub_el.text = _normalize_text_value(sub_value)
-            continue
-        field_el = ET.SubElement(node, key)
-        field_el.text = _normalize_text_value(value)
+                except ValueError:
+                    pass
+            tail.append(stmt)
+        ordered = [stmt for _, stmt in sorted(staged, key=lambda item: item[0])]
+        ordered.extend(tail)
+        return ordered
 
+    def read_server_xml(self, path: str) -> BindServer:
+        """Deserialize a BindServer object from previously generated XML."""
+        tree = ET.parse(path)
+        root = tree.getroot()
+        if root.tag != "root":
+            raise BindOperationError("INVALID_XML", "Root XML element must be <root>.", status=400)
 
-def _write_server_xml(server: BindServer, path: str) -> None:
-    function_name = sys._getframe().f_code.co_name
-    function_name=__PACKAGE_NAME__+"."+function_name
-    logger.debug("Entering function "+str(function_name))
+        server_name = self._text_of(root.find("name")) or "bind_conf"
+        server = BindServer(name=server_name)
+        source_path = self._text_of(root.find("source_path"))
+        server.source_path = source_path
 
-    root = ET.Element("root")
-    name_el = ET.SubElement(root, "name")
-    name_el.text = str(server.name)
-    if server.source_path is not None:
-        source_el = ET.SubElement(root, "source_path")
-        source_el.text = str(server.source_path)
+        source_files: List[str] = []
+        source_files_el = root.find("source_files")
+        if source_files_el is not None:
+            for file_el in source_files_el.findall("file"):
+                text = self._text_of(file_el)
+                if text:
+                    source_files.append(text)
+        server._source_files = source_files
 
-    files_el = ET.SubElement(root, "source_files")
-    for file_path in server._source_files:
-        file_el = ET.SubElement(files_el, "file")
-        file_el.text = str(file_path)
+        statements: List[Statement] = []
+        containers = {"keys", "zones"}
+        ignored = {"name", "source_path", "source_files", "zone_files"}
+        for child in list(root):
+            if child.tag in ignored:
+                continue
+            if child.tag in containers:
+                for nested in list(child):
+                    parsed = self._statement_from_xml_node(nested)
+                    if parsed is not None:
+                        statements.append(parsed)
+                continue
+            parsed = self._statement_from_xml_node(child)
+            if parsed is not None:
+                statements.append(parsed)
+        server._statements = statements
 
-    grouped: Dict[str, List[object]] = {}
-    for stmt in server._statements:
-        stmt_name = getattr(stmt, "statement_name", stmt.__class__.__name__.lower())
-        grouped.setdefault(str(stmt_name), []).append(stmt)
-
-    for stmt_name, stmt_list in grouped.items():
-        if len(stmt_list) > 1:
-            container = ET.SubElement(root, _plural_statement_name(stmt_name))
-            for stmt in stmt_list:
-                _append_statement_xml(container, stmt)
-        else:
-            _append_statement_xml(root, stmt_list[0])
-
-    if server._zone_files:
-        zone_files_el = ET.SubElement(root, "zone_files")
-        for zone_file in server._zone_files:
-            zone_file_el = ET.SubElement(zone_files_el, "zone_file")
-            zone_name_el = ET.SubElement(zone_file_el, "zone_name")
-            zone_name_el.text = _normalize_text_value(zone_file.zone_name)
-            file_path_el = ET.SubElement(zone_file_el, "file_path")
-            file_path_el.text = _normalize_text_value(zone_file.file_path)
-            if zone_file.zone_type:
-                zone_type_el = ET.SubElement(zone_file_el, "zone_type")
-                zone_type_el.text = _normalize_text_value(zone_file.zone_type)
-            ddns_el = ET.SubElement(zone_file_el, "ddns_enabled")
-            ddns_el.text = "true" if zone_file.ddns_enabled else "false"
-            fixed_hosts_path_el = ET.SubElement(zone_file_el, "fixed_hosts_file_path")
-            fixed_hosts_path_el.text = _normalize_text_value(zone_file.fixed_hosts_file_path)
-            static_include_el = ET.SubElement(zone_file_el, "static_hosts_include")
-            include_value = f'"{zone_file.fixed_hosts_file_path}"'
-            include_origin = zone_file._include_origin()
-            if include_origin:
-                include_value = f"{include_value} {include_origin}"
-            include_stmt = ZoneDirectiveInclude.fromText(f"$INCLUDE {include_value}")
-            _append_zone_file_statement_xml(
-                static_include_el,
-                include_stmt,
-                node_name_override="include",
-            )
-            generated_el = ET.SubElement(static_include_el, "generated")
-            generated_el.text = "true"
-            statements_el = ET.SubElement(zone_file_el, "statements")
-            seen_soa = False
-            default_ttl_written = False
-            for idx, statement in enumerate(zone_file.zone_file_statements):
-                tag_override = None
-                if isinstance(statement, ZoneResourceRecord) and getattr(statement, "rr_type", None) == "SOA":
-                    seen_soa = True
-                if isinstance(statement, ZoneDirectiveTtl) and not seen_soa and not default_ttl_written:
-                    tag_override = "DefaultTTL"
-                    default_ttl_written = True
-                _append_zone_file_statement_xml(
-                    statements_el,
-                    statement,
-                    position=idx,
-                    node_name_override=tag_override,
+        zone_files: List[BindZoneFile] = []
+        zone_files_el = root.find("zone_files")
+        if zone_files_el is not None:
+            for zone_file_el in zone_files_el.findall("zone_file"):
+                zone_name = self._text_of(zone_file_el.find("zone_name")) or ""
+                file_path = self._text_of(zone_file_el.find("file_path")) or ""
+                if not zone_name or not file_path:
+                    continue
+                zone_type = self._text_of(zone_file_el.find("zone_type")) or ""
+                ddns_text = (self._text_of(zone_file_el.find("ddns_enabled")) or "").lower()
+                ddns_enabled = ddns_text in {"1", "true", "yes", "on"}
+                statements_data = self._parse_zone_file_statements(
+                    zone_file_el.find("statements"),
+                    zone_name=zone_name,
                 )
-            fixed_hosts_el = ET.SubElement(zone_file_el, "FixedHosts")
-            for idx, statement in enumerate(zone_file.fixed_host_statements):
-                _append_zone_file_statement_xml(
-                    fixed_hosts_el,
-                    statement,
-                    position=idx,
+                zone_file = BindZoneFile(
+                    zone_name=zone_name,
+                    file_path=file_path,
+                    statements=statements_data,
+                    zone_type=zone_type,
+                    ddns_enabled=ddns_enabled,
                 )
+                fixed_hosts_el = zone_file_el.find("fixed_hosts")
+                fixed_hosts_path = None
+                fixed_entries_parent = None
+                if fixed_hosts_el is not None:
+                    fixed_hosts_path = self._text_of(fixed_hosts_el.find("fixed_hosts_file_path"))
+                    fixed_entries_parent = fixed_hosts_el.find("entries")
+                else:
+                    # Backward compatibility with older XML layout.
+                    fixed_hosts_path = self._text_of(zone_file_el.find("fixed_hosts_file_path"))
+                    fixed_entries_parent = zone_file_el.find("FixedHosts")
+                if fixed_hosts_path:
+                    zone_file.fixed_hosts_file_path = fixed_hosts_path
+                fixed_entries = self._parse_zone_file_statements(
+                    fixed_entries_parent,
+                    zone_name=zone_name,
+                )
+                if fixed_entries:
+                    zone_file.fixed_host_statements = fixed_entries
+                zone_files.append(zone_file)
+        server._zone_files = zone_files
+        return server
 
-    tree = ET.ElementTree(root)
-    ET.indent(tree, space="  ")
-    tree.write(path, encoding="utf-8", xml_declaration=True)
+    def _append_statement_xml(self, parent: ET.Element, statement: object) -> None:
+        """Internal helper."""
+        if not hasattr(statement, "statement_name"):
+            raw_el = ET.SubElement(parent, "raw")
+            raw_el.text = self._normalize_text_value(statement)
+            return
+        node = ET.SubElement(parent, str(statement.statement_name))
+        value = getattr(statement, "value", None)
+        if value is not None:
+            value_el = ET.SubElement(node, "value")
+            value_el.text = self._normalize_text_value(value)
+        children = getattr(statement, "_statements", None) or []
+        if children:
+            statements_el = ET.SubElement(node, "statements")
+            for child in children:
+                self._append_statement_xml(statements_el, child)
 
-    logger.debug("Leaving function "+str(function_name))
+    def _append_zone_file_statement_xml(
+        self,
+        parent: ET.Element,
+        statement: ZoneFileStatement,
+        position: Optional[int] = None,
+        node_name_override: Optional[str] = None,
+    ) -> None:
+        """Internal helper."""
+        payload = statement.to_dict() if hasattr(statement, "to_dict") else {"raw": str(statement)}
+        name = node_name_override or str(payload.get("statement", "raw")).lower().replace("$", "")
+        if not name:
+            name = "raw"
+        node = ET.SubElement(parent, name)
+        if position is not None:
+            node.set("position", str(position))
+        for key, value in payload.items():
+            if key == "statement":
+                continue
+            if value is None:
+                continue
+            if isinstance(value, list):
+                list_el = ET.SubElement(node, key)
+                for item in value:
+                    item_el = ET.SubElement(list_el, "item")
+                    item_el.text = self._normalize_text_value(item)
+                continue
+            if isinstance(value, dict):
+                obj_el = ET.SubElement(node, key)
+                for sub_key, sub_value in value.items():
+                    if sub_value is None:
+                        continue
+                    sub_el = ET.SubElement(obj_el, str(sub_key))
+                    sub_el.text = self._normalize_text_value(sub_value)
+                continue
+            field_el = ET.SubElement(node, key)
+            field_el.text = self._normalize_text_value(value)
+
+    def write_server_xml(self, server: BindServer, path: str) -> None:
+        """Serialize a BindServer object to human-readable XML."""
+        root = ET.Element("root")
+        name_el = ET.SubElement(root, "name")
+        name_el.text = str(server.name)
+        if server.source_path is not None:
+            source_el = ET.SubElement(root, "source_path")
+            source_el.text = str(server.source_path)
+
+        files_el = ET.SubElement(root, "source_files")
+        for file_path in server._source_files:
+            file_el = ET.SubElement(files_el, "file")
+            file_el.text = str(file_path)
+
+        grouped: Dict[str, List[object]] = {}
+        for stmt in server._statements:
+            stmt_name = getattr(stmt, "statement_name", stmt.__class__.__name__.lower())
+            grouped.setdefault(str(stmt_name), []).append(stmt)
+
+        for stmt_name, stmt_list in grouped.items():
+            if len(stmt_list) > 1:
+                container = ET.SubElement(root, self._plural_statement_name(stmt_name))
+                for stmt in stmt_list:
+                    self._append_statement_xml(container, stmt)
+            else:
+                self._append_statement_xml(root, stmt_list[0])
+
+        if server._zone_files:
+            zone_files_el = ET.SubElement(root, "zone_files")
+            for zone_file in server._zone_files:
+                zone_file_el = ET.SubElement(zone_files_el, "zone_file")
+                zone_name_el = ET.SubElement(zone_file_el, "zone_name")
+                zone_name_el.text = self._normalize_text_value(zone_file.zone_name)
+                file_path_el = ET.SubElement(zone_file_el, "file_path")
+                file_path_el.text = self._normalize_text_value(zone_file.file_path)
+                if zone_file.zone_type:
+                    zone_type_el = ET.SubElement(zone_file_el, "zone_type")
+                    zone_type_el.text = self._normalize_text_value(zone_file.zone_type)
+                ddns_el = ET.SubElement(zone_file_el, "ddns_enabled")
+                ddns_el.text = "true" if zone_file.ddns_enabled else "false"
+                fixed_hosts_section_el = ET.SubElement(zone_file_el, "fixed_hosts")
+                fixed_hosts_path_el = ET.SubElement(fixed_hosts_section_el, "fixed_hosts_file_path")
+                fixed_hosts_path_el.text = self._normalize_text_value(zone_file.fixed_hosts_file_path)
+                static_include_el = ET.SubElement(fixed_hosts_section_el, "static_hosts_include")
+                include_value = f'"{zone_file.fixed_hosts_file_path}"'
+                include_origin = zone_file._include_origin()
+                if include_origin:
+                    include_value = f"{include_value} {include_origin}"
+                include_stmt = ZoneDirectiveInclude.fromText(f"$INCLUDE {include_value}")
+                self._append_zone_file_statement_xml(
+                    static_include_el,
+                    include_stmt,
+                    node_name_override="include",
+                )
+                generated_el = ET.SubElement(static_include_el, "generated")
+                generated_el.text = "true"
+                statements_el = ET.SubElement(zone_file_el, "statements")
+                seen_soa = False
+                default_ttl_written = False
+                for idx, statement in enumerate(zone_file.zone_file_statements):
+                    tag_override = None
+                    if isinstance(statement, ZoneResourceRecord) and getattr(statement, "rr_type", None) == "SOA":
+                        seen_soa = True
+                    if isinstance(statement, ZoneDirectiveTtl) and not seen_soa and not default_ttl_written:
+                        tag_override = "DefaultTTL"
+                        default_ttl_written = True
+                    self._append_zone_file_statement_xml(
+                        statements_el,
+                        statement,
+                        position=idx,
+                        node_name_override=tag_override,
+                    )
+                fixed_hosts_el = ET.SubElement(fixed_hosts_section_el, "entries")
+                for idx, statement in enumerate(zone_file.fixed_host_statements):
+                    self._append_zone_file_statement_xml(
+                        fixed_hosts_el,
+                        statement,
+                        position=idx,
+                    )
+
+        tree = ET.ElementTree(root)
+        ET.indent(tree, space="  ")
+        tree.write(path, encoding="utf-8", xml_declaration=True)

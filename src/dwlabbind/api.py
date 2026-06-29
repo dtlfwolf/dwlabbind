@@ -9,12 +9,10 @@ import xml.etree.ElementTree as ET
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from .bind_conf import (
+    BindServerXmlSerializer,
+    BindConfigurationManager,
     BindOperationError,
     BindServer,
-    _write_server_xml,
-    backup_named_conf,
-    import_named_conf,
-    initialize_named_conf,
 )
 
 _API_STATE: dict[str, object] = {
@@ -22,6 +20,8 @@ _API_STATE: dict[str, object] = {
     "named_conf": None,
     "xml_root": None,
 }
+_MANAGER = BindConfigurationManager()
+_XML_SERIALIZER = BindServerXmlSerializer()
 
 
 class BindApiHandler(BaseHTTPRequestHandler):
@@ -106,7 +106,7 @@ class BindApiHandler(BaseHTTPRequestHandler):
         fd, tmp_path = tempfile.mkstemp(prefix="dwlabbind-api-", suffix=".xml")
         os.close(fd)
         try:
-            _write_server_xml(server, tmp_path)
+            _XML_SERIALIZER.write_server_xml(server, tmp_path)
             xml_tree = ET.parse(tmp_path)
             root = xml_tree.getroot()
             _API_STATE["xml_root"] = root
@@ -168,13 +168,13 @@ class BindApiHandler(BaseHTTPRequestHandler):
                 if not output:
                     self._send_error(400, "MISSING_REQUIRED_FIELD", "output is required")
                     return
-                path = backup_named_conf(named_conf, output)
+                path = _MANAGER.backup_named_conf(named_conf, output)
                 self._send_json(200, {"archive": path})
                 return
             if self.path == "/import":
                 data = self._read_json()
                 named_conf = data.get("named_conf", "/etc/bind/named.conf")
-                path = import_named_conf(named_conf)
+                path = _MANAGER.import_named_conf(named_conf)
                 _API_STATE["server"] = BindServer.fromConfFile(named_conf)
                 _API_STATE["named_conf"] = named_conf
                 try:
@@ -187,18 +187,22 @@ class BindApiHandler(BaseHTTPRequestHandler):
             if self.path == "/initialize":
                 data = self._read_json()
                 named_conf = data.get("named_conf", "/etc/bind/named.conf")
+                xml_input = data.get("xml_input")
                 output = data.get("output")
                 named_etc = data.get("named_etc")
                 named_var = data.get("named_var")
                 force = bool(data.get("force", False))
                 cleanup = bool(data.get("cleanup", True))
-                result = initialize_named_conf(
+                keep_stage_on_error = bool(data.get("keep_stage_on_error", False))
+                result = _MANAGER.initialize_named_conf(
                     named_conf=named_conf,
+                    xml_input=xml_input,
                     backup_output=output,
                     named_etc=named_etc,
                     named_var=named_var,
                     force=force,
                     cleanup=cleanup,
+                    keep_stage_on_error=keep_stage_on_error,
                 )
                 loaded_conf = result.get("conf") or named_conf
                 _API_STATE["server"] = BindServer.fromConfFile(str(loaded_conf))
@@ -253,6 +257,50 @@ class BindApiHandler(BaseHTTPRequestHandler):
                     fqdn=fqdn,
                     ip_address=ip_address,
                     ttl=ttl,
+                    force=force,
+                    persist=False,
+                )
+                xml_text = self._sync_xml_from_server(server)
+                self._send_json(
+                    200,
+                    {
+                        **result,
+                        "mode": "in-memory",
+                        "named_conf": _API_STATE.get("named_conf"),
+                        "xml": xml_text,
+                    },
+                )
+                return
+            if self.path == "/delete-fixed-host":
+                data = self._read_json()
+                named_conf = data.get("named_conf")
+                fqdn = data.get("fqdn")
+                ip_address = data.get("ip")
+                force = bool(data.get("force", False))
+                if not fqdn:
+                    self._send_error(
+                        400,
+                        "MISSING_REQUIRED_FIELD",
+                        "fqdn is required",
+                    )
+                    return
+                server = _API_STATE.get("server")
+                current_named_conf = _API_STATE.get("named_conf")
+                if named_conf and (server is None or current_named_conf != named_conf):
+                    server = BindServer.fromConfFile(named_conf)
+                    _API_STATE["server"] = server
+                    _API_STATE["named_conf"] = named_conf
+                if server is None:
+                    self._send_error(
+                        409,
+                        "STATE_NOT_INITIALIZED",
+                        "No in-memory configuration loaded in API mode.",
+                        "Call /import first (or provide named_conf once in /delete-fixed-host).",
+                    )
+                    return
+                result = server.delete_fixed_host(
+                    fqdn=fqdn,
+                    ip_address=ip_address,
                     force=force,
                     persist=False,
                 )

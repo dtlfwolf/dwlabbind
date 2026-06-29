@@ -6,12 +6,8 @@ import argparse
 import logging
 
 from .bind_conf import (
+    BindConfigurationManager,
     BindOperationError,
-    add_fixed_host_and_write,
-    backup_named_conf,
-    create_zone_and_write,
-    import_named_conf,
-    initialize_named_conf,
 )
 
 logger = logging.getLogger(__name__)
@@ -30,6 +26,12 @@ def main() -> None:
 
     init = sub.add_parser("initialize", help="Backup, import, and write managed dwlab config")
     init.add_argument("--named-conf", default="/etc/bind/named.conf", metavar="FILE", help="Full path to named.conf")
+    init.add_argument(
+        "--xml-input",
+        default=None,
+        metavar="FILE",
+        help="Optional dwlabbind XML input used as configuration source for initialize",
+    )
     init.add_argument(
         "--output",
         default=None,
@@ -57,6 +59,11 @@ def main() -> None:
         "--nocleanup",
         action="store_true",
         help="Disable post-initialize cleanup of unreferenced legacy backed-up files",
+    )
+    init.add_argument(
+        "--keep-stage-on-error",
+        action="store_true",
+        help="Keep temporary stage directory when initialize fails validation",
     )
 
     add_host = sub.add_parser("add-fixed-host", help="Add static A/AAAA and PTR records into matching zones")
@@ -87,6 +94,33 @@ def main() -> None:
         help="Overwrite existing host/ip mappings if they already exist",
     )
 
+    del_host = sub.add_parser("delete-fixed-host", help="Delete static host mapping from forward/reverse zones")
+    del_host.add_argument(
+        "--named-conf",
+        default="/etc/bind/named.conf",
+        metavar="FILE",
+        help="Optional full path to named.conf (default: /etc/bind/named.conf)",
+    )
+    del_host.add_argument("--fqdn", required=True, metavar="FQDN", help="Host FQDN (e.g. host.example.com)")
+    del_host.add_argument("--ip", default=None, metavar="IP", help="Optional IPv4/IPv6 to delete a specific mapping")
+    del_host.add_argument(
+        "--named-etc",
+        default=None,
+        metavar="DIR",
+        help="Target named configuration directory (default: directory of --named-conf)",
+    )
+    del_host.add_argument(
+        "--named-var",
+        default=None,
+        metavar="DIR",
+        help="Target named zone-file directory root (default: /var/lib/bind)",
+    )
+    del_host.add_argument(
+        "--force",
+        action="store_true",
+        help="Reserved flag for future delete conflict policies",
+    )
+
     zone_create = sub.add_parser("zone-create", help="Create forward/reverse zone from minimal parameters")
     zone_create.add_argument("--named-conf", default="/etc/bind/named.conf", metavar="FILE", help="Optional full path to named.conf (default: /etc/bind/named.conf)")
     zone_create.add_argument("--domain-name", required=True, metavar="DOMAIN", help="Domain name (e.g. example.com)")
@@ -99,23 +133,26 @@ def main() -> None:
     zone_create.add_argument("--force", action="store_true", help="Replace existing forward/reverse zones when already present")
 
     args = parser.parse_args()
+    manager = BindConfigurationManager()
     try:
         if args.command == "backup":
-            path = backup_named_conf(args.named_conf, args.output)
+            path = manager.backup_named_conf(args.named_conf, args.output)
             print(path)
             return
         if args.command == "import":
-            path = import_named_conf(args.named_conf)
+            path = manager.import_named_conf(args.named_conf)
             print(path)
             return
         if args.command == "initialize":
-            result = initialize_named_conf(
+            result = manager.initialize_named_conf(
                 named_conf=args.named_conf,
+                xml_input=args.xml_input,
                 backup_output=args.output,
                 named_etc=args.named_etc,
                 named_var=args.named_var,
                 force=args.force,
                 cleanup=not args.nocleanup,
+                keep_stage_on_error=args.keep_stage_on_error,
             )
             logger.info(
                 "initialize completed (named_conf=%s, backup=%s, xml=%s, conf=%s)",
@@ -126,7 +163,7 @@ def main() -> None:
             )
             return
         if args.command == "add-fixed-host":
-            result = add_fixed_host_and_write(
+            result = manager.add_fixed_host_and_write(
                 named_conf=args.named_conf,
                 fqdn=args.fqdn,
                 ip_address=args.ip,
@@ -146,8 +183,29 @@ def main() -> None:
                 result.get("conf"),
             )
             return
+        if args.command == "delete-fixed-host":
+            result = manager.delete_fixed_host_and_write(
+                named_conf=args.named_conf,
+                fqdn=args.fqdn,
+                ip_address=args.ip,
+                force=args.force,
+                named_etc=args.named_etc,
+                named_var=args.named_var,
+            )
+            logger.info(
+                "fixed host deleted and configuration written (named_conf=%s, fqdn=%s, ip=%s, forward_zone=%s, removed_forward=%s, removed_reverse=%s, xml=%s, conf=%s)",
+                args.named_conf,
+                result.get("fqdn"),
+                result.get("ip"),
+                result.get("forward_zone"),
+                result.get("removed_forward_records"),
+                result.get("removed_reverse_records"),
+                result.get("xml"),
+                result.get("conf"),
+            )
+            return
         if args.command == "zone-create":
-            result = create_zone_and_write(
+            result = manager.create_zone_and_write(
                 named_conf=args.named_conf,
                 domain_name=args.domain_name,
                 dns_server_cidr=args.dns_server,
@@ -171,6 +229,8 @@ def main() -> None:
             logger.warning("Lock detected. If stale, rerun with '--force'.")
         if exc.code == "HOST_EXISTS":
             logger.warning("Host/IP mapping already exists. Re-run with '--force' to overwrite.")
+        if exc.code == "HOST_NOT_FOUND":
+            logger.warning("No host mapping found for the provided fqdn/ip.")
         if exc.hint:
             logger.warning("Hint: %s", exc.hint)
         logger.error("[%s] %s", exc.code, str(exc))
