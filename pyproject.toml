@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dwlabbind"
+version = "0.20.0"
+description = "BIND statement classes, parser, and CLI tools"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+dependencies = [
+  "dwlabbasicpy>=0.20.0",
+]
+
+[project.scripts]
+dwlabbind = "dwlabbind.runner:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["dwlabbind*"]
+exclude = ["*.egg-info", "etc*"]
+
+[tool.setuptools.package-data]
+dwlabbind = ["bind_statements_data.json", "etc/*.yaml"]

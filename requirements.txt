@@ -1,0 +1,11 @@
+setuptools
+certifi
+charset-normalizer
+idna
+requests
+urllib3
+pip-system-certs
+-e ../dwlabbasicpy/
+-r ./../dwlabbasicpy/requirements.txt
+-e ../dwlabbackup/
+-r ./../dwlabbackup/requirements.txt

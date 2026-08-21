@@ -1,0 +1,1601 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3. Configurations and Zone Files &mdash; BIND 9 9.18.14 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <link rel="canonical" href="https://bind9.readthedocs.io/en/v9.18.14/chapter3.html" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="4. Name Server Operations" href="chapter4.html" />
+    <link rel="prev" title="2. Resource Requirements" href="chapter2.html" /> 
+
+<!-- RTD Extra Head -->
+
+
+
+<script type="application/json" id="READTHEDOCS_DATA">{"ad_free": false, "api_host": "https://readthedocs.org", "build_date": "2023-04-19T12:54:12Z", "builder": "sphinx", "canonical_url": null, "commit": "2c5e22fc", "docroot": "/doc/arm/", "features": {"docsearch_disabled": false}, "global_analytics_code": "UA-17997319-1", "language": "en", "page": "chapter3", "programming_language": "c", "project": "bind9", "proxied_api_host": "/_", "source_suffix": ".rst", "subprojects": {}, "theme": "sphinx_rtd_theme", "user_analytics_code": "", "version": "v9.18.14"}</script>
+
+<!--
+Using this variable directly instead of using `JSON.parse` is deprecated.
+The READTHEDOCS_DATA global variable will be removed in the future.
+-->
+<script type="text/javascript">
+READTHEDOCS_DATA = JSON.parse(document.getElementById('READTHEDOCS_DATA').innerHTML);
+</script>
+
+
+
+<!-- end RTD <extrahead> -->
+<script async type="text/javascript" src="/_/static/javascript/readthedocs-addons.js"></script><meta name="readthedocs-project-slug" content="bind9" /><meta name="readthedocs-version-slug" content="v9.18.14" /><meta name="readthedocs-resolver-filename" content="/chapter3.html" /><meta name="readthedocs-http-status" content="200" /></head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> BIND 9
+          </a>
+              <div class="version">
+                v9.18.14
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="chapter1.html">1. Introduction to DNS and BIND 9</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chapter2.html">2. Resource Requirements</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">3. Configurations and Zone Files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">3.1. Introduction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#named-conf-base-file">3.1.1. <code class="docutils literal notranslate"><span class="pre">named.conf</span></code> Base File</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#example-com-base-zone-file">3.1.2. <strong>example.com</strong> base zone file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#other-zone-files">3.1.3. Other Zone Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#localhost-zone-file">3.1.4. localhost Zone File</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#localhost-reverse-mapped-zone-file">3.1.5. localhost Reverse-Mapped Zone File</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#authoritative-name-servers">3.2. Authoritative Name Servers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#primary-authoritative-name-server">3.2.1. Primary Authoritative Name Server</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#secondary-authoritative-name-server">3.2.2. Secondary Authoritative Name Server</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#resolver-caching-name-servers">3.3. Resolver (Caching Name Servers)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#additional-zone-files">3.3.1. Additional Zone Files</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#root-servers-hint-zone-file">3.3.1.1. Root Servers (Hint) Zone File</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#private-ip-reverse-map-zone-files">3.3.1.2. Private IP Reverse Map Zone Files</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#resolver-configuration">3.3.2. Resolver Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#forwarding-resolver-configuration">3.3.3. Forwarding Resolver Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selective-forwarding-resolver-configuration">3.3.4. Selective Forwarding Resolver Configuration</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#load-balancing">3.4. Load Balancing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#soa-rr">3.5. Zone File</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#resource-records">3.5.1. Resource Records</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#textual-expression-of-rrs">3.5.1.1. Textual Expression of RRs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#discussion-of-mx-records">3.5.2. Discussion of MX Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setting-ttls">3.5.3. Setting TTLs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#inverse-mapping-in-ipv4">3.5.4. Inverse Mapping in IPv4</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#other-zone-file-directives">3.5.5. Other Zone File Directives</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#the-at-sign">3.5.5.1. The <strong>&#64;</strong> (at-sign)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#the-origin-directive">3.5.5.2. The <strong>$ORIGIN</strong> Directive</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#the-include-directive">3.5.5.3. The <strong>$INCLUDE</strong> Directive</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#the-ttl-directive">3.5.5.4. The <strong>$TTL</strong> Directive</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#bind-primary-file-extension-the-generate-directive">3.5.6. BIND Primary File Extension: the <strong>$GENERATE</strong> Directive</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#additional-file-formats">3.5.7. Additional File Formats</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="chapter4.html">4. Name Server Operations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chapter5.html">5. DNSSEC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chapter6.html">6. Advanced Configurations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chapter7.html">7. Security Configurations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">8. Configuration Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chapter9.html">9. Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chapter10.html">10. Building BIND 9</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Appendices</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dnssec-guide.html">DNSSEC Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">A Brief History of the DNS and BIND</a></li>
+<li class="toctree-l1"><a class="reference internal" href="general.html">General DNS Reference Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manpages.html">Manual Pages</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BIND 9</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li><span class="section-number">3. </span>Configurations and Zone Files</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/chapter3.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="configurations-and-zone-files">
+<span id="sample-configuration"></span><span id="configuration"></span><h1><span class="section-number">3. </span>Configurations and Zone Files<a class="headerlink" href="#configurations-and-zone-files" title="Permalink to this heading"></a></h1>
+<section id="introduction">
+<h2><span class="section-number">3.1. </span>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading"></a></h2>
+<p>BIND 9 uses a single configuration file called <a class="reference internal" href="reference.html#named-conf"><span class="std std-ref">named.conf</span></a>.
+which is typically located in either /etc/namedb or
+/usr/local/etc/namedb.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If <a class="reference internal" href="chapter4.html#ops-rndc"><span class="std std-ref">rndc</span></a> is being used locally (on the same host
+as BIND 9) then an additional file <a class="reference internal" href="manpages.html#std-iscman-rndc.conf"><code class="xref std std-iscman docutils literal notranslate"><span class="pre">rndc.conf</span></code></a> may be present, though
+<a class="reference internal" href="manpages.html#std-iscman-rndc"><code class="xref std std-iscman docutils literal notranslate"><span class="pre">rndc</span></code></a> operates without this file. If <a class="reference internal" href="manpages.html#std-iscman-rndc"><code class="xref std std-iscman docutils literal notranslate"><span class="pre">rndc</span></code></a> is being run
+from a remote host then an <a class="reference internal" href="manpages.html#std-iscman-rndc.conf"><code class="xref std std-iscman docutils literal notranslate"><span class="pre">rndc.conf</span></code></a> file must be present as it
+defines the link characteristics and properties.</p>
+</div>
+</div></blockquote>
+<p>Depending on the functionality of the system, one or more zone files is
+required.</p>
+<p>The samples given throughout this and subsequent chapters use a standard base
+format for both the <a class="reference internal" href="manpages.html#std-iscman-named.conf"><code class="xref std std-iscman docutils literal notranslate"><span class="pre">named.conf</span></code></a> and the zone files for <strong>example.com</strong>. The
+intent is for the reader to see the evolution from a common base as features
+are added or removed.</p>
+<section id="named-conf-base-file">
+<span id="base-named-conf"></span><h3><span class="section-number">3.1.1. </span><code class="docutils literal notranslate"><span class="pre">named.conf</span></code> Base File<a class="headerlink" href="#named-conf-base-file" title="Permalink to this heading"></a></h3>
+<p>This file illustrates the typical format and layout style used for
+<a class="reference internal" href="manpages.html#std-iscman-named.conf"><code class="xref std std-iscman docutils literal notranslate"><span class="pre">named.conf</span></code></a> and provides a basic logging service, which may be extended
+as required by the user.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="c1">// base named.conf file</span>
+<span class="c1">// Recommended that you always maintain a change log in this file as shown here</span>
+<span class="c1">// options clause defining the server-wide properties</span>
+<span class="n">options</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// all relative paths use this directory as a base</span>
+<span class="w">  </span><span class="n">directory</span><span class="w"> </span><span class="s">&quot;/var&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// version statement for security to avoid hacking known weaknesses</span>
+<span class="w">  </span><span class="c1">// if the real version number is revealed</span>
+<span class="w">  </span><span class="n">version</span><span class="w"> </span><span class="s">&quot;not currently available&quot;</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="c1">// logging clause</span>
+<span class="c1">// log to /var/log/named/example.log all events from info UP in severity (no debug)</span>
+<span class="c1">// uses 3 files in rotation swaps files when size reaches 250K</span>
+<span class="c1">// failure messages that occur before logging is established are</span>
+<span class="c1">// in syslog (/var/log/messages)</span>
+<span class="c1">//</span>
+<span class="n">logging</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">channel</span><span class="w"> </span><span class="n">example_log</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// uses a relative path name and the directory statement to</span>
+<span class="w">    </span><span class="c1">// expand to /var/log/named/example.log</span>
+<span class="w">    </span><span class="n">file</span><span class="w"> </span><span class="s">&quot;log/named/example.log&quot;</span><span class="w"> </span><span class="n">versions</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="n">size</span><span class="w"> </span><span class="mi">250</span><span class="n">k</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// only log info and up messages - all others discarded</span>
+<span class="w">    </span><span class="n">severity</span><span class="w"> </span><span class="n">info</span><span class="p">;</span>
+<span class="w">  </span><span class="p">};</span>
+<span class="w">  </span><span class="n">category</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">example_log</span><span class="p">;</span>
+<span class="w">  </span><span class="p">};</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="reference.html#namedconf-statement-logging" title="namedconf-statement-logging"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">logging</span></code></a> and <a class="reference internal" href="reference.html#namedconf-statement-options" title="namedconf-statement-options"><code class="xref namedconf namedconf-ref docutils literal notranslate"><span class="pre">options</span></code></a> blocks
+and <a class="reference internal" href="reference.html#namedconf-statement-category" title="namedconf-statement-category"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">category</span></code></a>, <a class="reference internal" href="reference.html#namedconf-statement-channel" title="namedconf-statement-channel"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">channel</span></code></a>,
+<a class="reference internal" href="reference.html#namedconf-statement-directory" title="namedconf-statement-directory"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">directory</span></code></a>, <a class="reference internal" href="reference.html#namedconf-statement-file" title="namedconf-statement-file"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">file</span></code></a>, and <a class="reference internal" href="reference.html#namedconf-statement-severity" title="namedconf-statement-severity"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">severity</span></code></a>
+statements are all described further in the appropriate sections of this ARM.</p>
+</section>
+<section id="example-com-base-zone-file">
+<span id="base-zone-file"></span><h3><span class="section-number">3.1.2. </span><strong>example.com</strong> base zone file<a class="headerlink" href="#example-com-base-zone-file" title="Permalink to this heading"></a></h3>
+<p>The following is a complete zone file for the domain <strong>example.com</strong>, which
+illustrates a number of common features. Comments in the file explain these
+features where appropriate.  Zone files consist of <a class="reference internal" href="#zone-file"><span class="std std-ref">Resource Records (RR)</span></a>, which describe the zone’s characteristics or properties.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span>; base zone file for example.com
+<span class="linenos"> 2</span>$TTL 2d    ; default TTL for zone
+<span class="linenos"> 3</span>$ORIGIN example.com. ; base domain-name
+<span class="linenos"> 4</span>; Start of Authority RR defining the key characteristics of the zone (domain)
+<span class="linenos"> 5</span>@         IN      SOA   ns1.example.com. hostmaster.example.com. (
+<span class="linenos"> 6</span>                                2003080800 ; serial number
+<span class="linenos"> 7</span>                                12h        ; refresh
+<span class="linenos"> 8</span>                                15m        ; update retry
+<span class="linenos"> 9</span>                                3w         ; expiry
+<span class="linenos">10</span>                                2h         ; minimum
+<span class="linenos">11</span>                                )
+<span class="linenos">12</span>; name server RR for the domain
+<span class="linenos">13</span>           IN      NS      ns1.example.com.
+<span class="linenos">14</span>; the second name server is external to this zone (domain)
+<span class="linenos">15</span>           IN      NS      ns2.example.net.
+<span class="linenos">16</span>; mail server RRs for the zone (domain)
+<span class="linenos">17</span>        3w IN      MX  10  mail.example.com.
+<span class="linenos">18</span>; the second  mail servers is  external to the zone (domain)
+<span class="linenos">19</span>           IN      MX  20  mail.example.net.
+<span class="linenos">20</span>; domain hosts includes NS and MX records defined above
+<span class="linenos">21</span>; plus any others required
+<span class="linenos">22</span>; for instance a user query for the A RR of joe.example.com will
+<span class="linenos">23</span>; return the IPv4 address 192.168.254.6 from this zone file
+<span class="linenos">24</span>ns1        IN      A       192.168.254.2
+<span class="linenos">25</span>mail       IN      A       192.168.254.4
+<span class="linenos">26</span>joe        IN      A       192.168.254.6
+<span class="linenos">27</span>www        IN      A       192.168.254.7
+<span class="linenos">28</span>; aliases ftp (ftp server) to an external domain
+<span class="linenos">29</span>ftp        IN      CNAME   ftp.example.net.
+</pre></div>
+</div>
+<p>This type of zone file is frequently referred to as a <strong>forward-mapped zone
+file</strong>, since it maps domain names to some other value, while a
+<a class="reference internal" href="#ipv4-reverse"><span class="std std-ref">reverse-mapped zone file</span></a> maps an IP address to a domain
+name.  The zone file is called <strong>example.com</strong> for no good reason except that
+it is the domain name of the zone it describes; as always, users are free to
+use whatever file-naming convention is appropriate to their needs.</p>
+</section>
+<section id="other-zone-files">
+<h3><span class="section-number">3.1.3. </span>Other Zone Files<a class="headerlink" href="#other-zone-files" title="Permalink to this heading"></a></h3>
+<p>Depending on the configuration additional zone files may or should be present.
+Their format and functionality are briefly described here.</p>
+</section>
+<section id="localhost-zone-file">
+<h3><span class="section-number">3.1.4. </span>localhost Zone File<a class="headerlink" href="#localhost-zone-file" title="Permalink to this heading"></a></h3>
+<p>All end-user systems are shipped with a <code class="docutils literal notranslate"><span class="pre">hosts</span></code> file (usually located in
+/etc). This file is normally configured to map the name <strong>localhost</strong> (the name
+used by applications when they run locally) to the loopback address. It is
+argued, reasonably, that a forward-mapped zone file for <strong>localhost</strong> is
+therefore not strictly required. This manual does use the BIND 9 distribution
+file <code class="docutils literal notranslate"><span class="pre">localhost-forward.db</span></code> (normally in /etc/namedb/master or
+/usr/local/etc/namedb/master) in all configuration samples for the following
+reasons:</p>
+<ol class="arabic simple">
+<li><p>Many users elect to delete the <code class="docutils literal notranslate"><span class="pre">hosts</span></code> file for security reasons (it is a
+potential target of serious domain name redirection/poisoning attacks).</p></li>
+<li><p>Systems normally lookup any name (including domain names) using the
+<code class="docutils literal notranslate"><span class="pre">hosts</span></code> file first (if present), followed by DNS. However, the
+<code class="docutils literal notranslate"><span class="pre">nsswitch.conf</span></code> file (typically in /etc) controls this order (normally
+<strong>hosts: file dns</strong>), allowing the order to be changed or the <strong>file</strong> value
+to be deleted entirely depending on local needs.  Unless the BIND
+administrator controls this file and knows its values, it is unsafe to
+assume that <strong>localhost</strong> is forward-mapped correctly.</p></li>
+<li><p>As a reminder to users that unnecessary queries for <strong>localhost</strong> form a
+non-trivial volume of DNS queries on the public network, which affects DNS
+performance for all users.</p></li>
+</ol>
+<p>Users may, however, elect at their discretion not to implement this file since,
+depending on the operational environment, it may not be essential.</p>
+<p>The BIND 9 distribution file <code class="docutils literal notranslate"><span class="pre">localhost-forward.db</span></code> format is shown for
+completeness and provides for both IPv4 and IPv6 localhost resolution. The zone
+(domain) name is <strong>localhost.</strong></p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$TTL 3h
+localhost.  SOA      localhost.  nobody.localhost. 42  1d  12h  1w  3h
+            NS       localhost.
+            A        127.0.0.1
+            AAAA     ::1
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Readers of a certain age or disposition may note the reference in this file to the late,
+lamented Douglas Noel Adams.</p>
+</div>
+</section>
+<section id="localhost-reverse-mapped-zone-file">
+<h3><span class="section-number">3.1.5. </span>localhost Reverse-Mapped Zone File<a class="headerlink" href="#localhost-reverse-mapped-zone-file" title="Permalink to this heading"></a></h3>
+<p>This zone file allows any query requesting the name associated with the
+loopback IP (127.0.0.1).  This file is required to prevent unnecessary queries
+from reaching the public DNS hierarchy. The BIND 9 distribution file
+<code class="docutils literal notranslate"><span class="pre">localhost.rev</span></code> is shown for completeness:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$TTL 1D
+@        IN        SOA  localhost. root.localhost. (
+                        2007091701 ; serial
+                        30800      ; refresh
+                        7200       ; retry
+                        604800     ; expire
+                        300 )      ; minimum
+         IN        NS    localhost.
+1        IN        PTR   localhost.
+</pre></div>
+</div>
+</section>
+</section>
+<section id="authoritative-name-servers">
+<span id="config-auth-samples"></span><h2><span class="section-number">3.2. </span>Authoritative Name Servers<a class="headerlink" href="#authoritative-name-servers" title="Permalink to this heading"></a></h2>
+<p>These provide authoritative answers to user queries for the zones
+they support: for instance, the zone data describing the domain name <strong>example.com</strong>. An
+authoritative name server may support one or many zones.</p>
+<p>Each zone may be defined as either a <strong>primary</strong> or a <strong>secondary</strong>. A primary zone
+reads its zone data directly from a file system. A secondary zone obtains its zone
+data from the primary zone using a process called <strong>zone transfer</strong>. Both the primary
+and the secondary zones provide authoritative data for their zone; there is no difference
+in the answer to a query from a primary or a secondary zone. An authoritative name server
+may support any combination of primary and secondary zones.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The terms <strong>primary</strong> and <strong>secondary</strong> do not imply any access
+priority. Resolvers (name servers that provide the complete answers to user
+queries) are not aware of (and cannot find out) whether an authoritative
+answer comes from the primary or secondary name server. Instead, the
+resolver uses the list of authoritative servers for the zone (there must be
+at least two) and maintains a Round Trip Time (RTT) - the time taken to
+respond to the query - for each server in the list.  The resolver uses the
+lowest-value server (the fastest) as its preferred server for the zone and
+continues to do so until its RTT becomes higher than the next slowest in its
+list, at which time that one becomes the preferred server.</p>
+<p>For reasons of backward compatibility BIND 9 treats “primary” and “master” as
+synonyms, as well as “secondary” and “slave.”</p>
+</div>
+<p>The following diagram shows the relationship between the primary and secondary
+name servers. The text below explains the process in detail.</p>
+<figure class="align-center" id="id4">
+<img alt="_images/primary-secondary.png" src="_images/primary-secondary.png" />
+<figcaption>
+<p><span class="caption-text">Authoritative Primary and Secondary Name Servers</span><a class="headerlink" href="#id4" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<p>The numbers in parentheses in the following text refer to the numbered items in the diagram above.</p>
+<ol class="arabic simple">
+<li><p>The authoritative primary name server always loads (or reloads) its zone
+files from (1) a local or networked filestore.</p></li>
+<li><p>The authoritative secondary name server always loads its zone data from a
+primary via a <strong>zone transfer</strong> operation.  Zone transfer may use <strong>AXFR</strong>
+(complete zone transfer) or <strong>IXFR</strong> (incremental zone transfer), but only
+if both primary and secondary name servers support the service. The zone
+transfer process (either AXFR or IXFR) works as follows:</p>
+<ol class="loweralpha simple">
+<li><p>The secondary name server for the zone reads (3 and 4) the
+<a class="reference internal" href="#soa-rr"><span class="std std-ref">SOA RR</span></a> periodically. The interval is defined by the <strong>refresh</strong>
+parameter of the Start of Authority (SOA) RR.</p></li>
+<li><p>The secondary compares the <strong>serial number</strong> parameter of the SOA RR
+received from the primary with the serial number in the SOA RR of its
+current zone data.</p></li>
+<li><p>If the received serial number is arithmetically greater (higher) than the
+current one, the secondary initiates a zone transfer (5) using AXFR or IXFR
+(depending on the primary and secondary configuration), using TCP over
+port 53 (6).</p></li>
+</ol>
+</li>
+<li><p>The typically recommended zone refresh times for the SOA RR (the time
+interval when the secondary reads or polls the primary for the zone SOA RR)
+are multiples of hours to reduce traffic loads. Worst-case zone change
+propagation can therefore take extended periods.</p></li>
+<li><p>The optional NOTIFY (<span class="target" id="index-0"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc1996.html"><strong>RFC 1996</strong></a>) feature (2) is automatically configured;
+use the <a class="reference internal" href="reference.html#namedconf-statement-notify" title="namedconf-statement-notify"><code class="xref namedconf namedconf-ref docutils literal notranslate"><span class="pre">notify</span></code></a> statement to turn off the feature.
+Whenever the primary loads or reloads a zone, it sends a NOTIFY message to
+the configured secondary (or secondaries) and may optionally be configured
+to send the NOTIFY message to other hosts using the
+<a class="reference internal" href="reference.html#namedconf-statement-also-notify" title="namedconf-statement-also-notify"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">also-notify</span></code></a> statement.  The NOTIFY message simply
+indicates to the secondary that the primary has loaded or reloaded the zone.
+On receipt of the NOTIFY message, the secondary respons to indicate it has received the NOTIFY and immediately reads the SOA RR
+from the primary (as described in section 2 a. above). If the zone file has
+changed, propagation is practically immediate.</p></li>
+</ol>
+<p>The authoritative samples all use NOTIFY but identify the statements used, so
+that they can be removed if not required.</p>
+<section id="primary-authoritative-name-server">
+<span id="sample-primary"></span><h3><span class="section-number">3.2.1. </span>Primary Authoritative Name Server<a class="headerlink" href="#primary-authoritative-name-server" title="Permalink to this heading"></a></h3>
+<p>The zone files are unmodified <a class="reference internal" href="#base-zone-file"><span class="std std-ref">from the base samples</span></a> but
+the <a class="reference internal" href="manpages.html#std-iscman-named.conf"><code class="xref std std-iscman docutils literal notranslate"><span class="pre">named.conf</span></code></a> file has been modified as shown:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="c1">// authoritative primary named.conf file</span>
+<span class="c1">// options clause defining the server-wide properties</span>
+<span class="n">options</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// all relative paths use this directory as a base</span>
+<span class="w">  </span><span class="n">directory</span><span class="w"> </span><span class="s">&quot;/var&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// version statement for security to avoid hacking known weaknesses</span>
+<span class="w">  </span><span class="c1">// if the real version number is revealed</span>
+<span class="w">  </span><span class="n">version</span><span class="w"> </span><span class="s">&quot;not currently available&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// This is the default - allows user queries from any IP</span>
+<span class="w">  </span><span class="n">allow</span><span class="o">-</span><span class="n">query</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">any</span><span class="p">;</span><span class="w"> </span><span class="p">};</span>
+<span class="w">  </span><span class="c1">// normal server operations may place items in the cache</span>
+<span class="w">  </span><span class="c1">// this prevents any user query from accessing these items</span>
+<span class="w">  </span><span class="c1">// only authoritative zone data will be returned</span>
+<span class="w">  </span><span class="n">allow</span><span class="o">-</span><span class="n">query</span><span class="o">-</span><span class="n">cache</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">none</span><span class="p">;</span><span class="w"> </span><span class="p">};</span>
+<span class="w">  </span><span class="c1">// Do not provide recursive service to user queries</span>
+<span class="w">  </span><span class="n">recursion</span><span class="w"> </span><span class="n">no</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="c1">// logging clause</span>
+<span class="c1">// log to /var/log/named/example.log all events from info UP in severity (no debug)</span>
+<span class="c1">// uses 3 files in rotation swaps files when size reaches 250K</span>
+<span class="c1">// failure messages that occur before logging is established are</span>
+<span class="c1">// in syslog (/var/log/messages)</span>
+<span class="c1">//</span>
+<span class="n">logging</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">channel</span><span class="w"> </span><span class="n">example_log</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// uses a relative path name and the directory statement to</span>
+<span class="w">    </span><span class="c1">// expand to /var/log/named/example.log</span>
+<span class="w">    </span><span class="n">file</span><span class="w"> </span><span class="s">&quot;log/named/example.log&quot;</span><span class="w"> </span><span class="n">versions</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="n">size</span><span class="w"> </span><span class="mi">250</span><span class="n">k</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// only log info and up messages - all others discarded</span>
+<span class="w">    </span><span class="n">severity</span><span class="w"> </span><span class="n">info</span><span class="p">;</span>
+<span class="w">  </span><span class="p">};</span>
+<span class="w">  </span><span class="n">category</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">example_log</span><span class="p">;</span>
+<span class="w">  </span><span class="p">};</span>
+<span class="p">};</span>
+<span class="c1">// Provide forward mapping zone for localhost</span>
+<span class="c1">// (optional)</span>
+<span class="n">zone</span><span class="w"> </span><span class="s">&quot;localhost&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="n">primary</span><span class="p">;</span>
+<span class="w">  </span><span class="n">file</span><span class="w"> </span><span class="s">&quot;master/localhost-forward.db&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">notify</span><span class="w"> </span><span class="n">no</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="c1">// Provide reverse mapping zone for the loopback</span>
+<span class="c1">// address 127.0.0.1</span>
+<span class="n">zone</span><span class="w"> </span><span class="s">&quot;0.0.127.in-addr.arpa&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="n">primary</span><span class="p">;</span>
+<span class="w">  </span><span class="n">file</span><span class="w"> </span><span class="s">&quot;localhost.rev&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">notify</span><span class="w"> </span><span class="n">no</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="c1">// We are the primary server for example.com</span>
+<span class="n">zone</span><span class="w"> </span><span class="s">&quot;example.com&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// this is the primary name server for the zone</span>
+<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="n">primary</span><span class="p">;</span>
+<span class="w">  </span><span class="n">file</span><span class="w"> </span><span class="s">&quot;example.com&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// this is the default</span>
+<span class="w">  </span><span class="n">notify</span><span class="w"> </span><span class="n">yes</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// IP addresses of secondary servers allowed to</span>
+<span class="w">  </span><span class="c1">// transfer example.com from this server</span>
+<span class="w">  </span><span class="n">allow</span><span class="o">-</span><span class="n">transfer</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="mf">192.168.4.14</span><span class="p">;</span>
+<span class="w">    </span><span class="mf">192.168.5.53</span><span class="p">;</span>
+<span class="w">  </span><span class="p">};</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>The added statements and blocks are commented in the above file.</p>
+<p>The <a class="reference internal" href="reference.html#namedconf-statement-zone" title="namedconf-statement-zone"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">zone</span></code></a> block, and <a class="reference internal" href="reference.html#namedconf-statement-allow-query" title="namedconf-statement-allow-query"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">allow-query</span></code></a>,
+<a class="reference internal" href="reference.html#namedconf-statement-allow-query-cache" title="namedconf-statement-allow-query-cache"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">allow-query-cache</span></code></a>,
+<a class="reference internal" href="reference.html#namedconf-statement-allow-transfer" title="namedconf-statement-allow-transfer"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">allow-transfer</span></code></a>, <a class="reference internal" href="reference.html#namedconf-statement-file" title="namedconf-statement-file"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">file</span></code></a>,
+<a class="reference internal" href="reference.html#namedconf-statement-notify" title="namedconf-statement-notify"><code class="xref namedconf namedconf-ref docutils literal notranslate"><span class="pre">notify</span></code></a>, <a class="reference internal" href="reference.html#namedconf-statement-recursion" title="namedconf-statement-recursion"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">recursion</span></code></a>, and <a class="reference internal" href="reference.html#namedconf-statement-type" title="namedconf-statement-type"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">type</span></code></a>
+statements are described in detail in the appropriate sections.</p>
+</section>
+<section id="secondary-authoritative-name-server">
+<span id="sample-secondary"></span><h3><span class="section-number">3.2.2. </span>Secondary Authoritative Name Server<a class="headerlink" href="#secondary-authoritative-name-server" title="Permalink to this heading"></a></h3>
+<p>The zone files <code class="docutils literal notranslate"><span class="pre">local-host-forward.db</span></code> and <code class="docutils literal notranslate"><span class="pre">localhost.rev</span></code> are unmodified
+<a class="reference internal" href="#base-zone-file"><span class="std std-ref">from the base samples</span></a>. The <strong>example.com</strong> zone file is
+not required (the zone file is obtained from the primary via zone transfer).
+The <a class="reference internal" href="reference.html#named-conf"><span class="std std-ref">named.conf</span></a> file has been modified as shown:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="c1">// authoritative secondary named.conf file</span>
+<span class="c1">// options clause defining the server-wide properties</span>
+<span class="n">options</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// all relative paths use this directory as a base</span>
+<span class="w">  </span><span class="n">directory</span><span class="w"> </span><span class="s">&quot;/var&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// version statement for security to avoid hacking known weaknesses</span>
+<span class="w">  </span><span class="c1">// if the real version number is revealed</span>
+<span class="w">  </span><span class="n">version</span><span class="w"> </span><span class="s">&quot;not currently available&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// This is the default - allows user queries from any IP</span>
+<span class="w">  </span><span class="n">allow</span><span class="o">-</span><span class="n">query</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">any</span><span class="p">;</span><span class="w"> </span><span class="p">};</span>
+<span class="w">  </span><span class="c1">// normal server operations may place items in the cache</span>
+<span class="w">  </span><span class="c1">// this prevents any user query from accessing these items</span>
+<span class="w">  </span><span class="c1">// only authoritative zone data will be returned</span>
+<span class="w">  </span><span class="n">allow</span><span class="o">-</span><span class="n">query</span><span class="o">-</span><span class="n">cache</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">none</span><span class="p">;</span><span class="w"> </span><span class="p">};</span>
+<span class="w">  </span><span class="c1">// Do not provide recursive service to user queries</span>
+<span class="w">  </span><span class="n">recursion</span><span class="w"> </span><span class="n">no</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="c1">// logging clause</span>
+<span class="c1">// log to /var/log/named/example.log all events from info UP in severity (no debug)</span>
+<span class="c1">// uses 3 files in rotation swaps files when size reaches 250K</span>
+<span class="c1">// failure messages that occur before logging is established are</span>
+<span class="c1">// in syslog (/var/log/messages)</span>
+<span class="c1">//</span>
+<span class="n">logging</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">channel</span><span class="w"> </span><span class="n">example_log</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// uses a relative path name and the directory statement to</span>
+<span class="w">    </span><span class="c1">// expand to /var/log/named/example.log</span>
+<span class="w">    </span><span class="n">file</span><span class="w"> </span><span class="s">&quot;log/named/example.log&quot;</span><span class="w"> </span><span class="n">versions</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="n">size</span><span class="w"> </span><span class="mi">250</span><span class="n">k</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// only log info and up messages - all others discarded</span>
+<span class="w">    </span><span class="n">severity</span><span class="w"> </span><span class="n">info</span><span class="p">;</span>
+<span class="w">   </span><span class="p">};</span>
+<span class="w">   </span><span class="n">category</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="p">{</span>
+<span class="w">     </span><span class="n">example_log</span><span class="p">;</span>
+<span class="w">  </span><span class="p">};</span>
+<span class="p">};</span>
+<span class="c1">// Provide forward mapping zone for localhost</span>
+<span class="c1">// (optional)</span>
+<span class="n">zone</span><span class="w"> </span><span class="s">&quot;localhost&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="n">primary</span><span class="p">;</span>
+<span class="w">  </span><span class="n">file</span><span class="w"> </span><span class="s">&quot;master/localhost-forward.db&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">notify</span><span class="w"> </span><span class="n">no</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="c1">// Provide reverse mapping zone for the loopback</span>
+<span class="c1">// address 127.0.0.1</span>
+<span class="n">zone</span><span class="w"> </span><span class="s">&quot;0.0.127.in-addr.arpa&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="n">primary</span><span class="p">;</span>
+<span class="w">  </span><span class="n">file</span><span class="w"> </span><span class="s">&quot;localhost.rev&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">notify</span><span class="w"> </span><span class="n">no</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="c1">// We are the secondary server for example.com</span>
+<span class="n">zone</span><span class="w"> </span><span class="s">&quot;example.com&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// this is a secondary server for the zone</span>
+<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="n">secondary</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// the file statement here allows the secondary to save</span>
+<span class="w">  </span><span class="c1">// each zone transfer so that in the event of a program restart</span>
+<span class="w">  </span><span class="c1">// the zone can be loaded immediately and the server can start</span>
+<span class="w">  </span><span class="c1">// to respond to queries without waiting for a zone transfer</span>
+<span class="w">  </span><span class="n">file</span><span class="w"> </span><span class="s">&quot;example.com.saved&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// IP address of example.com primary server</span>
+<span class="w">  </span><span class="n">primaries</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="mf">192.168.254.2</span><span class="p">;</span><span class="w"> </span><span class="p">};</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>The statements and blocks added are all commented in the above file.</p>
+<p>The <a class="reference internal" href="reference.html#namedconf-statement-zone" title="namedconf-statement-zone"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">zone</span></code></a> block, and <a class="reference internal" href="reference.html#namedconf-statement-allow-query" title="namedconf-statement-allow-query"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">allow-query</span></code></a>,
+<a class="reference internal" href="reference.html#namedconf-statement-allow-query-cache" title="namedconf-statement-allow-query-cache"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">allow-query-cache</span></code></a>,
+<a class="reference internal" href="reference.html#namedconf-statement-allow-transfer" title="namedconf-statement-allow-transfer"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">allow-transfer</span></code></a>, <a class="reference internal" href="reference.html#namedconf-statement-file" title="namedconf-statement-file"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">file</span></code></a>,
+<a class="reference internal" href="reference.html#namedconf-statement-primaries" title="namedconf-statement-primaries"><code class="xref namedconf namedconf-ref docutils literal notranslate"><span class="pre">primaries</span></code></a>,
+<a class="reference internal" href="reference.html#namedconf-statement-recursion" title="namedconf-statement-recursion"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">recursion</span></code></a>, and <a class="reference internal" href="reference.html#namedconf-statement-type" title="namedconf-statement-type"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">type</span></code></a> statements are described in
+detail in the appropriate sections.</p>
+<p>If NOTIFY is not being used, no changes are required in this
+<a class="reference internal" href="reference.html#named-conf"><span class="std std-ref">named.conf</span></a> file, since it is the primary that initiates the NOTIFY
+message.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Just when the reader thought they understood primary and secondary, things
+can get more complicated.  A secondary zone can also be a primary to other
+secondaries: <a class="reference internal" href="manpages.html#std-iscman-named"><code class="xref std std-iscman docutils literal notranslate"><span class="pre">named</span></code></a>, by default, sends NOTIFY messages for every
+zone it loads.  Specifying <a class="reference internal" href="chapter6.html#notify"><span class="std std-ref">notify primary-only;</span></a> in the
+<a class="reference internal" href="reference.html#namedconf-statement-zone" title="namedconf-statement-zone"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">zone</span></code></a> block for the secondary causes <a class="reference internal" href="manpages.html#std-iscman-named"><code class="xref std std-iscman docutils literal notranslate"><span class="pre">named</span></code></a> to
+only send NOTIFY messages for primary zones that it loads.</p>
+</div>
+</section>
+</section>
+<section id="resolver-caching-name-servers">
+<span id="config-resolver-samples"></span><h2><span class="section-number">3.3. </span>Resolver (Caching Name Servers)<a class="headerlink" href="#resolver-caching-name-servers" title="Permalink to this heading"></a></h2>
+<p>Resolvers handle <a class="reference internal" href="chapter1.html#recursive-query"><span class="std std-ref">recursive user queries</span></a> and provide
+complete answers; that is, they issue one or more <a class="reference internal" href="chapter1.html#iterative-query"><span class="std std-ref">iterative queries</span></a> to the DNS hierarchy.  Having obtained a complete answer (or
+an error), a resolver passes the answer to the user and places it in its cache.
+Subsequent user requests for the same query will be answered from the
+resolver’s cache until the <a class="reference internal" href="#term-TTL"><span class="xref std std-term">TTL</span></a> of the cached answer has expired, when
+it will be flushed from the cache; the next user query that requests the same
+information results in a new series of queries to the DNS hierarchy.</p>
+<p>Resolvers are frequently referred to by a bewildering variety of names,
+including caching name servers, recursive name servers, forwarding resolvers,
+area resolvers, and full-service resolvers.</p>
+<p>The following diagram shows how resolvers can function in a typical networked
+environment:</p>
+<figure class="align-center">
+<img alt="_images/resolver-forward.png" src="_images/resolver-forward.png" />
+</figure>
+<p>Resolver and Forwarding Resolver</p>
+<ol class="arabic simple">
+<li><p>End-user systems are all distributed with a local <strong>stub resolver</strong> as a
+standard feature. Today, the majority of stub resolvers also provide a local
+cache service to speed up user response times.</p></li>
+<li><p>A stub resolver has limited functionality; specifically, it cannot follow
+<a class="reference internal" href="chapter1.html#referral"><span class="std std-ref">referrals</span></a>. When a stub resolver receives a request for a
+name from a local program, such as a browser, and the answer is not in its
+local cache, it sends a <a class="reference internal" href="chapter1.html#recursive-query"><span class="std std-ref">recursive user query</span></a> (1) to
+a locally configured resolver (5), which may have the answer available in
+its cache. If it does not, it issues <a class="reference internal" href="chapter1.html#iterative-query"><span class="std std-ref">iterative
+queries</span></a> (2) to the DNS hierarchy to obtain the answer. The
+resolver to which the local system sends the user query is configured, for
+Linux and Unix hosts, in <code class="docutils literal notranslate"><span class="pre">/etc/resolv.conf</span></code>; for Windows users it is
+configured or changed via the Control Panel or Settings interface.</p></li>
+<li><p>Alternatively, the user query can be sent to a <strong>forwarding resolver</strong> (4).
+Forwarding resolvers on first glance look fairly pointless, since they
+appear to be acting as a simple pass-though and, like the stub resolver,
+require a full-service resolver (5). However, forwarding resolvers can be
+very powerful additions to a network for the following reasons:</p>
+<ol class="loweralpha simple">
+<li><p>Cost and Performance. Each <strong>recursive user query</strong> (1) at the forwarding
+resolver (4) results in two messages - the query and its answer. The resolver
+(5) may have to issue three, four, or more query pairs (2) to get the required
+answer. Traffic is reduced dramatically, increasing performance or reducing
+cost (if the link is tariffed). Additionally, since the forwarding resolver is
+typically shared across multiple hosts, its cache is more likely to contain
+answers, again improving user performance.</p></li>
+<li><p>Network Maintenance. Forwarding resolvers (4) can be used to ease the burden
+of local administration by providing a single point at which changes to remote
+name servers can be managed, rather than having to update all hosts. Thus, all
+hosts in a particular network section or area can be configured to point to a
+forwarding resolver, which can be configured to stream DNS traffic as desired
+and changed over time with minimal effort.</p></li>
+<li><p>Sanitizing Traffic. Especially in larger private networks it may be sensible
+to stream DNS traffic using a forwarding resolver structure.  The forwarding
+resolver (4) may be configured, for example, to handle all in-domain traffic
+(relatively safe) and forward all external traffic to a <strong>hardened</strong> resolver
+(5).</p></li>
+<li><p>Stealth Networks. Forwarding resolvers are extensively used in <a class="reference internal" href="chapter6.html#split-dns-sample"><span class="std std-ref">stealth
+or split networks</span></a>.</p></li>
+</ol>
+</li>
+<li><p>Forwarding resolvers (4) can be configured to forward all traffic to a
+resolver (5), or to only forward selective traffic (5) while directly
+resolving other traffic (3).</p></li>
+</ol>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>While the diagram above shows <strong>recursive user queries</strong>
+arriving via interface (1), there is nothing to stop them from arriving via
+interface (2) via the public network. If no limits are placed on the source
+IPs that can send such queries, the resolver is termed an <strong>open resolver</strong>.
+Indeed, when the world was young this was the way things worked on the
+Internet. Much has changed and what seems to be a friendly, generous action
+can be used by rogue actors to cause all kinds of problems including
+<strong>Denial of Service (DoS)</strong> attacks. Resolvers should always be configured
+to limit the IP addresses that can use their services. BIND 9 provides a
+number of statements and blocks to simplify defining these IP limits and
+configuring a <strong>closed resolver</strong>. The resolver samples given here all
+configure closed resolvers using a variety of techniques.</p>
+</div>
+<section id="additional-zone-files">
+<h3><span class="section-number">3.3.1. </span>Additional Zone Files<a class="headerlink" href="#additional-zone-files" title="Permalink to this heading"></a></h3>
+<section id="root-servers-hint-zone-file">
+<h4><span class="section-number">3.3.1.1. </span>Root Servers (Hint) Zone File<a class="headerlink" href="#root-servers-hint-zone-file" title="Permalink to this heading"></a></h4>
+<p>Resolvers (although not necessarily forwarding resolvers) need to access the
+DNS hierarchy. To do this, they need to know the addresses (IPv4 and/or IPv6)
+of the 13 <a class="reference internal" href="chapter1.html#root-servers"><span class="std std-ref">root servers</span></a>. This is done by the provision of a
+root server zone file, which is contained in the standard BIND 9 distribution
+as the file <code class="docutils literal notranslate"><span class="pre">named.root</span></code> (normally found in /etc/namedb or
+/usr/local/namedb). This file may also be obtained from the IANA website
+(<a class="reference external" href="https://www.iana.org/domains/root/files">https://www.iana.org/domains/root/files</a>).</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Many distributions rename this file for historical reasons.
+Consult the appropriate distribution documentation for the actual file name.</p>
+</div>
+</div></blockquote>
+<p>The hint zone file is referenced using the <a class="reference internal" href="reference.html#namedconf-statement-type hint" title="namedconf-statement-type hint"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">type</span> <span class="pre">hint</span></code></a> statement and
+a zone (domain) name of “.” (the generally silent dot).</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The root server IP addresses have been stable for a number of
+years and are likely to remain stable for the near future. BIND 9 has a
+root-server list in its executable such that even if this file is omitted,
+out-of-date, or corrupt BIND 9 can still function. For this reason, many
+sample configurations omit the hints file. All the samples given here
+include the hints file primarily as a reminder of the functionality of the
+configuration, rather than as an absolute necessity.</p>
+</div>
+</div></blockquote>
+</section>
+<section id="private-ip-reverse-map-zone-files">
+<h4><span class="section-number">3.3.1.2. </span>Private IP Reverse Map Zone Files<a class="headerlink" href="#private-ip-reverse-map-zone-files" title="Permalink to this heading"></a></h4>
+<p>Resolvers are configured to send <a class="reference internal" href="chapter1.html#iterative-query"><span class="std std-ref">iterative queries</span></a> to
+the public DNS hierarchy when the information requested is not in their cache
+or not defined in any local zone file. Many networks make extensive use of
+private IP addresses (defined by <span class="target" id="index-1"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc1918.html"><strong>RFC 1918</strong></a>, <span class="target" id="index-2"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2193.html"><strong>RFC 2193</strong></a>, <span class="target" id="index-3"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5737.html"><strong>RFC 5737</strong></a>, and
+<span class="target" id="index-4"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc6598.html"><strong>RFC 6598</strong></a>).  By their nature these IP addresses are forward-mapped in various
+user zone files. However, certain applications may issue <strong>reverse map</strong>
+queries (mapping an IP address to a name). If the private IP addresses are not
+defined in one or more reverse-mapped zone file(s), the resolver sends them to
+the DNS hierarchy where they are simply useless traffic, slowing down DNS
+responses for all users.</p>
+<p>Private IP addresses may be defined using standard <a class="reference internal" href="#ipv4-reverse"><span class="std std-ref">reverse-mapping
+techniques</span></a> or using the
+<a class="reference internal" href="reference.html#namedconf-statement-empty-zones-enable" title="namedconf-statement-empty-zones-enable"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">empty-zones-enable</span></code></a> statement. By
+default this statement is set to <code class="docutils literal notranslate"><span class="pre">empty-zones-enable</span> <span class="pre">yes;</span></code> and thus automatically prevents
+unnecessary DNS traffic by sending an NXDOMAIN error response (indicating the
+name does not exist) to any request.  However, some applications may require a
+genuine answer to such reverse-mapped requests or they will fail to function.
+Mail systems in particular perform reverse DNS queries as a first-line spam
+check; in this case a reverse-mapped zone file is essential.  The sample
+configuration files given here for both the resolver and the forwarding
+resolver provide a reverse-mapping zone file for the private IP address
+192.168.254.4, which is the mail server address in the <a class="reference internal" href="#base-zone-file"><span class="std std-ref">base zone
+file</span></a>, as an illustration of the reverse-map technique. The
+file is named <code class="docutils literal notranslate"><span class="pre">192.168.254.rev</span></code> and has a zone name of
+<strong>254.168.192.in-addr.arpa</strong>.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>; reverse map zone file for 192.168.254.4 only
+$TTL 2d  ; 172800 seconds
+$ORIGIN 254.168.192.IN-ADDR.ARPA.
+@     IN      SOA   ns1.example.com. hostmaster.example.com. (
+                                        2003080800 ; serial number
+                                        3h         ; refresh
+                                        15m        ; update retry
+                                        3w         ; expiry
+                                        3h         ; nx = nxdomain ttl
+                                        )
+; only one NS is required for this local file
+; and is an out of zone name
+      IN      NS      ns1.example.com.
+; other IP addresses can be added as required
+; this maps 192.168.254.4 as shown
+4     IN      PTR     mail.example.com. ; fully qualified domain name (FQDN)
+</pre></div>
+</div>
+</section>
+</section>
+<section id="resolver-configuration">
+<span id="sample-resolver"></span><h3><span class="section-number">3.3.2. </span>Resolver Configuration<a class="headerlink" href="#resolver-configuration" title="Permalink to this heading"></a></h3>
+<p>The resolver provides <a class="reference internal" href="chapter1.html#recursive-query"><span class="std std-ref">recursive query support</span></a> to a defined set of IP addresses.
+It is therefore a <strong>closed</strong> resolver and cannot be used in wider network attacks.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="c1">// resolver named.conf file</span>
+<span class="c1">// Two corporate subnets we wish to allow queries from</span>
+<span class="c1">// defined in an acl clause</span>
+<span class="n">acl</span><span class="w"> </span><span class="n">corpnets</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="mf">192.168.4.0</span><span class="o">/</span><span class="mi">24</span><span class="p">;</span>
+<span class="w">  </span><span class="mf">192.168.7.0</span><span class="o">/</span><span class="mi">24</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="c1">// options clause defining the server-wide properties</span>
+<span class="n">options</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// all relative paths use this directory as a base</span>
+<span class="w">  </span><span class="n">directory</span><span class="w"> </span><span class="s">&quot;/var&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// version statement for security to avoid hacking known weaknesses</span>
+<span class="w">  </span><span class="c1">// if the real version number is revealed</span>
+<span class="w">  </span><span class="n">version</span><span class="w"> </span><span class="s">&quot;not currently available&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// this is the default</span>
+<span class="w">  </span><span class="n">recursion</span><span class="w"> </span><span class="n">yes</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// recursive queries only allowed from these ips</span>
+<span class="w">  </span><span class="c1">// and references the acl clause</span>
+<span class="w">  </span><span class="n">allow</span><span class="o">-</span><span class="n">query</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">corpnets</span><span class="p">;</span><span class="w"> </span><span class="p">};</span>
+<span class="w">  </span><span class="c1">// this ensures that any reverse map for private IPs</span>
+<span class="w">  </span><span class="c1">// not defined in a zone file will *not* be passed to the public network</span>
+<span class="w">  </span><span class="c1">// it is the default value</span>
+<span class="w">  </span><span class="n">empty</span><span class="o">-</span><span class="n">zones</span><span class="o">-</span><span class="n">enable</span><span class="w"> </span><span class="n">yes</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="c1">// logging clause</span>
+<span class="c1">// log to /var/log/named/example.log all events from info UP in severity (no debug)</span>
+<span class="c1">// uses 3 files in rotation swaps files when size reaches 250K</span>
+<span class="c1">// failure messages that occur before logging is established are</span>
+<span class="c1">// in syslog (/var/log/messages)</span>
+<span class="c1">//</span>
+<span class="n">logging</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">channel</span><span class="w"> </span><span class="n">example_log</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// uses a relative path name and the directory statement to</span>
+<span class="w">    </span><span class="c1">// expand to /var/log/named/example.log</span>
+<span class="w">    </span><span class="n">file</span><span class="w"> </span><span class="s">&quot;log/named/example.log&quot;</span><span class="w"> </span><span class="n">versions</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="n">size</span><span class="w"> </span><span class="mi">250</span><span class="n">k</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// only log info and up messages - all others discarded</span>
+<span class="w">    </span><span class="n">severity</span><span class="w"> </span><span class="n">info</span><span class="p">;</span>
+<span class="w">   </span><span class="p">};</span>
+<span class="w">   </span><span class="n">category</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="p">{</span>
+<span class="w">     </span><span class="n">example_log</span><span class="p">;</span>
+<span class="w">  </span><span class="p">};</span>
+<span class="p">};</span>
+
+<span class="c1">// zone file for the root servers</span>
+<span class="c1">// discretionary zone (see root server discussion above)</span>
+<span class="n">zone</span><span class="w"> </span><span class="s">&quot;.&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="n">hint</span><span class="p">;</span>
+<span class="w">  </span><span class="n">file</span><span class="w"> </span><span class="s">&quot;named.root&quot;</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="c1">// zone file for the localhost forward map</span>
+<span class="c1">// discretionary zone depending on hosts file (see discussion)</span>
+<span class="n">zone</span><span class="w"> </span><span class="s">&quot;localhost&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="n">primary</span><span class="p">;</span>
+<span class="w">  </span><span class="n">file</span><span class="w"> </span><span class="s">&quot;masters/localhost-forward.db&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">notify</span><span class="w"> </span><span class="n">no</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="c1">// zone file for the loopback address</span>
+<span class="c1">// necessary zone</span>
+<span class="n">zone</span><span class="w"> </span><span class="s">&quot;0.0.127.in-addr.arpa&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="n">primary</span><span class="p">;</span>
+<span class="w">  </span><span class="n">file</span><span class="w"> </span><span class="s">&quot;localhost.rev&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">notify</span><span class="w"> </span><span class="n">no</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="c1">// zone file for local IP reverse map</span>
+<span class="c1">// discretionary file depending on requirements</span>
+<span class="n">zone</span><span class="w"> </span><span class="s">&quot;254.168.192.in-addr.arpa&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="n">primary</span><span class="p">;</span>
+<span class="w">  </span><span class="n">file</span><span class="w"> </span><span class="s">&quot;192.168.254.rev&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">notify</span><span class="w"> </span><span class="n">no</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="reference.html#namedconf-statement-zone" title="namedconf-statement-zone"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">zone</span></code></a> and <a class="reference internal" href="reference.html#namedconf-statement-acl" title="namedconf-statement-acl"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">acl</span></code></a> blocks, and the
+<a class="reference internal" href="reference.html#namedconf-statement-allow-query" title="namedconf-statement-allow-query"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">allow-query</span></code></a>, <a class="reference internal" href="reference.html#namedconf-statement-empty-zones-enable" title="namedconf-statement-empty-zones-enable"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">empty-zones-enable</span></code></a>,
+<a class="reference internal" href="reference.html#namedconf-statement-file" title="namedconf-statement-file"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">file</span></code></a>, <a class="reference internal" href="reference.html#namedconf-statement-notify" title="namedconf-statement-notify"><code class="xref namedconf namedconf-ref docutils literal notranslate"><span class="pre">notify</span></code></a>, <a class="reference internal" href="reference.html#namedconf-statement-recursion" title="namedconf-statement-recursion"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">recursion</span></code></a>, and
+<a class="reference internal" href="reference.html#namedconf-statement-type" title="namedconf-statement-type"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">type</span></code></a> statements are described in detail in the appropriate
+sections.</p>
+<p>As a reminder, the configuration of this resolver does <strong>not</strong> access the DNS
+hierarchy (does not use the public network) for any recursive query for which:</p>
+<ol class="arabic simple">
+<li><p>The answer is already in the cache.</p></li>
+<li><p>The domain name is <strong>localhost</strong> (zone localhost).</p></li>
+<li><p>Is a reverse-map query for 127.0.0.1 (zone 0.0.127.in-addr.arpa).</p></li>
+<li><p>Is a reverse-map query for 192.168.254/24 (zone 254.168.192.in-addr.arpa).</p></li>
+<li><p>Is a reverse-map query for any local IP (<a class="reference internal" href="reference.html#namedconf-statement-empty-zones-enable" title="namedconf-statement-empty-zones-enable"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">empty-zones-enable</span></code></a>
+statement).</p></li>
+</ol>
+<p>All other recursive queries will result in access to the DNS hierarchy to
+resolve the query.</p>
+</section>
+<section id="forwarding-resolver-configuration">
+<span id="sample-forwarding"></span><h3><span class="section-number">3.3.3. </span>Forwarding Resolver Configuration<a class="headerlink" href="#forwarding-resolver-configuration" title="Permalink to this heading"></a></h3>
+<p>This forwarding resolver configuration forwards all recursive queries, other
+than those for the defined zones and those for which the answer is already in
+its cache, to a full-service resolver at the IP address 192.168.250.3, with an
+alternative at 192.168.230.27. The forwarding resolver will cache all responses
+from these servers.  The configuration is closed, in that it defines those IPs
+from which it will accept recursive queries.</p>
+<p>A second configuration in which selective forwarding occurs <a class="reference internal" href="#selective-forward-sample"><span class="std std-ref">is also
+provided</span></a>.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="c1">// forwarding named.conf file</span>
+<span class="c1">// Two corporate subnets we wish to allow queries from</span>
+<span class="c1">// defined in an acl clause</span>
+<span class="n">acl</span><span class="w"> </span><span class="n">corpnets</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="mf">192.168.4.0</span><span class="o">/</span><span class="mi">24</span><span class="p">;</span>
+<span class="w">  </span><span class="mf">192.168.7.0</span><span class="o">/</span><span class="mi">24</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="c1">// options clause defining the server-wide properties</span>
+<span class="n">options</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// all relative paths use this directory as a base</span>
+<span class="w">  </span><span class="n">directory</span><span class="w"> </span><span class="s">&quot;/var&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// version statement for security to avoid hacking known weaknesses</span>
+<span class="w">  </span><span class="c1">// if the real version number is revealed</span>
+<span class="w">  </span><span class="n">version</span><span class="w"> </span><span class="s">&quot;not currently available&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// this is the default</span>
+<span class="w">  </span><span class="n">recursion</span><span class="w"> </span><span class="n">yes</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// recursive queries only allowed from these ips</span>
+<span class="w">  </span><span class="c1">// and references the acl clause</span>
+<span class="w">  </span><span class="n">allow</span><span class="o">-</span><span class="n">query</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">corpnets</span><span class="p">;</span><span class="w"> </span><span class="p">};</span>
+<span class="w">  </span><span class="c1">// this ensures that any reverse map for private IPs</span>
+<span class="w">  </span><span class="c1">// not defined in a zone file will *not* be passed to the public network</span>
+<span class="w">  </span><span class="c1">// it is the default value</span>
+<span class="w">  </span><span class="n">empty</span><span class="o">-</span><span class="n">zones</span><span class="o">-</span><span class="n">enable</span><span class="w"> </span><span class="n">yes</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// this defines the addresses of the resolvers to which queries will be forwarded</span>
+<span class="w">  </span><span class="n">forwarders</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="mf">192.168.250.3</span><span class="p">;</span>
+<span class="w">    </span><span class="mf">192.168.230.27</span><span class="p">;</span>
+<span class="w">  </span><span class="p">};</span>
+<span class="w">  </span><span class="c1">// indicates all queries will be forwarded other than for defined zones</span>
+<span class="w">  </span><span class="n">forward</span><span class="w"> </span><span class="n">only</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="c1">// logging clause</span>
+<span class="c1">// log to /var/log/named/example.log all events from info UP in severity (no debug)</span>
+<span class="c1">// uses 3 files in rotation swaps files when size reaches 250K</span>
+<span class="c1">// failure messages that occur before logging is established are</span>
+<span class="c1">// in syslog (/var/log/messages)</span>
+<span class="c1">//</span>
+<span class="n">logging</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">channel</span><span class="w"> </span><span class="n">example_log</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// uses a relative path name and the directory statement to</span>
+<span class="w">    </span><span class="c1">// expand to /var/log/named/example.log</span>
+<span class="w">    </span><span class="n">file</span><span class="w"> </span><span class="s">&quot;log/named/example.log&quot;</span><span class="w"> </span><span class="n">versions</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="n">size</span><span class="w"> </span><span class="mi">250</span><span class="n">k</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// only log info and up messages - all others discarded</span>
+<span class="w">    </span><span class="n">severity</span><span class="w"> </span><span class="n">info</span><span class="p">;</span>
+<span class="w">  </span><span class="p">};</span>
+<span class="w">  </span><span class="n">category</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">example_log</span><span class="p">;</span>
+<span class="w">  </span><span class="p">};</span>
+<span class="p">};</span>
+
+<span class="c1">// hints zone file is not required</span>
+
+<span class="c1">// zone file for the localhost forward map</span>
+<span class="c1">// discretionary zone depending on hosts file (see discussion)</span>
+<span class="n">zone</span><span class="w"> </span><span class="s">&quot;localhost&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="n">primary</span><span class="p">;</span>
+<span class="w">  </span><span class="n">file</span><span class="w"> </span><span class="s">&quot;masters/localhost-forward.db&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">notify</span><span class="w"> </span><span class="n">no</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="c1">// zone file for the loopback address</span>
+<span class="c1">// necessary zone</span>
+<span class="n">zone</span><span class="w"> </span><span class="s">&quot;0.0.127.in-addr.arpa&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="n">primary</span><span class="p">;</span>
+<span class="w">  </span><span class="n">file</span><span class="w"> </span><span class="s">&quot;localhost.rev&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">notify</span><span class="w"> </span><span class="n">no</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="c1">// zone file for local IP reverse map</span>
+<span class="c1">// discretionary file depending on requirements</span>
+<span class="n">zone</span><span class="w"> </span><span class="s">&quot;254.168.192.in-addr.arpa&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="n">primary</span><span class="p">;</span>
+<span class="w">  </span><span class="n">file</span><span class="w"> </span><span class="s">&quot;192.168.254.rev&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">notify</span><span class="w"> </span><span class="n">no</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="reference.html#namedconf-statement-zone" title="namedconf-statement-zone"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">zone</span></code></a> and <a class="reference internal" href="reference.html#namedconf-statement-acl" title="namedconf-statement-acl"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">acl</span></code></a> blocks, and the
+<a class="reference internal" href="reference.html#namedconf-statement-allow-query" title="namedconf-statement-allow-query"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">allow-query</span></code></a>, <a class="reference internal" href="reference.html#namedconf-statement-empty-zones-enable" title="namedconf-statement-empty-zones-enable"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">empty-zones-enable</span></code></a>,
+<a class="reference internal" href="reference.html#namedconf-statement-file" title="namedconf-statement-file"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">file</span></code></a>, <a class="reference internal" href="reference.html#namedconf-statement-forward" title="namedconf-statement-forward"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">forward</span></code></a>, <a class="reference internal" href="reference.html#namedconf-statement-forwarders" title="namedconf-statement-forwarders"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">forwarders</span></code></a>,
+<a class="reference internal" href="reference.html#namedconf-statement-notify" title="namedconf-statement-notify"><code class="xref namedconf namedconf-ref docutils literal notranslate"><span class="pre">notify</span></code></a>, <a class="reference internal" href="reference.html#namedconf-statement-recursion" title="namedconf-statement-recursion"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">recursion</span></code></a>, and <a class="reference internal" href="reference.html#namedconf-statement-type" title="namedconf-statement-type"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">type</span></code></a>
+statements are described in detail in the appropriate sections.</p>
+<p>As a reminder, the configuration of this forwarding resolver does <strong>not</strong>
+forward any recursive query for which:</p>
+<ol class="arabic simple">
+<li><p>The answer is already in the cache.</p></li>
+<li><p>The domain name is <strong>localhost</strong> (zone localhost).</p></li>
+<li><p>Is a reverse-map query for 127.0.0.1 (zone 0.0.127.in-addr.arpa).</p></li>
+<li><p>Is a reverse-map query for 192.168.254/24 (zone 254.168.192.in-addr.arpa).</p></li>
+<li><p>Is a reverse-map query for any local IP (<a class="reference internal" href="reference.html#namedconf-statement-empty-zones-enable" title="namedconf-statement-empty-zones-enable"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">empty-zones-enable</span></code></a> statement).</p></li>
+</ol>
+<p>All other recursive queries will be forwarded to resolve the query.</p>
+</section>
+<section id="selective-forwarding-resolver-configuration">
+<span id="selective-forward-sample"></span><h3><span class="section-number">3.3.4. </span>Selective Forwarding Resolver Configuration<a class="headerlink" href="#selective-forwarding-resolver-configuration" title="Permalink to this heading"></a></h3>
+<p>This forwarding resolver configuration only forwards recursive queries for the
+zone <strong>example.com</strong> to the resolvers at 192.168.250.3 and 192.168.230.27. All
+other recursive queries, other than those for the defined zones and those for
+which the answer is already in its cache, are handled by this resolver. The
+forwarding resolver will cache all responses from both the public network and
+from the forwarded resolvers.  The configuration is closed, in that it defines
+those IPs from which it will accept recursive queries.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="c1">// selective forwarding named.conf file</span>
+<span class="c1">// Two corporate subnets we wish to allow queries from</span>
+<span class="c1">// defined in an acl clause</span>
+<span class="n">acl</span><span class="w"> </span><span class="n">corpnets</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="mf">192.168.4.0</span><span class="o">/</span><span class="mi">24</span><span class="p">;</span>
+<span class="w">  </span><span class="mf">192.168.7.0</span><span class="o">/</span><span class="mi">24</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="c1">// options clause defining the server-wide properties</span>
+<span class="n">options</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// all relative paths use this directory as a base</span>
+<span class="w">  </span><span class="n">directory</span><span class="w"> </span><span class="s">&quot;/var&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// version statement for security to avoid hacking known weaknesses</span>
+<span class="w">  </span><span class="c1">// if the real version number is revealed</span>
+<span class="w">  </span><span class="n">version</span><span class="w"> </span><span class="s">&quot;not currently available&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// this is the default</span>
+<span class="w">  </span><span class="n">recursion</span><span class="w"> </span><span class="n">yes</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// recursive queries only allowed from these ips</span>
+<span class="w">  </span><span class="c1">// and references the acl clause</span>
+<span class="w">  </span><span class="n">allow</span><span class="o">-</span><span class="n">query</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">corpnets</span><span class="p">;</span><span class="w"> </span><span class="p">};</span>
+<span class="w">  </span><span class="c1">// this ensures that any reverse map for private IPs</span>
+<span class="w">  </span><span class="c1">// not defined in a zone file will *not* be passed to the public network</span>
+<span class="w">  </span><span class="c1">// it is the default value</span>
+<span class="w">  </span><span class="n">empty</span><span class="o">-</span><span class="n">zones</span><span class="o">-</span><span class="n">enable</span><span class="w"> </span><span class="n">yes</span><span class="p">;</span>
+
+<span class="w">  </span><span class="c1">// forwarding is not global but selective by zone in this configuration</span>
+<span class="p">};</span>
+
+<span class="c1">// logging clause</span>
+<span class="c1">// log to /var/log/named/example.log all events from info UP in severity (no debug)</span>
+<span class="c1">// uses 3 files in rotation swaps files when size reaches 250K</span>
+<span class="c1">// failure messages that occur before logging is established are</span>
+<span class="c1">// in syslog (/var/log/messages)</span>
+<span class="c1">//</span>
+<span class="n">logging</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">channel</span><span class="w"> </span><span class="n">example_log</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// uses a relative path name and the directory statement to</span>
+<span class="w">    </span><span class="c1">// expand to /var/log/named/example.log</span>
+<span class="w">    </span><span class="n">file</span><span class="w"> </span><span class="s">&quot;log/named/example.log&quot;</span><span class="w"> </span><span class="n">versions</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="n">size</span><span class="w"> </span><span class="mi">250</span><span class="n">k</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// only log info and up messages - all others discarded</span>
+<span class="w">    </span><span class="n">severity</span><span class="w"> </span><span class="n">info</span><span class="p">;</span>
+<span class="w">   </span><span class="p">};</span>
+<span class="w">   </span><span class="n">category</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="p">{</span>
+<span class="w">     </span><span class="n">example_log</span><span class="p">;</span>
+<span class="w">  </span><span class="p">};</span>
+<span class="p">};</span>
+
+<span class="c1">// zone file for the root servers</span>
+<span class="c1">// discretionary zone (see root server discussion above)</span>
+<span class="n">zone</span><span class="w"> </span><span class="s">&quot;.&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="n">hint</span><span class="p">;</span>
+<span class="w">  </span><span class="n">file</span><span class="w"> </span><span class="s">&quot;named.root&quot;</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="c1">// zone file for the localhost forward map</span>
+<span class="c1">// discretionary zone depending on hosts file (see discussion)</span>
+<span class="n">zone</span><span class="w"> </span><span class="s">&quot;localhost&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="n">primary</span><span class="p">;</span>
+<span class="w">  </span><span class="n">file</span><span class="w"> </span><span class="s">&quot;masters/localhost-forward.db&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">notify</span><span class="w"> </span><span class="n">no</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="c1">// zone file for the loopback address</span>
+<span class="c1">// necessary zone</span>
+<span class="n">zone</span><span class="w"> </span><span class="s">&quot;0.0.127.in-addr.arpa&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="n">primary</span><span class="p">;</span>
+<span class="w">  </span><span class="n">file</span><span class="w"> </span><span class="s">&quot;localhost.rev&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">notify</span><span class="w"> </span><span class="n">no</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="c1">// zone file for local IP reverse map</span>
+<span class="c1">// discretionary file depending on requirements</span>
+<span class="n">zone</span><span class="w"> </span><span class="s">&quot;254.168.192.in-addr.arpa&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="n">primary</span><span class="p">;</span>
+<span class="w">  </span><span class="n">file</span><span class="w"> </span><span class="s">&quot;192.168.254.rev&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">notify</span><span class="w"> </span><span class="n">no</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="c1">// zone file forwarded example.com</span>
+<span class="n">zone</span><span class="w"> </span><span class="s">&quot;example.com&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="n">forward</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// this defines the addresses of the resolvers to</span>
+<span class="w">  </span><span class="c1">// which queries for this zone will be forwarded</span>
+<span class="w">  </span><span class="n">forwarders</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="mf">192.168.250.3</span><span class="p">;</span>
+<span class="w">    </span><span class="mf">192.168.230.27</span><span class="p">;</span>
+<span class="w">  </span><span class="p">};</span>
+<span class="w">  </span><span class="c1">// indicates all queries for this zone will be forwarded</span>
+<span class="w">  </span><span class="n">forward</span><span class="w"> </span><span class="n">only</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="reference.html#namedconf-statement-zone" title="namedconf-statement-zone"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">zone</span></code></a> and <a class="reference internal" href="reference.html#namedconf-statement-acl" title="namedconf-statement-acl"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">acl</span></code></a> blocks, and the
+<a class="reference internal" href="reference.html#namedconf-statement-allow-query" title="namedconf-statement-allow-query"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">allow-query</span></code></a>, <a class="reference internal" href="reference.html#namedconf-statement-empty-zones-enable" title="namedconf-statement-empty-zones-enable"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">empty-zones-enable</span></code></a>,
+<a class="reference internal" href="reference.html#namedconf-statement-file" title="namedconf-statement-file"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">file</span></code></a>, <a class="reference internal" href="reference.html#namedconf-statement-forward" title="namedconf-statement-forward"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">forward</span></code></a>, <a class="reference internal" href="reference.html#namedconf-statement-forwarders" title="namedconf-statement-forwarders"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">forwarders</span></code></a>,
+<a class="reference internal" href="reference.html#namedconf-statement-notify" title="namedconf-statement-notify"><code class="xref namedconf namedconf-ref docutils literal notranslate"><span class="pre">notify</span></code></a>, <a class="reference internal" href="reference.html#namedconf-statement-recursion" title="namedconf-statement-recursion"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">recursion</span></code></a>, and <a class="reference internal" href="reference.html#namedconf-statement-type" title="namedconf-statement-type"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">type</span></code></a>
+statements are described in detail in the appropriate sections.</p>
+<p>As a reminder, the configuration of this resolver does <strong>not</strong> access the DNS
+hierarchy (does not use the public network) for any recursive query for which:</p>
+<ol class="arabic simple">
+<li><p>The answer is already in the cache.</p></li>
+<li><p>The domain name is <strong>localhost</strong> (zone localhost).</p></li>
+<li><p>Is a reverse-map query for 127.0.0.1 (zone 0.0.127.in-addr.arpa).</p></li>
+<li><p>Is a reverse-map query for 192.168.254/24 (zone 254.168.192.in-addr.arpa).</p></li>
+<li><p>Is a reverse-map query for any local IP (empty-zones-enable statement).</p></li>
+<li><p>Is a query for the domain name <strong>example.com</strong>, in which case it will be
+forwarded to either 192.168.250.3 or 192.168.230.27 (zone example.com).</p></li>
+</ol>
+<p>All other recursive queries will result in access to the DNS hierarchy to
+resolve the query.</p>
+</section>
+</section>
+<section id="load-balancing">
+<span id="id1"></span><h2><span class="section-number">3.4. </span>Load Balancing<a class="headerlink" href="#load-balancing" title="Permalink to this heading"></a></h2>
+<p>A primitive form of load balancing can be achieved in the DNS by using multiple
+resource records (RRs) in a <a class="reference internal" href="#zone-file"><span class="std std-ref">zone file</span></a> (such as multiple A
+records) for one name.</p>
+<p>For example, assuming three HTTP servers with network addresses of
+10.0.0.1, 10.0.0.2, and 10.0.0.3, a set of records such as the following
+means that clients will connect to each machine one-third of the time:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 9%" />
+<col style="width: 15%" />
+<col style="width: 15%" />
+<col style="width: 43%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Name</p></td>
+<td><p>TTL</p></td>
+<td><p>CLASS</p></td>
+<td><p>TYPE</p></td>
+<td><p>Resource Record (RR) Data</p></td>
+</tr>
+<tr class="row-even"><td><p>www</p></td>
+<td><p>600</p></td>
+<td><p>IN</p></td>
+<td><p>A</p></td>
+<td><p>10.0.0.1</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>600</p></td>
+<td><p>IN</p></td>
+<td><p>A</p></td>
+<td><p>10.0.0.2</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>600</p></td>
+<td><p>IN</p></td>
+<td><p>A</p></td>
+<td><p>10.0.0.3</p></td>
+</tr>
+</tbody>
+</table>
+<p>When a resolver queries for these records, BIND rotates them and
+responds to the query with the records in a random order. In the
+example above, clients randomly receive records in the order 1, 2,
+3; 2, 3, 1; and 3, 1, 2. Most clients use the first record returned
+and discard the rest.</p>
+<p>For more detail on ordering responses, refer to the
+<a class="reference internal" href="reference.html#rrset-ordering"><span class="std std-ref">rrset-order</span></a> statement in the
+<a class="reference internal" href="reference.html#namedconf-statement-options" title="namedconf-statement-options"><code class="xref namedconf namedconf-ref docutils literal notranslate"><span class="pre">options</span></code></a> block.</p>
+</section>
+<section id="soa-rr">
+<span id="zone-file"></span><span id="id2"></span><h2><span class="section-number">3.5. </span>Zone File<a class="headerlink" href="#soa-rr" title="Permalink to this heading"></a></h2>
+<p>This section, largely borrowed from <span class="target" id="index-5"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc1034.html"><strong>RFC 1034</strong></a>, describes the concept of a
+Resource Record (RR) and explains how to use them.</p>
+<section id="resource-records">
+<h3><span class="section-number">3.5.1. </span>Resource Records<a class="headerlink" href="#resource-records" title="Permalink to this heading"></a></h3>
+<p>A domain name identifies a node in the DNS tree namespace. Each node has a set of resource
+information, which may be empty. The set of resource information
+associated with a particular name is composed of separate RRs. The order
+of RRs in a set is not significant and need not be preserved by name
+servers, resolvers, or other parts of the DNS. However, sorting of
+multiple RRs is permitted for optimization purposes: for example, to
+specify that a particular nearby server be tried first. See
+<a class="reference internal" href="reference.html#namedconf-statement-sortlist" title="namedconf-statement-sortlist"><code class="xref any namedconf namedconf-ref docutils literal notranslate"><span class="pre">sortlist</span></code></a> and <a class="reference internal" href="reference.html#rrset-ordering"><span class="std std-ref">RRset Ordering</span></a>.</p>
+<p>The components of a Resource Record are:</p>
+<dl class="glossary simple">
+<dt id="term-owner-name">owner name<a class="headerlink" href="#term-owner-name" title="Permalink to this term"></a></dt><dd><p>The domain name where the RR is found.</p>
+</dd>
+<dt id="term-RR-type">RR type<a class="headerlink" href="#term-RR-type" title="Permalink to this term"></a></dt><dd><p>An encoded 16-bit value that specifies the type of the resource record.
+For a list of <em>types</em> of valid RRs, including those that have been obsoleted, please refer to
+<cite>https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-4</cite>.</p>
+</dd>
+<dt id="term-TTL">TTL<a class="headerlink" href="#term-TTL" title="Permalink to this term"></a></dt><dd><p>The time-to-live of the RR. This field is a 32-bit integer in units of seconds,
+and is primarily used by resolvers when they cache RRs. The TTL describes how long
+a RR can be cached before it should be discarded.</p>
+</dd>
+<dt id="term-class">class<a class="headerlink" href="#term-class" title="Permalink to this term"></a></dt><dd><p>An encoded 16-bit value that identifies a protocol family or an instance of a protocol.</p>
+</dd>
+<dt id="term-RDATA">RDATA<a class="headerlink" href="#term-RDATA" title="Permalink to this term"></a></dt><dd><p>The resource data. The format of the data is type- and sometimes class-specific.</p>
+</dd>
+</dl>
+<p>The following <em>classes</em> of resource records are currently valid in the
+DNS:</p>
+<dl class="glossary simple">
+<dt id="term-IN">IN<a class="headerlink" href="#term-IN" title="Permalink to this term"></a></dt><dd><p>The Internet. The only widely <a class="reference internal" href="#term-class"><span class="xref std std-term">class</span></a> used today.</p>
+</dd>
+<dt id="term-CH">CH<a class="headerlink" href="#term-CH" title="Permalink to this term"></a></dt><dd><p>Chaosnet, a LAN protocol created at MIT in the mid-1970s. It was rarely used for its historical purpose, but was reused for BIND’s built-in server information zones, e.g., <strong>version.bind</strong>.</p>
+</dd>
+<dt id="term-HS">HS<a class="headerlink" href="#term-HS" title="Permalink to this term"></a></dt><dd><p>Hesiod, an information service developed by MIT’s Project Athena. It was used to share information about various systems databases, such as users, groups, printers, etc.</p>
+</dd>
+</dl>
+<p>The <a class="reference internal" href="#term-owner-name"><span class="xref std std-term">owner name</span></a> is often implicit, rather than forming an integral part
+of the RR. For example, many name servers internally form tree or hash
+structures for the name space, and chain RRs off nodes. The remaining RR
+parts are the fixed header (type, class, TTL), which is consistent for
+all RRs, and a variable part (RDATA) that fits the needs of the resource
+being described.</p>
+<p>The TTL field is a time limit on how long an RR can be
+kept in a cache. This limit does not apply to authoritative data in
+zones; that also times out, but follows the refreshing policies for the
+zone. The TTL is assigned by the administrator for the zone where the
+data originates. While short TTLs can be used to minimize caching, and a
+zero TTL prohibits caching, the realities of Internet performance
+suggest that these times should be on the order of days for the typical
+host. If a change is anticipated, the TTL can be reduced prior to
+the change to minimize inconsistency, and then
+increased back to its former value following the change.</p>
+<p>The data in the RDATA section of RRs is carried as a combination of
+binary strings and domain names. The domain names are frequently used as
+“pointers” to other data in the DNS.</p>
+<section id="textual-expression-of-rrs">
+<span id="rr-text"></span><h4><span class="section-number">3.5.1.1. </span>Textual Expression of RRs<a class="headerlink" href="#textual-expression-of-rrs" title="Permalink to this heading"></a></h4>
+<p>RRs are represented in binary form in the packets of the DNS protocol,
+and are usually represented in highly encoded form when stored in a name
+server or resolver. In the examples provided in <span class="target" id="index-6"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc1034.html"><strong>RFC 1034</strong></a>, a style
+similar to that used in primary files was employed in order to show the
+contents of RRs. In this format, most RRs are shown on a single line,
+although continuation lines are possible using parentheses.</p>
+<p>The start of the line gives the owner of the RR. If a line begins with a
+blank, then the owner is assumed to be the same as that of the previous
+RR. Blank lines are often included for readability.</p>
+<p>Following the owner are listed the TTL, type, and class of the RR. Class
+and type use the mnemonics defined above, and TTL is an integer before
+the type field. To avoid ambiguity in parsing, type and class
+mnemonics are disjoint, TTLs are integers, and the type mnemonic is
+always last. The IN class and TTL values are often omitted from examples
+in the interest of clarity.</p>
+<p>The resource data or RDATA section of the RR is given using knowledge
+of the typical representation for the data.</p>
+<p>For example, the RRs carried in a message might be shown as:</p>
+<blockquote>
+<div><table class="docutils align-default">
+<colgroup>
+<col style="width: 31%" />
+<col style="width: 22%" />
+<col style="width: 47%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>ISI.EDU.</strong></p></td>
+<td><p><strong>MX</strong></p></td>
+<td><p><strong>10 VENERA.ISI.EDU.</strong></p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><strong>MX</strong></p></td>
+<td><p><strong>10 VAXA.ISI.EDU</strong></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>VENERA.ISI.EDU</strong></p></td>
+<td><p><strong>A</strong></p></td>
+<td><p><strong>128.9.0.32</strong></p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><strong>A</strong></p></td>
+<td><p><strong>10.1.0.52</strong></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>VAXA.ISI.EDU</strong></p></td>
+<td><p><strong>A</strong></p></td>
+<td><p><strong>10.2.0.27</strong></p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><strong>A</strong></p></td>
+<td><p><strong>128.9.0.33</strong></p></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>The MX RRs have an RDATA section which consists of a 16-bit number
+followed by a domain name. The address RRs use a standard IP address
+format to contain a 32-bit Internet address.</p>
+<p>The above example shows six RRs, with two RRs at each of three domain
+names.</p>
+<p>Here is another possible example:</p>
+<blockquote>
+<div><table class="docutils align-default">
+<colgroup>
+<col style="width: 32%" />
+<col style="width: 22%" />
+<col style="width: 46%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>XX.LCS.MIT.EDU.</strong></p></td>
+<td><p><strong>IN A</strong></p></td>
+<td><p><strong>10.0.0.44</strong></p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><strong>CH A</strong></p></td>
+<td><p><strong>MIT.EDU. 2420</strong></p></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>This shows two addresses for <strong>XX.LCS.MIT.EDU</strong>, each of a
+different class.</p>
+</section>
+</section>
+<section id="discussion-of-mx-records">
+<span id="mx-records"></span><h3><span class="section-number">3.5.2. </span>Discussion of MX Records<a class="headerlink" href="#discussion-of-mx-records" title="Permalink to this heading"></a></h3>
+<p>As described above, domain servers store information as a series of
+resource records, each of which contains a particular piece of
+information about a given domain name (which is usually, but not always,
+a host). The simplest way to think of an RR is as a typed pair of data, a
+domain name matched with a relevant datum and stored with some
+additional type information, to help systems determine when the RR is
+relevant.</p>
+<p>MX records are used to control delivery of email. The data specified in
+the record is a priority and a domain name. The priority controls the
+order in which email delivery is attempted, with the lowest number
+first. If two priorities are the same, a server is chosen randomly. If
+no servers at a given priority are responding, the mail transport agent
+falls back to the next largest priority. Priority numbers do not
+have any absolute meaning; they are relevant only respective to other
+MX records for that domain name. The domain name given is the machine to
+which the mail is delivered. It <em>must</em> have an associated address
+record (A or AAAA); CNAME is not sufficient.</p>
+<p>For a given domain, if there is both a CNAME record and an MX record,
+the MX record is in error and is ignored. Instead, the mail is
+delivered to the server specified in the MX record pointed to by the
+CNAME. For example:</p>
+<blockquote>
+<div><table class="docutils align-default">
+<colgroup>
+<col style="width: 31%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 18%" />
+<col style="width: 31%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>example.com.</strong></p></td>
+<td><p><strong>IN</strong></p></td>
+<td><p><strong>MX</strong></p></td>
+<td><p><strong>10</strong></p></td>
+<td><p><strong>mail.example.com.</strong></p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><strong>IN</strong></p></td>
+<td><p><strong>MX</strong></p></td>
+<td><p><strong>10</strong></p></td>
+<td><p><strong>mail2.example.com.</strong></p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><strong>IN</strong></p></td>
+<td><p><strong>MX</strong></p></td>
+<td><p><strong>20</strong></p></td>
+<td><p><strong>mail.backup.org.</strong></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>mail.example.com.</strong></p></td>
+<td><p><strong>IN</strong></p></td>
+<td><p><strong>A</strong></p></td>
+<td><p><strong>10.0.0.1</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>mail2.example.com.</strong></p></td>
+<td><p><strong>IN</strong></p></td>
+<td><p><strong>A</strong></p></td>
+<td><p><strong>10.0.0.2</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>Mail delivery is attempted to <strong>mail.example.com</strong> and
+<strong>mail2.example.com</strong> (in any order); if neither of those succeeds,
+delivery to <strong>mail.backup.org</strong> is attempted.</p>
+</section>
+<section id="setting-ttls">
+<span id="id3"></span><h3><span class="section-number">3.5.3. </span>Setting TTLs<a class="headerlink" href="#setting-ttls" title="Permalink to this heading"></a></h3>
+<p>The time-to-live (TTL) of the RR field is a 32-bit integer represented in
+units of seconds, and is primarily used by resolvers when they cache
+RRs. The TTL describes how long an RR can be cached before it should be
+discarded. The following three types of TTLs are currently used in a zone
+file.</p>
+<dl class="glossary">
+<dt id="term-SOA-minimum">SOA minimum<a class="headerlink" href="#term-SOA-minimum" title="Permalink to this term"></a></dt><dd><p>The last field in the SOA is the negative caching TTL.
+This controls how long other servers cache no-such-domain (NXDOMAIN)
+responses from this server. Further details can be found in <span class="target" id="index-7"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2308.html"><strong>RFC 2308</strong></a>.</p>
+<p>The maximum time for negative caching is 3 hours (3h).</p>
+</dd>
+<dt id="term-0">$TTL<a class="headerlink" href="#term-0" title="Permalink to this term"></a></dt><dd><p>The $TTL directive at the top of the zone file (before the SOA) gives a default TTL for every RR without a specific TTL set.</p>
+</dd>
+<dt id="term-RR-TTLs">RR TTLs<a class="headerlink" href="#term-RR-TTLs" title="Permalink to this term"></a></dt><dd><p>Each RR can have a TTL as the second field in the RR, which controls how long other servers can cache it.</p>
+</dd>
+</dl>
+<p>All of these TTLs default to units of seconds, though units can be
+explicitly specified: for example, <strong>1h30m</strong>.</p>
+</section>
+<section id="inverse-mapping-in-ipv4">
+<span id="ipv4-reverse"></span><h3><span class="section-number">3.5.4. </span>Inverse Mapping in IPv4<a class="headerlink" href="#inverse-mapping-in-ipv4" title="Permalink to this heading"></a></h3>
+<p>Reverse name resolution (that is, translation from IP address to name)
+is achieved by means of the <strong>in-addr.arpa</strong> domain and PTR records.
+Entries in the in-addr.arpa domain are made in least-to-most significant
+order, read left to right. This is the opposite order to the way IP
+addresses are usually written. Thus, a machine with an IP address of
+10.1.2.3 would have a corresponding in-addr.arpa name of
+3.2.1.10.in-addr.arpa. This name should have a PTR resource record whose
+data field is the name of the machine or, optionally, multiple PTR
+records if the machine has more than one name. For example, in the
+<strong>example.com</strong> domain:</p>
+<blockquote>
+<div><table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>$ORIGIN</strong></p></td>
+<td><p><strong>2.1.10.in-addr.arpa</strong></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>3</strong></p></td>
+<td><p><strong>IN PTR foo.example.com.</strong></p></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <strong>$ORIGIN</strong> line in this example is only to provide context;
+it does not necessarily appear in the actual
+usage. It is only used here to indicate that the example is
+relative to the listed origin.</p>
+</div>
+</section>
+<section id="other-zone-file-directives">
+<span id="zone-directives"></span><h3><span class="section-number">3.5.5. </span>Other Zone File Directives<a class="headerlink" href="#other-zone-file-directives" title="Permalink to this heading"></a></h3>
+<p>The DNS “master file” format was initially defined in <span class="target" id="index-8"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc1035.html"><strong>RFC 1035</strong></a> and has
+subsequently been extended. While the format itself is class-independent,
+all records in a zone file must be of the same class.</p>
+<p>Master file directives include <strong>$ORIGIN</strong>, <strong>$INCLUDE</strong>, and <strong>$TTL.</strong></p>
+<section id="the-at-sign">
+<span id="atsign"></span><h4><span class="section-number">3.5.5.1. </span>The <strong>&#64;</strong> (at-sign)<a class="headerlink" href="#the-at-sign" title="Permalink to this heading"></a></h4>
+<p>When used in the label (or name) field, the asperand or at-sign (&#64;)
+symbol represents the current origin. At the start of the zone file, it
+is the &lt;<strong>zone_name</strong>&gt;, followed by a trailing dot (.).</p>
+</section>
+<section id="the-origin-directive">
+<span id="origin-directive"></span><h4><span class="section-number">3.5.5.2. </span>The <strong>$ORIGIN</strong> Directive<a class="headerlink" href="#the-origin-directive" title="Permalink to this heading"></a></h4>
+<p>Syntax: <strong>$ORIGIN</strong> domain-name [comment]</p>
+<p><strong>$ORIGIN</strong> sets the domain name that is appended to any
+unqualified records. When a zone is first read, there is an implicit
+<code class="docutils literal notranslate"><span class="pre">$ORIGIN</span> <span class="pre">&lt;zone_name&gt;.</span></code>; note the trailing dot. The
+current <strong>$ORIGIN</strong> is appended to the domain specified in the
+<strong>$ORIGIN</strong> argument if it is not absolute.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ORIGIN example.com.
+WWW     CNAME   MAIN-SERVER
+</pre></div>
+</div>
+<p>is equivalent to</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>WWW.EXAMPLE.COM. CNAME MAIN-SERVER.EXAMPLE.COM.
+</pre></div>
+</div>
+</section>
+<section id="the-include-directive">
+<h4><span class="section-number">3.5.5.3. </span>The <strong>$INCLUDE</strong> Directive<a class="headerlink" href="#the-include-directive" title="Permalink to this heading"></a></h4>
+<p>Syntax: <strong>$INCLUDE</strong> filename [origin] [comment]</p>
+<p>This reads and processes the file <strong>filename</strong> as if it were included in the
+file at this point. The <strong>filename</strong> can be an absolute path, or a relative
+path. In the latter case it is read from <a class="reference internal" href="manpages.html#std-iscman-named"><code class="xref std std-iscman docutils literal notranslate"><span class="pre">named</span></code></a>’s working directory. If
+<strong>origin</strong> is specified, the file is processed with <strong>$ORIGIN</strong> set to that
+value; otherwise, the current <strong>$ORIGIN</strong> is used.</p>
+<p>The origin and the current domain name revert to the values they had
+prior to the <strong>$INCLUDE</strong> once the file has been read.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><span class="target" id="index-9"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc1035.html"><strong>RFC 1035</strong></a> specifies that the current origin should be restored after
+an <strong>$INCLUDE</strong>, but it is silent on whether the current domain name
+should also be restored. BIND 9 restores both of them. This could be
+construed as a deviation from <span class="target" id="index-10"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc1035.html"><strong>RFC 1035</strong></a>, a feature, or both.</p>
+</div>
+</section>
+<section id="the-ttl-directive">
+<span id="ttl-directive"></span><h4><span class="section-number">3.5.5.4. </span>The <strong>$TTL</strong> Directive<a class="headerlink" href="#the-ttl-directive" title="Permalink to this heading"></a></h4>
+<p>Syntax: <strong>$TTL</strong> default-ttl [comment]</p>
+<p>This sets the default Time-To-Live (TTL) for subsequent records with undefined
+TTLs. Valid TTLs are of the range 0-2147483647 seconds.</p>
+<p><strong>$TTL</strong> is defined in <span class="target" id="index-11"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2308.html"><strong>RFC 2308</strong></a>.</p>
+</section>
+</section>
+<section id="bind-primary-file-extension-the-generate-directive">
+<span id="generate-directive"></span><h3><span class="section-number">3.5.6. </span>BIND Primary File Extension: the <strong>$GENERATE</strong> Directive<a class="headerlink" href="#bind-primary-file-extension-the-generate-directive" title="Permalink to this heading"></a></h3>
+<p>Syntax: <strong>$GENERATE</strong> range owner [ttl] [class] type rdata [comment]</p>
+<p><strong>$GENERATE</strong> is used to create a series of resource records that only
+differ from each other by an iterator.</p>
+<dl>
+<dt><strong>range</strong></dt><dd><p>This can be one of two forms: start-stop or start-stop/step.
+If the first form is used, then step is set to 1. “start”,
+“stop”, and “step” must be positive integers between 0 and
+(2^31)-1. “start” must not be larger than “stop”.</p>
+</dd>
+<dt><strong>owner</strong></dt><dd><p>This describes the owner name of the resource records to be created.</p>
+<p>The <strong>owner</strong> string may include one or more <strong>$</strong> (dollar sign)
+symbols, which will be replaced with the iterator value when
+generating records; see below for details.</p>
+</dd>
+<dt><strong>ttl</strong></dt><dd><p>This specifies the time-to-live of the generated records. If
+not specified, this is inherited using the normal TTL inheritance
+rules.</p>
+<p><strong>class</strong> and <strong>ttl</strong> can be entered in either order.</p>
+</dd>
+<dt><strong>class</strong></dt><dd><p>This specifies the class of the generated records. This must
+match the zone class if it is specified.</p>
+<p><strong>class</strong> and <strong>ttl</strong> can be entered in either order.</p>
+</dd>
+<dt><strong>type</strong></dt><dd><p>This can be any valid type.</p>
+</dd>
+<dt><strong>rdata</strong></dt><dd><p>This is a string containing the RDATA of the resource record
+to be created. As with <strong>owner</strong>, the <strong>rdata</strong> string may
+include one or more <strong>$</strong> symbols, which are replaced with the
+iterator value. <strong>rdata</strong> may be quoted if there are spaces in
+the string; the quotation marks do not appear in the generated
+record.</p>
+<p>Any single <strong>$</strong> (dollar sign) symbols within the <strong>owner</strong> or
+<strong>rdata</strong> strings are replaced by the iterator value. To get a <strong>$</strong>
+in the output, escape the <strong>$</strong> using a backslash <strong>\</strong>, e.g.,
+<code class="docutils literal notranslate"><span class="pre">\$</span></code>. (For compatibility with earlier versions, <strong>$$</strong> is also
+recognized as indicating a literal <strong>$</strong> in the output.)</p>
+<p>The <strong>$</strong> may optionally be followed by modifiers which change
+the offset from the iterator, field width, and base.  Modifiers
+are introduced by a <strong>{</strong> (left brace) immediately following
+the <strong>$</strong>, as in  <strong>${offset[,width[,base]]}</strong>. For example,
+<strong>${-20,3,d}</strong> subtracts 20 from the current value and prints
+the result as a decimal in a zero-padded field of width 3.
+Available output forms are decimal (<strong>d</strong>), octal (<strong>o</strong>),
+hexadecimal (<strong>x</strong> or <strong>X</strong> for uppercase), and nibble (<strong>n</strong>
+or <strong>N</strong> for uppercase). The modfiier cannot contain whitespace
+or newlines.</p>
+<p>The default modifier is <strong>${0,0,d}</strong>. If the <strong>owner</strong> is not
+absolute, the current <strong>$ORIGIN</strong> is appended to the name.</p>
+<p>In nibble mode, the value is treated as if it were a reversed
+hexadecimal string, with each hexadecimal digit as a separate
+label. The width field includes the label separator.</p>
+</dd>
+</dl>
+<p>Examples:</p>
+<p><strong>$GENERATE</strong> can be used to easily generate the sets of records required
+to support sub-/24 reverse delegations described in <span class="target" id="index-12"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2317.html"><strong>RFC 2317</strong></a>:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ORIGIN 0.0.192.IN-ADDR.ARPA.
+$GENERATE 1-2 @ NS SERVER$.EXAMPLE.
+$GENERATE 1-127 $ CNAME $.0
+</pre></div>
+</div>
+<p>is equivalent to</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>0.0.0.192.IN-ADDR.ARPA. NS SERVER1.EXAMPLE.
+0.0.0.192.IN-ADDR.ARPA. NS SERVER2.EXAMPLE.
+1.0.0.192.IN-ADDR.ARPA. CNAME 1.0.0.0.192.IN-ADDR.ARPA.
+2.0.0.192.IN-ADDR.ARPA. CNAME 2.0.0.0.192.IN-ADDR.ARPA.
+...
+127.0.0.192.IN-ADDR.ARPA. CNAME 127.0.0.0.192.IN-ADDR.ARPA.
+</pre></div>
+</div>
+<p>This example creates a set of A and MX records. Note the MX’s <strong>rdata</strong>
+is a quoted string; the quotes are stripped when <strong>$GENERATE</strong> is processed:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ORIGIN EXAMPLE.
+$GENERATE 1-127 HOST-$ A 1.2.3.$
+$GENERATE 1-127 HOST-$ MX &quot;0 .&quot;
+</pre></div>
+</div>
+<p>is equivalent to</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>HOST-1.EXAMPLE.   A  1.2.3.1
+HOST-1.EXAMPLE.   MX 0 .
+HOST-2.EXAMPLE.   A  1.2.3.2
+HOST-2.EXAMPLE.   MX 0 .
+HOST-3.EXAMPLE.   A  1.2.3.3
+HOST-3.EXAMPLE.   MX 0 .
+...
+HOST-127.EXAMPLE. A  1.2.3.127
+HOST-127.EXAMPLE. MX 0 .
+</pre></div>
+</div>
+<p>This example generates A and AAAA records using modifiers; the AAAA
+<strong>owner</strong> names are generated using nibble mode:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ORIGIN EXAMPLE.
+$GENERATE 0-2 HOST-${0,4,d} A 1.2.3.${1,0,d}
+$GENERATE 1024-1026 ${0,3,n} AAAA 2001:db8::${0,4,x}
+</pre></div>
+</div>
+<p>is equivalent to:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>HOST-0000.EXAMPLE.   A      1.2.3.1
+HOST-0001.EXAMPLE.   A      1.2.3.2
+HOST-0002.EXAMPLE.   A      1.2.3.3
+0.0.4.EXAMPLE.       AAAA   2001:db8::400
+1.0.4.EXAMPLE.       AAAA   2001:db8::401
+2.0.4.EXAMPLE.       AAAA   2001:db8::402
+</pre></div>
+</div>
+<p>The <strong>$GENERATE</strong> directive is a BIND extension and not part of the
+standard zone file format.</p>
+</section>
+<section id="additional-file-formats">
+<span id="zonefile-format"></span><h3><span class="section-number">3.5.7. </span>Additional File Formats<a class="headerlink" href="#additional-file-formats" title="Permalink to this heading"></a></h3>
+<p>In addition to the standard text format, BIND 9 supports the ability
+to read or dump to zone files in other formats.</p>
+<p>The <strong>raw</strong> format is a binary representation of zone data in a manner
+similar to that used in zone transfers. Since it does not require
+parsing text, load time is significantly reduced.</p>
+<p>For a primary server, a zone file in <strong>raw</strong> format is expected
+to be generated from a text zone file by the <a class="reference internal" href="manpages.html#std-iscman-named-compilezone"><code class="xref std std-iscman docutils literal notranslate"><span class="pre">named-compilezone</span></code></a> command.
+For a secondary server or a dynamic zone, the zone file is automatically
+generated when <a class="reference internal" href="manpages.html#std-iscman-named"><code class="xref std std-iscman docutils literal notranslate"><span class="pre">named</span></code></a> dumps the zone contents after zone transfer or
+when applying prior updates, if one of these formats is specified by the
+<strong>masterfile-format</strong> option.</p>
+<p>If a zone file in <strong>raw</strong> format needs manual modification, it first must
+be converted to <strong>text</strong> format by the <a class="reference internal" href="manpages.html#std-iscman-named-compilezone"><code class="xref std std-iscman docutils literal notranslate"><span class="pre">named-compilezone</span></code></a> command,
+then converted back after editing.  For example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>named-compilezone -f raw -F text -o zonefile.text &lt;origin&gt; zonefile.raw
+[edit zonefile.text]
+named-compilezone -f text -F raw -o zonefile.raw &lt;origin&gt; zonefile.text
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="chapter2.html" class="btn btn-neutral float-left" title="2. Resource Requirements" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="chapter4.html" class="btn btn-neutral float-right" title="4. Name Server Operations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Internet Systems Consortium.
+      <span class="commit">Revision <code>2c5e22fc</code>.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+
+  
+<script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

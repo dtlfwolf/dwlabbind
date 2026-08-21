@@ -1,0 +1,47 @@
+{
+  "name": "dwlabbind-test-20260128",
+  "named_conf": "/etc/bind/named.conf",
+  "named_etc": "/etc/bind",
+  "named_var": "/var/lib/bind",
+  "expected_zones": [
+    "dw-lab.de",
+    "0.100.10.in-addr.arpa",
+    "dwhome.de",
+    "5.168.192.in-addr.arpa",
+    "ovpnprivate.dw-lab.com",
+    "4.8.10.in-addr.arpa"
+  ],
+  "expected_package_managed_zones": [
+    ".",
+    "localhost",
+    "0.in-addr.arpa",
+    "127.in-addr.arpa",
+    "255.in-addr.arpa"
+  ],
+  "expected_managed_zones": [],
+  "expected_unmanaged_zones": [
+    "dw-lab.de",
+    "dwhome.de",
+    "ovpnprivate.dw-lab.com",
+    "0.100.10.in-addr.arpa",
+    "4.8.10.in-addr.arpa",
+    "5.168.192.in-addr.arpa"
+  ],
+  "expected_ddns_zones": [
+    "dw-lab.de",
+    "dwhome.de",
+    "ovpnprivate.dw-lab.com",
+    "0.100.10.in-addr.arpa",
+    "4.8.10.in-addr.arpa",
+    "5.168.192.in-addr.arpa"
+  ],
+  "expected_reverse_zones": [
+    "0.100.10.in-addr.arpa",
+    "0.in-addr.arpa",
+    "127.in-addr.arpa",
+    "255.in-addr.arpa",
+    "4.8.10.in-addr.arpa",
+    "5.168.192.in-addr.arpa"
+  ],
+  "notes": "Debian-like sample with DDNS and fixed hosts"
+}
