@@ -6,6 +6,7 @@ from typing import Dict, List, Optional
 import sys
 import os
 import re
+import grp
 import tarfile
 import glob
 import ipaddress
@@ -4563,7 +4564,38 @@ class BindServer:
             "zones_dir": zones_dir,
         }
 
-    def _write_layout_to_disk(self, layout: dict) -> None:
+    def _set_dynamic_zone_permissions(self, layout: dict) -> None:
+        """Give named write access to managed DDNS zones and their journals."""
+        dynamic_zone_files = [
+            zone_file
+            for zone_file in self._zone_files
+            if not zone_file.externally_managed and zone_file.ddns_enabled
+        ]
+        if not dynamic_zone_files:
+            return
+
+        try:
+            bind_group_id = grp.getgrnam("bind").gr_gid
+        except KeyError as exc:
+            raise BindOperationError(
+                "BIND_GROUP_NOT_FOUND",
+                "The BIND service group 'bind' is required for dynamic DNS zones.",
+                "Install the bind9 package before creating a dynamic DNS zone.",
+                status=500,
+            ) from exc
+
+        zones_dir = layout["zones_dir"]
+        # setgid ensures named-created journal files remain in the bind group.
+        os.chown(zones_dir, -1, bind_group_id)
+        os.chmod(zones_dir, 0o2775)
+        for zone_file in dynamic_zone_files:
+            for path in (zone_file.file_path, zone_file.fixed_hosts_file_path):
+                if not os.path.exists(path):
+                    continue
+                os.chown(path, -1, bind_group_id)
+                os.chmod(path, 0o664)
+
+    def _write_layout_to_disk(self, layout: dict, apply_runtime_permissions: bool = False) -> None:
         """Internal helper."""
         for path, content in layout["files"].items():
             directory = os.path.dirname(path)
@@ -4582,6 +4614,9 @@ class BindServer:
             )
             zone_file.set_file_path(target_zone_path)
             zone_file.toFile()
+
+        if apply_runtime_permissions and os.path.abspath(layout["zones_dir"]) == "/var/lib/bind/dwlab":
+            self._set_dynamic_zone_permissions(layout)
 
     def _prune_managed_layout_files(self, layout: dict, named_etc: str, named_var: str) -> None:
         """Remove stale generated files from managed dwlab directories after a successful write."""
@@ -4707,7 +4742,7 @@ class BindServer:
             moved = True
             try:
                 real_layout = self._build_layout(named_etc, named_var)
-                self._write_layout_to_disk(real_layout)
+                self._write_layout_to_disk(real_layout, apply_runtime_permissions=True)
                 if os.path.lexists(named_conf):
                     os.remove(named_conf)
                 os.symlink(target_conf, named_conf)

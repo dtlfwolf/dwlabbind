@@ -107,6 +107,33 @@ class TestZoneCreate(unittest.TestCase):
             self.assertIn("example.com", zone_names)
             self.assertIn("5.168.192.in-addr.arpa", zone_names)
 
+    def test_dynamic_zone_files_are_writable_by_bind_service(self) -> None:
+        _, BindServer, _ = _bind_conf_exports()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            server = BindServer(name="test")
+            server.create_zone_minimal(
+                domain_name="example.com",
+                dns_server_cidr="192.168.5.10/24",
+                base_hostname="ns1",
+            )
+            zones_dir = os.path.join(tmpdir, "dwlab")
+            os.makedirs(zones_dir)
+            for zone_file in server._zone_files:
+                zone_file.set_file_path(os.path.join(zones_dir, f"{zone_file.zone_name}.zone"))
+                zone_file.toFile()
+
+            with mock.patch("dwlabbind.bind_conf.grp.getgrnam", return_value=mock.Mock(gr_gid=987)) as getgrnam:
+                with mock.patch("dwlabbind.bind_conf.os.chown") as chown:
+                    with mock.patch("dwlabbind.bind_conf.os.chmod") as chmod:
+                        server._set_dynamic_zone_permissions({"zones_dir": zones_dir})
+
+            getgrnam.assert_called_once_with("bind")
+            chown.assert_any_call(zones_dir, -1, 987)
+            chmod.assert_any_call(zones_dir, 0o2775)
+            for zone_file in server._zone_files:
+                chown.assert_any_call(zone_file.file_path, -1, 987)
+                chmod.assert_any_call(zone_file.file_path, 0o664)
+
     def test_create_zone_minimal_rejects_existing_without_force(self) -> None:
         BindOperationError, BindServer, _ = _bind_conf_exports()
         with tempfile.TemporaryDirectory() as tmpdir:

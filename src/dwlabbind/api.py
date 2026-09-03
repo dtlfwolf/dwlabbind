@@ -7,6 +7,7 @@ import os
 import tempfile
 import xml.etree.ElementTree as ET
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import unquote, urlparse
 
 from .bind_conf import (
     BindServerXmlSerializer,
@@ -14,17 +15,121 @@ from .bind_conf import (
     BindOperationError,
     BindServer,
 )
+from .application import BindReconciliationService
+from .desired_state import BindDesiredState, DesiredStateValidationError
+from .desired_state import ResponsePolicyRecord, ResponsePolicyRule
+from .desired_state_io import DesiredStateFileError, YamlDesiredStateRepository
+from .response_policy import ResponsePolicyAlreadyExistsError, ResponsePolicyNotFoundError, ResponsePolicyService
 
 _API_STATE: dict[str, object] = {
     "server": None,
     "named_conf": None,
     "xml_root": None,
+    "desired_state_path": None,
 }
 _MANAGER = BindConfigurationManager()
 _XML_SERIALIZER = BindServerXmlSerializer()
 
 
 class BindApiHandler(BaseHTTPRequestHandler):
+    def _desired_state_path(self) -> str:
+        path = _API_STATE.get("desired_state_path")
+        if not isinstance(path, str) or not path:
+            raise BindOperationError(
+                "DESIRED_STATE_NOT_CONFIGURED",
+                "RPZ API requires a desired-state file configured when the server starts.",
+                "Start with dwlabbind serve-api --desired-state /etc/dwlab/dns.yaml.",
+                status=409,
+            )
+        return path
+
+    @staticmethod
+    def _response_policy_payload(state: BindDesiredState) -> dict:
+        return {"response_policies": [policy.to_mapping() for policy in state.response_policies]}
+
+    @staticmethod
+    def _rule_from_payload(data: dict) -> ResponsePolicyRule:
+        records = data.get("records", [])
+        if not isinstance(records, list):
+            raise DesiredStateValidationError("records must be a list")
+        if not all(isinstance(record, dict) for record in records):
+            raise DesiredStateValidationError("records must be a list of mappings")
+        return ResponsePolicyRule(
+            query_name=str(data.get("query_name", "")),
+            action=str(data.get("action", "answer")),
+            records=tuple(
+                ResponsePolicyRecord(
+                    record_type=str(record.get("type", "")),
+                    value=str(record.get("value", "")),
+                    ttl=record.get("ttl"),
+                )
+                for record in records
+            ),
+        )
+
+    def _load_desired_state(self) -> BindDesiredState:
+        return YamlDesiredStateRepository().load(self._desired_state_path())
+
+    def _save_desired_state(self, state: BindDesiredState) -> None:
+        YamlDesiredStateRepository().save(state, self._desired_state_path())
+
+    @staticmethod
+    def _rpz_path_parts(path: str) -> list[str]:
+        return [unquote(item) for item in path.strip("/").split("/") if item]
+
+    def do_GET(self) -> None:
+        try:
+            parts = self._rpz_path_parts(urlparse(self.path).path)
+            if parts == ["v1", "rpz", "policies"]:
+                self._send_json(200, self._response_policy_payload(self._load_desired_state()))
+                return
+            if len(parts) == 5 and parts[:3] == ["v1", "rpz", "policies"] and parts[4] == "rules":
+                policy = ResponsePolicyService().get_policy(self._load_desired_state(), parts[3])
+                self._send_json(200, {"policy": policy.name, "rules": [rule.to_mapping() for rule in policy.rules]})
+                return
+            self._send_error(404, "NOT_FOUND", "not found")
+        except DesiredStateFileError as exc:
+            self._send_error(422, "INVALID_DESIRED_STATE_FILE", str(exc))
+        except ResponsePolicyNotFoundError as exc:
+            self._send_error(404, "RPZ_NOT_FOUND", str(exc))
+        except BindOperationError as exc:
+            self._send_error(exc.status, exc.code, str(exc), exc.hint)
+        except Exception as exc:
+            self._send_error(500, "INTERNAL_ERROR", f"internal error: {exc}")
+
+    def do_PATCH(self) -> None:
+        self._handle_rpz_mutation("update")
+
+    def do_DELETE(self) -> None:
+        self._handle_rpz_mutation("delete")
+
+    def _handle_rpz_mutation(self, operation: str) -> None:
+        try:
+            parts = self._rpz_path_parts(urlparse(self.path).path)
+            if len(parts) != 6 or parts[:3] != ["v1", "rpz", "policies"] or parts[4] != "rules":
+                self._send_error(404, "NOT_FOUND", "not found")
+                return
+            state = self._load_desired_state()
+            service = ResponsePolicyService()
+            if operation == "delete":
+                updated = service.delete_rule(state, parts[3], parts[5])
+            else:
+                data = self._read_json()
+                data["query_name"] = parts[5]
+                updated = service.update_rule(state, parts[3], self._rule_from_payload(data))
+            self._save_desired_state(updated)
+            self._send_json(200, {"status": "ok", **self._response_policy_payload(updated)})
+        except DesiredStateValidationError as exc:
+            self._send_error(400, "INVALID_RPZ_RULE", str(exc))
+        except DesiredStateFileError as exc:
+            self._send_error(422, "INVALID_DESIRED_STATE_FILE", str(exc))
+        except ResponsePolicyNotFoundError as exc:
+            self._send_error(404, "RPZ_NOT_FOUND", str(exc))
+        except BindOperationError as exc:
+            self._send_error(exc.status, exc.code, str(exc), exc.hint)
+        except Exception as exc:
+            self._send_error(500, "INTERNAL_ERROR", f"internal error: {exc}")
+
     def _normalize_zone_name(self, value: str) -> str:
         text = (value or "").strip()
         if text.startswith('"') and text.endswith('"') and len(text) >= 2:
@@ -141,6 +246,17 @@ class BindApiHandler(BaseHTTPRequestHandler):
             payload["hint"] = hint
         self._send_json(status, payload)
 
+    @staticmethod
+    def _plan_payload(desired_state: BindDesiredState) -> dict:
+        plan = BindReconciliationService(renderer=None, validator=None).plan(desired_state)  # type: ignore[arg-type]
+        return {
+            "can_apply": plan.can_apply,
+            "issues": [
+                {"code": issue.code, "message": issue.message, "severity": issue.severity}
+                for issue in plan.issues
+            ],
+        }
+
     def _map_runtime_error(self, message: str) -> tuple[int, str, str | None]:
         text = (message or "").strip()
         if "named.conf.working-on already exists" in text:
@@ -161,6 +277,20 @@ class BindApiHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         try:
+            if self.path.startswith("/v1/rpz/policies/") and self.path.endswith("/rules"):
+                parts = self._rpz_path_parts(urlparse(self.path).path)
+                if len(parts) != 5 or parts[:3] != ["v1", "rpz", "policies"] or parts[4] != "rules":
+                    self._send_error(404, "NOT_FOUND", "not found")
+                    return
+                state = self._load_desired_state()
+                updated = ResponsePolicyService().add_rule(state, parts[3], self._rule_from_payload(self._read_json()))
+                self._save_desired_state(updated)
+                self._send_json(201, {"status": "created", **self._response_policy_payload(updated)})
+                return
+            if self.path == "/desired-state/plan":
+                data = self._read_json()
+                self._send_json(200, self._plan_payload(BindDesiredState.from_mapping(data)))
+                return
             if self.path == "/backup":
                 data = self._read_json()
                 named_conf = data.get("named_conf", "/etc/bind/named.conf")
@@ -463,6 +593,14 @@ class BindApiHandler(BaseHTTPRequestHandler):
             self._send_error(404, "NOT_FOUND", "not found")
         except json.JSONDecodeError:
             self._send_error(400, "INVALID_JSON", "invalid JSON body")
+        except DesiredStateValidationError as exc:
+            self._send_error(400, "INVALID_DESIRED_STATE", str(exc))
+        except DesiredStateFileError as exc:
+            self._send_error(422, "INVALID_DESIRED_STATE_FILE", str(exc))
+        except ResponsePolicyAlreadyExistsError as exc:
+            self._send_error(409, "RPZ_RULE_EXISTS", str(exc))
+        except ResponsePolicyNotFoundError as exc:
+            self._send_error(404, "RPZ_NOT_FOUND", str(exc))
         except BindOperationError as exc:
             self._send_error(exc.status, exc.code, str(exc), exc.hint)
         except RuntimeError as exc:
@@ -473,6 +611,7 @@ class BindApiHandler(BaseHTTPRequestHandler):
             self._send_error(500, "INTERNAL_ERROR", f"internal error: {exc}")
 
 
-def serve(host: str = "127.0.0.1", port: int = 8080) -> None:
+def serve(host: str = "127.0.0.1", port: int = 8080, desired_state_path: str | None = None) -> None:
+    _API_STATE["desired_state_path"] = desired_state_path
     server = HTTPServer((host, port), BindApiHandler)
     server.serve_forever()

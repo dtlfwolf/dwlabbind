@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import argparse
+import json
 import logging
+from pathlib import Path
 
 from dwlabbasicpy.dwlabSettings import dwlabSettings
 
@@ -13,6 +15,12 @@ from dwlabbind.bind_conf import (
     BindOperationError,
 )
 from dwlabbind.dynamic_dns import handle_dynamic_dns_update
+from dwlabbind.application import BindReconciliationService, ReconciliationError
+from dwlabbind.bind_adapters import NamedCheckValidator, StagingBindRenderer
+from dwlabbind.desired_state_io import DesiredStateFileError, YamlDesiredStateRepository
+from dwlabbind.desired_state import ResponsePolicyRecord, ResponsePolicyRule
+from dwlabbind.legacy_import import LegacyXmlDesiredStateImporter
+from dwlabbind.response_policy import ResponsePolicyService
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +66,34 @@ def _resolve_zone_create_inputs(args: argparse.Namespace) -> tuple[str, str, str
         hint=hint,
         status=400,
     )
+
+
+def _plan_to_mapping(plan) -> dict:  # type: ignore[no-untyped-def]
+    return {
+        "can_apply": plan.can_apply,
+        "issues": [
+            {"code": issue.code, "message": issue.message, "severity": issue.severity}
+            for issue in plan.issues
+        ],
+    }
+
+
+def _release_path(releases_root: str, release_name: str) -> Path:
+    name = release_name.strip()
+    if not name or Path(name).name != name or name in {".", ".."}:
+        raise ValueError("release name must be a single directory name")
+    return Path(releases_root) / name
+
+
+def _response_policy_rule_from_args(args: argparse.Namespace) -> ResponsePolicyRule:
+    records: list[ResponsePolicyRecord] = []
+    for value in args.record or []:
+        try:
+            record_type, record_value = value.split("=", 1)
+        except ValueError as error:
+            raise ValueError("--record must use TYPE=VALUE, for example A=192.168.2.31") from error
+        records.append(ResponsePolicyRecord(record_type=record_type, value=record_value))
+    return ResponsePolicyRule(query_name=args.query_name, action=args.action, records=tuple(records))
 
 
 def main() -> None:
@@ -145,6 +181,41 @@ def main() -> None:
     api = sub.add_parser("serve-api", help="Serve REST API")
     api.add_argument("--host", default="127.0.0.1")
     api.add_argument("--port", type=int, default=8080)
+    api.add_argument("--desired-state", default=None, metavar="FILE", help="Desired-state YAML managed by RPZ HTTP endpoints")
+
+    desired_plan = sub.add_parser("desired-state-plan", help="Validate and plan a dwlabbind/v1 YAML state")
+    desired_plan.add_argument("--state", required=True, metavar="FILE", help="Desired-state YAML file")
+
+    desired_stage = sub.add_parser("desired-state-stage", help="Render and validate a release without activating it")
+    desired_stage.add_argument("--state", required=True, metavar="FILE", help="Desired-state YAML file")
+    desired_stage.add_argument("--releases-root", required=True, metavar="DIR", help="Directory containing staged releases")
+    desired_stage.add_argument("--release-name", required=True, metavar="NAME", help="New release directory name")
+    desired_stage.add_argument(
+        "--runtime-root",
+        default=None,
+        metavar="DIR",
+        help="Stable BIND runtime root, normally the managed current symlink",
+    )
+
+    rpz = sub.add_parser("rpz", help="Manage response-policy rules in desired-state YAML")
+    rpz_sub = rpz.add_subparsers(dest="rpz_command", required=True)
+    rpz_list = rpz_sub.add_parser("list", help="List configured response policies and rules")
+    rpz_list.add_argument("--state", required=True, metavar="FILE", help="Desired-state YAML file")
+    for action in ("add", "update"):
+        rpz_mutation = rpz_sub.add_parser(action, help=f"{action.title()} one response-policy rule")
+        rpz_mutation.add_argument("--state", required=True, metavar="FILE", help="Desired-state YAML file")
+        rpz_mutation.add_argument("--policy", required=True, metavar="NAME", help="Configured response policy name")
+        rpz_mutation.add_argument("--query-name", required=True, metavar="FQDN", help="DNS name to match")
+        rpz_mutation.add_argument("--action", default="answer", choices=["answer", "nxdomain", "nodata", "passthru", "drop"])
+        rpz_mutation.add_argument("--record", action="append", default=[], metavar="TYPE=VALUE", help="Answer record; repeat for multiple records")
+    rpz_delete = rpz_sub.add_parser("delete", help="Delete one response-policy rule")
+    rpz_delete.add_argument("--state", required=True, metavar="FILE", help="Desired-state YAML file")
+    rpz_delete.add_argument("--policy", required=True, metavar="NAME", help="Configured response policy name")
+    rpz_delete.add_argument("--query-name", required=True, metavar="FQDN", help="DNS name to remove")
+
+    legacy_import = sub.add_parser("legacy-xml-import", help="Convert legacy dwlabbind XML into reviewable dwlabbind/v1 YAML")
+    legacy_import.add_argument("--xml", required=True, metavar="FILE", help="Legacy dwlabbind XML file")
+    legacy_import.add_argument("--output", required=True, metavar="FILE", help="New desired-state YAML output file")
 
     add_host = sub.add_parser("add-fixed-host", help="Add static A/AAAA and PTR records into matching zones")
     add_host.add_argument(
@@ -299,7 +370,65 @@ def main() -> None:
             )
             return
         if args.command == "serve-api":
-            serve(host=args.host, port=args.port)
+            serve(host=args.host, port=args.port, desired_state_path=args.desired_state)
+            return
+        if args.command == "rpz":
+            repository = YamlDesiredStateRepository()
+            state = repository.load(args.state)
+            service = ResponsePolicyService()
+            if args.rpz_command == "list":
+                print(json.dumps({"response_policies": [policy.to_mapping() for policy in service.list_policies(state)]}, indent=2, sort_keys=True))
+                return
+            if args.rpz_command == "delete":
+                updated = service.delete_rule(state, args.policy, args.query_name)
+            else:
+                rule = _response_policy_rule_from_args(args)
+                updated = service.add_rule(state, args.policy, rule) if args.rpz_command == "add" else service.update_rule(state, args.policy, rule)
+            repository.save(updated, args.state)
+            print(json.dumps({"status": "ok", "response_policies": [policy.to_mapping() for policy in updated.response_policies]}, indent=2, sort_keys=True))
+            return
+        if args.command == "desired-state-plan":
+            state = YamlDesiredStateRepository().load(args.state)
+            plan = BindReconciliationService(renderer=None, validator=None).plan(state)  # type: ignore[arg-type]
+            print(json.dumps(_plan_to_mapping(plan), indent=2, sort_keys=True))
+            raise SystemExit(0 if plan.can_apply else 2)
+        if args.command == "desired-state-stage":
+            state = YamlDesiredStateRepository().load(args.state)
+            release_path = _release_path(args.releases_root, args.release_name)
+            runtime_root = args.runtime_root or str(Path(args.releases_root).parent / "current")
+            service = BindReconciliationService(
+                renderer=StagingBindRenderer(release_path, runtime_root=runtime_root),
+                validator=NamedCheckValidator(),
+            )
+            result = service.stage(state)
+            print(
+                json.dumps(
+                    {
+                        **_plan_to_mapping(result.plan),
+                        "release_root": result.rendered.root_path,
+                        "files": list(result.rendered.files),
+                    },
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+            return
+        if args.command == "legacy-xml-import":
+            result = LegacyXmlDesiredStateImporter().from_xml(args.xml)
+            output = YamlDesiredStateRepository().save(result.desired_state, args.output)
+            print(
+                json.dumps(
+                    {
+                        "output": str(output),
+                        "issues": [
+                            {"code": issue.code, "message": issue.message, "severity": issue.severity}
+                            for issue in result.issues
+                        ],
+                    },
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
             return
         if args.command == "add-fixed-host":
             result = manager.add_fixed_host_and_write(
@@ -442,6 +571,9 @@ def main() -> None:
         if exc.hint:
             logger.warning("Hint: %s", exc.hint)
         logger.error("[%s] %s", exc.code, str(exc))
+        raise SystemExit(2)
+    except (DesiredStateFileError, ReconciliationError, ValueError) as exc:
+        logger.error("Command '%s' failed: %s", args.command, exc)
         raise SystemExit(2)
     except RuntimeError as exc:
         msg = str(exc)
