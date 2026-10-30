@@ -38,7 +38,7 @@ class TestUpdateZone(unittest.TestCase):
                     sample.write_fixture_metadata(fixture.manifest)
                     sample.copy_fixture_file(fixture.archive_path)
                     sample.copy_fixture_file(fixture.manifest_path)
-                    sample.append_log("suite.log", f"update-zone start fixture={fixture_name}")
+                    sample.append_log("suite.log", f"zone-update start fixture={fixture_name}")
 
                     manager = BindConfigurationManager()
                     zone_name = fixture.expected_zones[0]
@@ -68,7 +68,7 @@ class TestUpdateZone(unittest.TestCase):
                     inspected_zone_path = managed_zone_path if managed_zone_path.exists() else written_zone_path
                     written_zone_text = inspected_zone_path.read_text(encoding="utf-8")
 
-                    scenario = sample.scenario(11, "update-zone")
+                    scenario = sample.scenario(11, "zone-update")
                     scenario.copy_file(fixture.named_conf, "input/named.conf")
                     if fixture.named_etc.exists():
                         scenario.copy_tree(fixture.named_etc, "generated/etc")
@@ -88,7 +88,7 @@ class TestUpdateZone(unittest.TestCase):
                     }
                     scenario.write_status(status_payload)
                     sample.append_log(
-                        "update-zone.log",
+                        "zone-update.log",
                         f"fixture={fixture_name} zone={zone_name} old_serial={before_serial} new_serial={after_serial}",
                     )
                     summary["fixtures"].append(status_payload)

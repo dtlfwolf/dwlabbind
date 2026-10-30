@@ -74,6 +74,68 @@ python -m dwlabbind.runner desired-state-stage \
 The REST equivalent is `POST /desired-state/plan` with the YAML-decoded JSON
 document as its request body. It returns `can_apply` and structured issues.
 
+### `server-listener-show` and `server-listener-update`
+
+Define the global BIND socket bindings in desired state. This is distinct from
+resolver ACLs and applies outside BIND views. The policy is intentionally
+absent by default, preserving BIND's existing listener behavior until an
+operator explicitly configures it.
+
+```bash
+python -m dwlabbind.runner server-listener-update \
+  --state /etc/dwlab/dwlabbind/dns.yaml \
+  --ipv4 127.0.0.1 \
+  --ipv4 192.168.2.30
+```
+
+The command writes an explicit IPv4 policy and disables IPv6 with
+`listen-on-v6 { none; };`. Add `--ipv6 ADDRESS` as required, or use `--clear`
+to return to BIND's distribution defaults. As with RPZ commands, stage and
+activate the resulting desired state through the normal deployment workflow.
+
+### First Installation Modes
+
+Installing the deployment package never changes BIND. Inspect the effective
+configuration before the first activation:
+
+```bash
+dwlabbind installation-inspect --named-conf /etc/bind/named.conf
+```
+
+Select one explicit mode when activating the first release:
+
+- `new-server`: only for a BIND server without non-default zones.
+- `additive`: preserves existing DNS ownership and adds only the zones in the
+  reviewed DW-Lab desired state.
+- `adopt-existing`: deliberately stops. Existing-zone adoption requires the
+  separate, reviewable migration workflow and is never automatic.
+
+Validate the choice without changing BIND, then activate:
+
+```bash
+dwlabbind installation-validate \
+  --named-conf /etc/bind/named.conf \
+  --installation-mode additive
+
+dwlabbind configure \
+  --state /etc/dwlab/dwlabbind/dns.yaml \
+  --release-name initial \
+  --installation-mode additive
+```
+
+OpenVPN dynamic zone operations require a previously activated DW-Lab release.
+They cannot create the first managed BIND include implicitly.
+
+The same read-only inspection is available through the HTTP interface:
+
+```text
+GET /v1/installation
+GET /v1/installation/validate/additive
+```
+
+The validation endpoint returns `409 INSTALLATION_MODE_REJECTED` for an unsafe
+mode or for `adopt-existing`; neither endpoint changes BIND or desired state.
+
 ### `rpz`
 
 Response policies are declarative resolver overrides. They are not an
@@ -103,18 +165,25 @@ Manage rules through the same application service from the CLI:
 
 ```bash
 dwlabbind rpz list --state /etc/dwlab/dns.yaml
-dwlabbind rpz add --state /etc/dwlab/dns.yaml \
-  --policy internal-host-overrides \
-  --query-name dwlab-cmk-dev.dw-lab.com \
-  --action answer --record A=192.168.2.31
+dwlabbind rpz policy-create --state /etc/dwlab/dns.yaml \
+  --domain-name dw-lab.com
+dwlabbind rpz fixed-host-add --state /etc/dwlab/dns.yaml \
+  --policy dw-lab.com-overrides \
+  --hostname cmkdev --ip-address 192.168.2.31
 dwlabbind rpz update --state /etc/dwlab/dns.yaml \
-  --policy internal-host-overrides \
-  --query-name dwlab-cmk-dev.dw-lab.com \
+  --policy dw-lab.com-overrides \
+  --query-name cmkdev.dw-lab.com \
   --action nxdomain
 dwlabbind rpz delete --state /etc/dwlab/dns.yaml \
-  --policy internal-host-overrides \
-  --query-name dwlab-cmk-dev.dw-lab.com
+  --policy dw-lab.com-overrides \
+  --query-name cmkdev.dw-lab.com
 ```
+
+`policy-create --domain-name dw-lab.com` creates the conventional state
+`name: dw-lab.com-overrides` and `zone_name: rpz.dw-lab.com-overrides`.
+`fixed-host-add` accepts one host label and derives the fully qualified query
+name from that policy. Use the generic `rpz add` command for wildcard names or
+non-`answer` actions.
 
 The command atomically writes only the desired-state file. Run the normal
 `desired-state-stage` and deployment activation afterwards, so BIND remains
@@ -132,6 +201,36 @@ python -m dwlabbind.runner legacy-xml-import \
 
 The command never imports inline TSIG secrets or implicit resolver policy. Its
 JSON output lists every required manual review before the new YAML is staged.
+
+### `legacy-migrate`
+
+Back up the active BIND configuration, import legacy zones and TSIG file
+references into desired state, validate a managed release, and activate it
+transactionally:
+
+```bash
+sudo /opt/dwlab/dwlabbind/bin/dwlabbind legacy-migrate \
+  --state /etc/dwlab/dwlabbind/dns.yaml \
+  --release-name legacy-migration-20261016-01 \
+  --backup /root/bind-before-legacy-migration.tar
+```
+
+When the active server is already managed but a preserved legacy configuration
+must be re-imported, pass it separately. The active configuration is still the
+configuration backed up and replaced:
+
+```bash
+sudo /opt/dwlab/dwlabbind/bin/dwlabbind legacy-migrate \
+  --state /etc/dwlab/dwlabbind/dns.yaml \
+  --legacy-named-conf /root/preserved-legacy-named.conf \
+  --release-name corrected-legacy-migration \
+  --backup /root/bind-before-corrected-migration.tar
+```
+
+Package-managed zones such as root hints are retained through the operating
+system BIND configuration and are not copied into desired state. Imported zone
+files are self-contained; legacy `$INCLUDE` paths are replaced by their loaded
+records.
 
 ### `backup`
 
@@ -174,12 +273,15 @@ Arguments:
 - `--nocleanup` (optional, disable legacy file cleanup after successful initialize)
 - `--keep-stage-on-error` (optional, keep `/tmp/dwlabbind-stage-*` for debugging failed validation)
 
-### `add-fixed-host`
+The fixed-host commands were renamed to `fixed-host-add` and `fixed-host-delete`
+in version 0.20.15. Update scripts using the previous command names.
+
+### `fixed-host-add`
 
 Add one static host mapping (A/AAAA + PTR) into managed fixed-host includes.
 
 ```bash
-python -m dwlabbind.runner add-fixed-host --fqdn host.example.com --ip 192.0.2.10
+python -m dwlabbind.runner fixed-host-add --fqdn host.example.com --ip 192.0.2.10
 ```
 
 Arguments:
@@ -191,12 +293,12 @@ Arguments:
 - `--named-var` (optional)
 - `--force` (optional, overwrite conflicting mapping)
 
-### `delete-fixed-host`
+### `fixed-host-delete`
 
 Delete static host mapping from forward/reverse zone files.
 
 ```bash
-python -m dwlabbind.runner delete-fixed-host --fqdn host.example.com --ip 192.0.2.10
+python -m dwlabbind.runner fixed-host-delete --fqdn host.example.com --ip 192.0.2.10
 ```
 
 Arguments:
@@ -209,7 +311,8 @@ Arguments:
 
 ### `zone-create`
 
-Create forward + reverse zones from minimal parameters.
+Create authoritative forward + reverse zones from minimal parameters
+(`--type primary`, the default).
 
 ```bash
 python -m dwlabbind.runner zone-create --domain-name example.com --dns-server 192.0.2.10/24 --base-hostname ns1
@@ -226,6 +329,48 @@ Arguments:
 - `--no-allow-update` (optional)
 - `--force` (optional)
 
+To forward queries for a domain to upstream DNS servers, use `--type forward`:
+
+```bash
+dwlabbind zone-create --type forward --domain-name tcom.home.arpa \
+  --forwarder 192.168.2.30 --forward-mode only
+```
+
+Repeat `--forwarder IP` for multiple upstream servers. IPv4 and IPv6 addresses
+are accepted without subnet prefixes. `--forward-mode` defaults to `only`;
+use `first` to allow normal recursive resolution if forwarding fails.
+
+Forwarding zones require `--domain-name` and at least one `--forwarder`.
+They create only the requested zone definition, with no new reverse zone,
+zone data file, or TSIG key. `--force` replaces only the same-named zone.
+The existing configuration is written through the normal managed layout writer.
+
+For `--type forward`, `--dns-server`, `--base-hostname`, `--yaml`, `--xml`,
+`--no-allow-recursion`, and `--no-allow-update` are rejected. `--forwarder`
+and `--forward-mode` are accepted only with `--type forward`.
+
+### `zone-delete`
+
+Delete a managed zone and its linked reverse zone:
+
+```bash
+dwlabbind zone-delete --zone-name example.com
+```
+
+Use `--no-delete-related` to keep linked zones. Add `--remove-files` to
+also remove the generated zone files.
+
+### `zone-update`
+
+Increment a zone's SOA serial and rewrite the managed configuration:
+
+```bash
+dwlabbind zone-update --zone-name example.com
+```
+
+The command names `zone-delete` and `zone-update` replace `delete-zone` and
+`update-zone` starting with version 0.20.13; update existing scripts accordingly.
+
 ### `serve-api`
 
 Start HTTP API server.
@@ -233,6 +378,20 @@ Start HTTP API server.
 ```bash
 python -m dwlabbind.runner serve-api --host 127.0.0.1 --port 8080 \
   --desired-state /etc/dwlab/dns.yaml
+```
+
+For a remote controller, explicitly configure the BIND paths and a bearer
+token. `serve-api` rejects a non-loopback listen address without a token.
+Terminate TLS in a reverse proxy or run the API only on a trusted management
+network.
+
+```bash
+python -m dwlabbind.runner serve-api --host 192.168.2.30 --port 8080 \
+  --api-token "$DWLABBIND_API_TOKEN" \
+  --desired-state /etc/dwlab/dwlabbind/dns.yaml \
+  --releases-root /etc/bind/dwlab/releases \
+  --runtime-root /etc/bind/dwlab/current \
+  --named-service bind9
 ```
 
 ## API endpoints
@@ -243,12 +402,24 @@ When `serve-api` is running, these POST endpoints are available:
 - `/import`
 - `/initialize`
 - `/xml/load`
-- `/add-fixed-host`
-- `/delete-fixed-host`
+- `/fixed-host-add`
+- `/fixed-host-delete`
 - `/zone/create-minimal`
 - `/zone/create`
 - `/zone/update`
 - `/zone/delete`
+
+The active zone resource is separate from those legacy in-memory endpoints:
+
+- `POST /v1/zones` creates a primary forward/reverse zone from
+  `domain_name`, `dns_server_cidr`, and `base_hostname`.
+- `DELETE /v1/zones/{zone-name}` removes that managed zone and related files.
+
+Both operations invoke the same `BindRuntimeService` as `dwlabbind
+ovpn-zone-ensure` and `dwlabbind ovpn-zone-remove`. They update desired state,
+create or remove the TSIG key, stage and validate a release, then atomically
+activate it. A bearer token is required whenever the API listens beyond
+loopback.
 
 The RPZ endpoints use only the desired-state file configured when the server
 starts; callers cannot supply arbitrary server-side paths:
@@ -263,9 +434,18 @@ starts; callers cannot supply arbitrary server-side paths:
 They update desired state atomically; BIND activation remains the deployment
 workflow's explicit render, validation, and release switch.
 
+The listener resource follows the same desired-state-only activation model:
+
+- `GET /v1/server/listener`
+- `PUT /v1/server/listener`
+- `DELETE /v1/server/listener`
+
+`PUT` accepts the `listener_policy` YAML object shown in the desired-state
+documentation. It replaces both IP families as one validated policy.
+
 Notes:
-- API mode is in-memory first: mutate server model, then sync XML.
-- Writing/activating BIND files is done by initialize/write flows, not ad-hoc from UI state changes.
+- The older `/zone/*` and fixed-host endpoints remain in-memory editing APIs.
+- `/v1/zones` is the production resource for transactional OpenVPN zone lifecycle management.
 
 ## XML structure for fixed hosts
 

@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import subprocess
 
-from .desired_state import BindDesiredState, ResolverPolicy, ResponsePolicy, ResponsePolicyRule, View, Zone
+from .desired_state import BindDesiredState, ListenerFamilyPolicy, ListenerPolicy, ResolverPolicy, ResponsePolicy, ResponsePolicyRule, View, Zone
 from .ports import BindServiceController, RenderedBindConfiguration, ValidationIssue
 
 
@@ -57,6 +57,7 @@ class StagingBindRenderer:
         zones_conf = self._staging_root / "zones.conf"
         options_text = self._render_options(
             desired_state.resolver_policy,
+            listener_policy=desired_state.listener_policy,
             include_container=False,
             include_resolver_settings=not desired_state.views,
         )
@@ -145,10 +146,13 @@ class StagingBindRenderer:
     def _render_options(
         self,
         policy: ResolverPolicy,
+        listener_policy: ListenerPolicy | None = None,
         include_container: bool = True,
         include_resolver_settings: bool = True,
     ) -> list[str]:
         settings = []
+        if listener_policy is not None:
+            settings.extend(self._render_listener_policy(listener_policy))
         if include_resolver_settings:
             settings.append(f"recursion {'yes' if policy.recursion_enabled else 'no'};")
             if policy.allow_query:
@@ -161,6 +165,17 @@ class StagingBindRenderer:
         if not include_container:
             return settings
         return ["options {"] + [f"    {setting}" for setting in settings] + ["};"]
+
+    def _render_listener_policy(self, policy: ListenerPolicy) -> list[str]:
+        return [
+            self._render_listener_family("listen-on", policy.ipv4),
+            self._render_listener_family("listen-on-v6", policy.ipv6),
+        ]
+
+    def _render_listener_family(self, statement: str, policy: ListenerFamilyPolicy) -> str:
+        port = "" if policy.port == 53 else f" port {policy.port}"
+        addresses = "none" if not policy.addresses else self._acl(policy.addresses).rstrip(";")
+        return f"{statement}{port} {{ {addresses}; }};"
 
     def _render_zone(self, zone: Zone) -> tuple[str, list[Path]]:
         zone_name = self._bind_string(zone.name)

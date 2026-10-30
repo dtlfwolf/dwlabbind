@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+from pathlib import Path
 import tempfile
 import xml.etree.ElementTree as ET
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -20,24 +21,84 @@ from .desired_state import BindDesiredState, DesiredStateValidationError
 from .desired_state import ResponsePolicyRecord, ResponsePolicyRule
 from .desired_state_io import DesiredStateFileError, YamlDesiredStateRepository
 from .response_policy import ResponsePolicyAlreadyExistsError, ResponsePolicyNotFoundError, ResponsePolicyService
+from .listener_policy import ListenerPolicyService
+from .bind_adapters import SystemdBindServiceController
+from .installation import BindInstallationError, BindInstallationInspector, BindInstallationMode
+from .runtime import BindRuntimeConfiguration, BindRuntimeService
 
 _API_STATE: dict[str, object] = {
     "server": None,
     "named_conf": None,
     "xml_root": None,
     "desired_state_path": None,
+    "api_token": None,
+    "releases_root": "/etc/bind/dwlab/releases",
+    "runtime_root": "/etc/bind/dwlab/current",
+    "named_options": "/etc/bind/named.conf.options",
+    "named_local": "/etc/bind/named.conf.local",
+    "named_main": "/etc/bind/named.conf",
+    "key_directory": "/etc/bind/dwlab/keys",
+    "named_service": "bind9",
 }
 _MANAGER = BindConfigurationManager()
 _XML_SERIALIZER = BindServerXmlSerializer()
 
 
 class BindApiHandler(BaseHTTPRequestHandler):
+    def _require_mutation_authorization(self) -> None:
+        token = _API_STATE.get("api_token")
+        if not isinstance(token, str) or not token:
+            return
+        if self.headers.get("Authorization") != f"Bearer {token}":
+            raise BindOperationError(
+                "UNAUTHORIZED",
+                "A valid bearer token is required for BIND mutations.",
+                status=401,
+            )
+
+    def _create_managed_zone(self, data: dict) -> dict:
+        domain_name = str(data.get("domain_name") or "").strip()
+        dns_server_cidr = str(data.get("dns_server_cidr") or "").strip()
+        base_hostname = str(data.get("base_hostname") or "").strip()
+        if not domain_name or not dns_server_cidr or not base_hostname:
+            raise BindOperationError(
+                "MISSING_REQUIRED_FIELD",
+                "domain_name, dns_server_cidr, and base_hostname are required",
+                status=400,
+            )
+        return self._runtime_service().ensure_ovpn_zone(self._runtime_configuration(), domain_name, dns_server_cidr, base_hostname)
+
+    def _delete_managed_zone(self, zone_name: str) -> dict:
+        if not zone_name:
+            raise BindOperationError("MISSING_REQUIRED_FIELD", "zone_name is required", status=400)
+        self._runtime_service().remove_ovpn_zone(self._runtime_configuration(), zone_name)
+        return {"zone_name": zone_name}
+
+    def _runtime_service(self) -> BindRuntimeService:
+        return BindRuntimeService(SystemdBindServiceController(str(_API_STATE["named_service"])))
+
+    def _runtime_configuration(self) -> BindRuntimeConfiguration:
+        return BindRuntimeConfiguration(
+            state_path=Path(self._desired_state_path()),
+            releases_root=Path(str(_API_STATE["releases_root"])),
+            runtime_root=Path(str(_API_STATE["runtime_root"])),
+            named_options=Path(str(_API_STATE["named_options"])),
+            named_local=Path(str(_API_STATE["named_local"])),
+            named_main=Path(str(_API_STATE["named_main"])),
+            key_directory=Path(str(_API_STATE["key_directory"])),
+        )
+
+    def _installation_inspector(self) -> BindInstallationInspector:
+        """Create the read-only first-install inspection service."""
+
+        return BindInstallationInspector(_MANAGER)
+
     def _desired_state_path(self) -> str:
         path = _API_STATE.get("desired_state_path")
         if not isinstance(path, str) or not path:
             raise BindOperationError(
                 "DESIRED_STATE_NOT_CONFIGURED",
-                "RPZ API requires a desired-state file configured when the server starts.",
+                "Desired-state API requires a desired-state file configured when the server starts.",
                 "Start with dwlabbind serve-api --desired-state /etc/dwlab/dns.yaml.",
                 status=409,
             )
@@ -46,6 +107,21 @@ class BindApiHandler(BaseHTTPRequestHandler):
     @staticmethod
     def _response_policy_payload(state: BindDesiredState) -> dict:
         return {"response_policies": [policy.to_mapping() for policy in state.response_policies]}
+
+    @staticmethod
+    def _listener_policy_payload(state: BindDesiredState) -> dict:
+        policy = ListenerPolicyService.get_policy(state)
+        return {"listener_policy": policy.to_mapping() if policy is not None else None}
+
+    @staticmethod
+    def _listener_policy_from_payload(state: BindDesiredState, payload: dict) -> BindDesiredState:
+        if not isinstance(payload, dict):
+            raise DesiredStateValidationError("listener policy payload must be a mapping")
+        document = state.to_mapping()
+        server = document["server"]
+        assert isinstance(server, dict)
+        server["listener_policy"] = payload
+        return BindDesiredState.from_mapping(document)
 
     @staticmethod
     def _rule_from_payload(data: dict) -> ResponsePolicyRule:
@@ -80,8 +156,21 @@ class BindApiHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         try:
             parts = self._rpz_path_parts(urlparse(self.path).path)
+            if parts == ["v1", "installation"]:
+                inspection = self._installation_inspector().inspect(str(_API_STATE["named_main"]))
+                self._send_json(200, inspection.to_mapping())
+                return
+            if len(parts) == 4 and parts[:3] == ["v1", "installation", "validate"]:
+                inspection = self._installation_inspector().inspect(str(_API_STATE["named_main"]))
+                mode = BindInstallationMode(parts[3])
+                self._installation_inspector().validate_mode(mode, inspection)
+                self._send_json(200, {**inspection.to_mapping(), "installation_mode": mode.value, "status": "approved"})
+                return
             if parts == ["v1", "rpz", "policies"]:
                 self._send_json(200, self._response_policy_payload(self._load_desired_state()))
+                return
+            if parts == ["v1", "server", "listener"]:
+                self._send_json(200, self._listener_policy_payload(self._load_desired_state()))
                 return
             if len(parts) == 5 and parts[:3] == ["v1", "rpz", "policies"] and parts[4] == "rules":
                 policy = ResponsePolicyService().get_policy(self._load_desired_state(), parts[3])
@@ -94,13 +183,62 @@ class BindApiHandler(BaseHTTPRequestHandler):
             self._send_error(404, "RPZ_NOT_FOUND", str(exc))
         except BindOperationError as exc:
             self._send_error(exc.status, exc.code, str(exc), exc.hint)
+        except BindInstallationError as exc:
+            self._send_error(409, "INSTALLATION_MODE_REJECTED", str(exc))
+        except ValueError as exc:
+            self._send_error(400, "INVALID_INSTALLATION_MODE", str(exc))
         except Exception as exc:
             self._send_error(500, "INTERNAL_ERROR", f"internal error: {exc}")
 
     def do_PATCH(self) -> None:
+        try:
+            self._require_mutation_authorization()
+        except BindOperationError as exc:
+            self._send_error(exc.status, exc.code, str(exc), exc.hint)
+            return
         self._handle_rpz_mutation("update")
 
+    def do_PUT(self) -> None:
+        try:
+            self._require_mutation_authorization()
+            if self._rpz_path_parts(urlparse(self.path).path) != ["v1", "server", "listener"]:
+                self._send_error(404, "NOT_FOUND", "not found")
+                return
+            state = self._load_desired_state()
+            parsed = self._listener_policy_from_payload(state, self._read_json())
+            assert parsed.listener_policy is not None
+            updated = ListenerPolicyService().update_policy(state, parsed.listener_policy)
+            self._save_desired_state(updated)
+            self._send_json(200, {"status": "ok", **self._listener_policy_payload(updated)})
+        except DesiredStateValidationError as exc:
+            self._send_error(400, "INVALID_LISTENER_POLICY", str(exc))
+        except DesiredStateFileError as exc:
+            self._send_error(422, "INVALID_DESIRED_STATE_FILE", str(exc))
+        except BindOperationError as exc:
+            self._send_error(exc.status, exc.code, str(exc), exc.hint)
+        except Exception as exc:
+            self._send_error(500, "INTERNAL_ERROR", f"internal error: {exc}")
+
     def do_DELETE(self) -> None:
+        try:
+            self._require_mutation_authorization()
+            parts = self._rpz_path_parts(urlparse(self.path).path)
+            if parts == ["v1", "server", "listener"]:
+                updated = ListenerPolicyService().clear_policy(self._load_desired_state())
+                self._save_desired_state(updated)
+                self._send_json(200, {"status": "ok", **self._listener_policy_payload(updated)})
+                return
+            if len(parts) == 4 and parts[:3] == ["v1", "rpz", "policies"]:
+                updated = ResponsePolicyService().delete_policy(self._load_desired_state(), parts[3])
+                self._save_desired_state(updated)
+                self._send_json(200, {"status": "deleted", **self._response_policy_payload(updated)})
+                return
+            if len(parts) == 3 and parts[:2] == ["v1", "zones"]:
+                self._send_json(200, {"status": "deleted", **self._delete_managed_zone(parts[2])})
+                return
+        except BindOperationError as exc:
+            self._send_error(exc.status, exc.code, str(exc), exc.hint)
+            return
         self._handle_rpz_mutation("delete")
 
     def _handle_rpz_mutation(self, operation: str) -> None:
@@ -277,6 +415,33 @@ class BindApiHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         try:
+            self._require_mutation_authorization()
+            if self.path == "/v1/zones":
+                self._send_json(201, {"status": "created", **self._create_managed_zone(self._read_json())})
+                return
+            if self.path == "/v1/rpz/policies":
+                data = self._read_json()
+                updated = ResponsePolicyService().create_policy(
+                    self._load_desired_state(), str(data.get("domain_name", ""))
+                )
+                self._save_desired_state(updated)
+                self._send_json(201, {"status": "created", **self._response_policy_payload(updated)})
+                return
+            if self.path.startswith("/v1/rpz/policies/") and self.path.endswith("/fixed-hosts"):
+                parts = self._rpz_path_parts(urlparse(self.path).path)
+                if len(parts) != 5 or parts[:3] != ["v1", "rpz", "policies"] or parts[4] != "fixed-hosts":
+                    self._send_error(404, "NOT_FOUND", "not found")
+                    return
+                data = self._read_json()
+                updated = ResponsePolicyService().add_fixed_host(
+                    self._load_desired_state(),
+                    parts[3],
+                    str(data.get("hostname", "")),
+                    str(data.get("ip_address", "")),
+                )
+                self._save_desired_state(updated)
+                self._send_json(201, {"status": "created", **self._response_policy_payload(updated)})
+                return
             if self.path.startswith("/v1/rpz/policies/") and self.path.endswith("/rules"):
                 parts = self._rpz_path_parts(urlparse(self.path).path)
                 if len(parts) != 5 or parts[:3] != ["v1", "rpz", "policies"] or parts[4] != "rules":
@@ -381,7 +546,7 @@ class BindApiHandler(BaseHTTPRequestHandler):
                 root = self._load_xml_text_into_state(str(xml_text))
                 self._send_json(200, {"status": "ok", "root": root.tag})
                 return
-            if self.path == "/add-fixed-host":
+            if self.path == "/fixed-host-add":
                 data = self._read_json()
                 named_conf = data.get("named_conf")
                 fqdn = data.get("fqdn")
@@ -406,7 +571,7 @@ class BindApiHandler(BaseHTTPRequestHandler):
                         409,
                         "STATE_NOT_INITIALIZED",
                         "No in-memory configuration loaded in API mode.",
-                        "Call /import first (or provide named_conf once in /add-fixed-host).",
+                        "Call /import first (or provide named_conf once in /fixed-host-add).",
                     )
                     return
                 result = server.add_fixed_host(
@@ -427,7 +592,7 @@ class BindApiHandler(BaseHTTPRequestHandler):
                     },
                 )
                 return
-            if self.path == "/delete-fixed-host":
+            if self.path == "/fixed-host-delete":
                 data = self._read_json()
                 named_conf = data.get("named_conf")
                 fqdn = data.get("fqdn")
@@ -451,7 +616,7 @@ class BindApiHandler(BaseHTTPRequestHandler):
                         409,
                         "STATE_NOT_INITIALIZED",
                         "No in-memory configuration loaded in API mode.",
-                        "Call /import first (or provide named_conf once in /delete-fixed-host).",
+                        "Call /import first (or provide named_conf once in /fixed-host-delete).",
                     )
                     return
                 result = server.delete_fixed_host(
@@ -611,7 +776,30 @@ class BindApiHandler(BaseHTTPRequestHandler):
             self._send_error(500, "INTERNAL_ERROR", f"internal error: {exc}")
 
 
-def serve(host: str = "127.0.0.1", port: int = 8080, desired_state_path: str | None = None) -> None:
+def serve(
+    host: str = "127.0.0.1",
+    port: int = 8080,
+    desired_state_path: str | None = None,
+    *,
+    api_token: str | None = None,
+    releases_root: str = "/etc/bind/dwlab/releases",
+    runtime_root: str = "/etc/bind/dwlab/current",
+    named_options: str = "/etc/bind/named.conf.options",
+    named_local: str = "/etc/bind/named.conf.local",
+    named_main: str = "/etc/bind/named.conf",
+    key_directory: str = "/etc/bind/dwlab/keys",
+    named_service: str = "bind9",
+) -> None:
+    if host not in {"127.0.0.1", "::1", "localhost"} and not api_token:
+        raise ValueError("--api-token is required when serve-api listens beyond loopback.")
     _API_STATE["desired_state_path"] = desired_state_path
+    _API_STATE["api_token"] = api_token
+    _API_STATE["releases_root"] = releases_root
+    _API_STATE["runtime_root"] = runtime_root
+    _API_STATE["named_options"] = named_options
+    _API_STATE["named_local"] = named_local
+    _API_STATE["named_main"] = named_main
+    _API_STATE["key_directory"] = key_directory
+    _API_STATE["named_service"] = named_service
     server = HTTPServer((host, port), BindApiHandler)
     server.serve_forever()

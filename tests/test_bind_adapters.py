@@ -10,7 +10,7 @@ from dwlabbind.bind_adapters import (
     NamedCheckValidator,
     StagingBindRenderer,
 )
-from dwlabbind.desired_state import BindDesiredState, ResolverPolicy, View, Zone
+from dwlabbind.desired_state import BindDesiredState, ListenerFamilyPolicy, ListenerPolicy, ResolverPolicy, View, Zone
 
 
 VALID_ZONE_RECORDS = (
@@ -35,6 +35,22 @@ def test_staging_renderer_writes_a_valid_bind_configuration(tmp_path: Path) -> N
     assert "allow-query { any; };" in (Path(rendered.root_path) / "options.conf").read_text(encoding="utf-8")
     assert 'zone "example.test"' in (Path(rendered.root_path) / "zones.conf").read_text(encoding="utf-8")
     assert NamedCheckValidator().validate(rendered) == ()
+
+
+def test_staging_renderer_writes_explicit_global_listener_policy(tmp_path: Path) -> None:
+    state = BindDesiredState(
+        server_name="dns-01",
+        listener_policy=ListenerPolicy(
+            ipv4=ListenerFamilyPolicy(addresses=("127.0.0.1", "192.168.2.30")),
+            ipv6=ListenerFamilyPolicy(),
+        ),
+    )
+
+    rendered = StagingBindRenderer(tmp_path / "stage").render(state)
+
+    options = (Path(rendered.root_path) / "options.conf").read_text(encoding="utf-8")
+    assert "listen-on { 127.0.0.1; 192.168.2.30; };" in options
+    assert "listen-on-v6 { none; };" in options
 
 
 def test_staging_renderer_writes_view_specific_configuration(tmp_path: Path) -> None:

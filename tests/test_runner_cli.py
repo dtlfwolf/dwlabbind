@@ -3,7 +3,11 @@ import sys
 import tempfile
 import unittest
 from importlib import import_module
+from pathlib import Path
 from unittest import mock
+
+from dwlabbind.desired_state import BindDesiredState
+from dwlabbind.desired_state_io import YamlDesiredStateRepository
 
 
 def _runner_module():
@@ -12,6 +16,28 @@ def _runner_module():
 
 
 class TestRunnerCli(unittest.TestCase):
+    def test_server_listener_update_persists_explicit_policy(self) -> None:
+        runner = _runner_module()
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            state_path = Path(temporary_directory) / "dns.yaml"
+            YamlDesiredStateRepository().save(BindDesiredState(server_name="dns-01"), state_path)
+            with (
+                mock.patch.object(sys, "argv", [
+                    "runner.py",
+                    "server-listener-update",
+                    "--state", str(state_path),
+                    "--ipv4", "127.0.0.1",
+                    "--ipv4", "192.168.2.30",
+                ]),
+                mock.patch("sys.stdout", new_callable=io.StringIO) as stdout,
+            ):
+                runner.main()
+
+            state = YamlDesiredStateRepository().load(state_path)
+            self.assertEqual(state.listener_policy.ipv4.addresses, ("127.0.0.1", "192.168.2.30"))
+            self.assertEqual(state.listener_policy.ipv6.addresses, ())
+            self.assertIn('"status": "ok"', stdout.getvalue())
+
     def test_backup_prints_archive_path(self) -> None:
         runner = _runner_module()
         with (
@@ -81,6 +107,36 @@ class TestRunnerCli(unittest.TestCase):
                 stdout.getvalue(),
             )
 
+    def test_installation_inspect_is_read_only(self) -> None:
+        runner = _runner_module()
+        with (
+            mock.patch.object(runner, "BindConfigurationManager") as manager_cls,
+            mock.patch.object(sys, "argv", ["runner.py", "installation-inspect", "--named-conf", "/etc/bind/named.conf"]),
+            mock.patch("dwlabbind.installation.Path.is_file", return_value=True),
+            mock.patch("sys.stdout", new_callable=io.StringIO) as stdout,
+        ):
+            manager_cls.return_value.list_zones_from_conf.return_value = [
+                {"zone_name": ".", "zone_type": "hint", "file_path": "/usr/share/dns/root.hints"}
+            ]
+
+            runner.main()
+
+            self.assertIn('"available_modes"', stdout.getvalue())
+            manager_cls.return_value.list_zones_from_conf.assert_called_once_with("/etc/bind/named.conf")
+
+    def test_installation_validate_rejects_adopt_existing(self) -> None:
+        runner = _runner_module()
+        with (
+            mock.patch.object(runner, "BindConfigurationManager"),
+            mock.patch.object(sys, "argv", [
+                "runner.py", "installation-validate", "--named-conf", "/missing/named.conf",
+                "--installation-mode", "adopt-existing",
+            ]),
+        ):
+            with self.assertRaises(SystemExit) as failure:
+                runner.main()
+            self.assertEqual(failure.exception.code, 2)
+
     def test_initialize_dispatches_expected_flags(self) -> None:
         runner = _runner_module()
         with (
@@ -131,7 +187,7 @@ class TestRunnerCli(unittest.TestCase):
             mock.patch.object(runner, "BindConfigurationManager") as manager_cls,
             mock.patch.object(sys, "argv", [
                 "runner.py",
-                "update-zone",
+                "zone-update",
                 "--named-conf",
                 "/etc/bind/named.conf",
                 "--zone-name",
@@ -249,7 +305,7 @@ class TestRunnerCli(unittest.TestCase):
             mock.patch.object(runner.logger, "info") as log_info,
             mock.patch.object(sys, "argv", [
                 "runner.py",
-                "delete-fixed-host",
+                "fixed-host-delete",
                 "--named-conf", "/etc/bind/named.conf",
                 "--fqdn", "host.example.com",
                 "--ip", "192.0.2.10",
@@ -304,7 +360,7 @@ class TestRunnerCli(unittest.TestCase):
             mock.patch.object(runner.logger, "error") as log_error,
             mock.patch.object(sys, "argv", [
                 "runner.py",
-                "add-fixed-host",
+                "fixed-host-add",
                 "--fqdn",
                 "host.example.com",
                 "--ip",

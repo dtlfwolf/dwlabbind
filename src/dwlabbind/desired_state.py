@@ -94,9 +94,67 @@ class ResolverPolicy:
         }
 
 
+@dataclass(frozen=True)
+class ListenerFamilyPolicy:
+    """Explicit socket bindings for one IP address family.
+
+    An empty ``addresses`` tuple intentionally renders ``none``.  The
+    containing listener policy is optional so existing installations retain
+    BIND's distribution default until an operator opts in to explicit binds.
+    """
+
+    addresses: tuple[str, ...] = ()
+    port: int = 53
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "addresses", _as_string_tuple(self.addresses, "listener addresses"))
+        if not isinstance(self.port, int) or isinstance(self.port, bool) or not 1 <= self.port <= 65535:
+            raise DesiredStateValidationError("listener port must be an integer between 1 and 65535")
+        if "any" in self.addresses and len(self.addresses) != 1:
+            raise DesiredStateValidationError("listener address 'any' cannot be combined with concrete addresses")
+        if len(self.addresses) != len(set(self.addresses)):
+            raise DesiredStateValidationError("listener addresses must be unique")
+        for address in self.addresses:
+            if address == "any":
+                continue
+            try:
+                ipaddress.ip_address(address)
+            except ValueError as error:
+                raise DesiredStateValidationError(
+                    f"listener address is not an IP address or 'any': {address}"
+                ) from error
+
+    def to_mapping(self) -> dict[str, object]:
+        return {"addresses": list(self.addresses), "port": self.port}
+
+
+@dataclass(frozen=True)
+class ListenerPolicy:
+    """Global BIND listener configuration, independent from resolver policy."""
+
+    ipv4: ListenerFamilyPolicy = field(default_factory=ListenerFamilyPolicy)
+    ipv6: ListenerFamilyPolicy = field(default_factory=ListenerFamilyPolicy)
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.ipv4, ListenerFamilyPolicy):
+            raise DesiredStateValidationError("listener_policy.ipv4 must be a ListenerFamilyPolicy")
+        if not isinstance(self.ipv6, ListenerFamilyPolicy):
+            raise DesiredStateValidationError("listener_policy.ipv6 must be a ListenerFamilyPolicy")
+        for address in self.ipv4.addresses:
+            if address != "any" and ipaddress.ip_address(address).version != 4:
+                raise DesiredStateValidationError(f"listener IPv4 address has the wrong address family: {address}")
+        for address in self.ipv6.addresses:
+            if address != "any" and ipaddress.ip_address(address).version != 6:
+                raise DesiredStateValidationError(f"listener IPv6 address has the wrong address family: {address}")
+
+    def to_mapping(self) -> dict[str, object]:
+        return {"ipv4": self.ipv4.to_mapping(), "ipv6": self.ipv6.to_mapping()}
+
+
 _RPZ_ACTIONS = {"answer", "nxdomain", "nodata", "passthru", "drop"}
 _RPZ_RECORD_TYPES = {"A", "AAAA", "CNAME", "TXT"}
-_POLICY_NAME = re.compile(r"^[a-z0-9][a-z0-9-]{0,62}$")
+_POLICY_NAME = re.compile(r"^[a-z0-9][a-z0-9.-]{0,252}$")
+_DNS_LABEL = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$")
 
 
 def _fqdn(value: object, field_name: str) -> str:
@@ -104,6 +162,14 @@ def _fqdn(value: object, field_name: str) -> str:
     if any(character.isspace() for character in name) or "." not in name:
         raise DesiredStateValidationError(f"{field_name} must be a fully qualified domain name")
     return name
+
+
+def _domain_name(value: object, field_name: str) -> str:
+    """Validate a concrete DNS domain name used to derive an RPZ policy."""
+    domain_name = _fqdn(value, field_name)
+    if not all(_DNS_LABEL.fullmatch(label) for label in domain_name.split(".")):
+        raise DesiredStateValidationError(f"{field_name} must contain valid DNS labels")
+    return domain_name
 
 
 @dataclass(frozen=True)
@@ -189,6 +255,26 @@ class ResponsePolicy:
         rule_names = [rule.query_name for rule in self.rules]
         if len(rule_names) != len(set(rule_names)):
             raise DesiredStateValidationError(f"response policy {name} rule query_names must be unique")
+
+    @classmethod
+    def for_domain(cls, domain_name: str) -> "ResponsePolicy":
+        """Create the conventional customer override policy for one domain."""
+        domain_name = _domain_name(domain_name, "response policy domain_name")
+        return cls(
+            name=f"{domain_name}-overrides",
+            zone_name=f"rpz.{domain_name}-overrides",
+        )
+
+    @property
+    def domain_name(self) -> str:
+        """Return the domain encoded by the standard DW-Lab RPZ convention."""
+        prefix = "rpz."
+        suffix = "-overrides"
+        if not self.zone_name.startswith(prefix) or not self.zone_name.endswith(suffix):
+            raise DesiredStateValidationError(
+                f"response policy {self.name} does not use the rpz.<domain>-overrides convention"
+            )
+        return _domain_name(self.zone_name[len(prefix) : -len(suffix)], "response policy domain_name")
 
     @property
     def file(self) -> str:
@@ -296,6 +382,7 @@ class BindDesiredState:
     zones: tuple[Zone, ...] = ()
     tsig_keys: tuple[TsigKey, ...] = ()
     resolver_policy: ResolverPolicy = field(default_factory=ResolverPolicy)
+    listener_policy: ListenerPolicy | None = None
     response_policies: tuple[ResponsePolicy, ...] = ()
     schema_version: str = SCHEMA_VERSION
 
@@ -308,6 +395,8 @@ class BindDesiredState:
         object.__setattr__(self, "views", tuple(self.views))
         object.__setattr__(self, "zones", tuple(self.zones))
         object.__setattr__(self, "tsig_keys", tuple(self.tsig_keys))
+        if self.listener_policy is not None and not isinstance(self.listener_policy, ListenerPolicy):
+            raise DesiredStateValidationError("listener_policy must be a ListenerPolicy or null")
         if not all(isinstance(view, View) for view in self.views):
             raise DesiredStateValidationError("views must contain View objects")
         if not all(isinstance(zone, Zone) for zone in self.zones):
@@ -340,12 +429,15 @@ class BindDesiredState:
                 )
 
     def to_mapping(self) -> dict[str, object]:
+        server: dict[str, object] = {
+            "name": self.server_name,
+            "resolver_policy": self.resolver_policy.to_mapping(),
+        }
+        if self.listener_policy is not None:
+            server["listener_policy"] = self.listener_policy.to_mapping()
         return {
             "schema_version": self.schema_version,
-            "server": {
-                "name": self.server_name,
-                "resolver_policy": self.resolver_policy.to_mapping(),
-            },
+            "server": server,
             "tsig_keys": [key.to_mapping() for key in self.tsig_keys],
             "zones": [zone.to_mapping() for zone in self.zones],
             "views": [view.to_mapping() for view in self.views],
@@ -378,6 +470,7 @@ class BindDesiredState:
             schema_version=str(payload.get("schema_version", "")),
             server_name=str(server.get("name", "")),
             resolver_policy=cls._resolver_policy_from_mapping(server.get("resolver_policy", {})),
+            listener_policy=cls._listener_policy_from_mapping(server.get("listener_policy")),
             tsig_keys=keys,
             zones=zones,
             views=views,
@@ -447,3 +540,24 @@ class BindDesiredState:
             forwarders=_as_string_tuple(payload.get("forwarders", []), "forwarders"),
             forward_mode=str(payload.get("forward_mode", "first")),
         )
+
+    @staticmethod
+    def _listener_policy_from_mapping(payload: object) -> ListenerPolicy | None:
+        if payload is None:
+            return None
+        if not isinstance(payload, Mapping):
+            raise DesiredStateValidationError("listener_policy must be a mapping")
+
+        def family(name: str) -> ListenerFamilyPolicy:
+            family_payload = payload.get(name, {})
+            if not isinstance(family_payload, Mapping):
+                raise DesiredStateValidationError(f"listener_policy.{name} must be a mapping")
+            return ListenerFamilyPolicy(
+                addresses=_as_string_tuple(family_payload.get("addresses", []), f"listener_policy.{name}.addresses"),
+                port=family_payload.get("port", 53),
+            )
+
+        unknown = set(payload) - {"ipv4", "ipv6"}
+        if unknown:
+            raise DesiredStateValidationError(f"unsupported listener_policy setting(s): {', '.join(sorted(unknown))}")
+        return ListenerPolicy(ipv4=family("ipv4"), ipv6=family("ipv6"))

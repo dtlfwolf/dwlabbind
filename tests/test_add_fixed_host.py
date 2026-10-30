@@ -42,7 +42,7 @@ class TestAddFixedHost(unittest.TestCase):
                     sample.write_fixture_metadata(fixture.manifest)
                     sample.copy_fixture_file(fixture.archive_path)
                     sample.copy_fixture_file(fixture.manifest_path)
-                    sample.append_log("suite.log", f"add-fixed-host start fixture={fixture_name}")
+                    sample.append_log("suite.log", f"fixed-host-add start fixture={fixture_name}")
 
                     manager = BindConfigurationManager()
                     fqdn = "dwlabbind-test-host-01.dw-lab.de"
@@ -59,7 +59,7 @@ class TestAddFixedHost(unittest.TestCase):
                             named_var=str(fixture.named_var),
                         )
 
-                    scenario = sample.scenario(4, "add-fixed-host")
+                    scenario = sample.scenario(4, "fixed-host-add")
                     scenario.copy_file(fixture.named_conf, "input/named.conf")
                     if fixture.named_etc.exists():
                         scenario.copy_tree(fixture.named_etc, "generated/etc")
@@ -81,7 +81,7 @@ class TestAddFixedHost(unittest.TestCase):
                     }
                     scenario.write_status(status_payload)
                     sample.append_log(
-                        "add-fixed-host.log",
+                        "fixed-host-add.log",
                         f"fixture={fixture_name} fqdn={fqdn} ip={ip_address} forward_zone={result['forward_zone']} reverse_zone={result['reverse_zone']}",
                     )
                     summary["fixtures"].append(status_payload)

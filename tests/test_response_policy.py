@@ -101,6 +101,29 @@ def test_response_policy_service_has_explicit_add_update_delete_contract() -> No
         service.delete_rule(deleted, "internal-host-overrides", rule.query_name)
 
 
+def test_response_policy_service_creates_domain_policy_and_fixed_host_rule() -> None:
+    service = ResponsePolicyService()
+    created = service.create_policy(BindDesiredState(server_name="dns-01"), "dw-lab.com")
+
+    policy = created.response_policies[0]
+    assert policy.name == "dw-lab.com-overrides"
+    assert policy.zone_name == "rpz.dw-lab.com-overrides"
+
+    updated = service.add_fixed_host(created, policy.name, "cmkdev", "192.168.2.31")
+    assert updated.response_policies[0].rules == (
+        ResponsePolicyRule(
+            query_name="cmkdev.dw-lab.com",
+            records=(ResponsePolicyRecord(record_type="A", value="192.168.2.31"),),
+        ),
+    )
+
+    with pytest.raises(ValueError, match="one DNS host label"):
+        service.add_fixed_host(updated, policy.name, "cmkdev.dw-lab.com", "192.168.2.31")
+
+    emptied = service.delete_rule(updated, policy.name, "cmkdev.dw-lab.com")
+    assert service.delete_policy(emptied, policy.name).response_policies == ()
+
+
 def test_response_policy_rejects_non_answer_records_and_invalid_addresses() -> None:
     with pytest.raises(DesiredStateValidationError, match="must not contain records"):
         ResponsePolicyRule(

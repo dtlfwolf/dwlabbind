@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import replace
+import ipaddress
+import re
 
-from .desired_state import BindDesiredState, ResponsePolicy, ResponsePolicyRule
+from .desired_state import BindDesiredState, ResponsePolicy, ResponsePolicyRecord, ResponsePolicyRule
 
 
 class ResponsePolicyNotFoundError(ValueError):
@@ -29,6 +31,40 @@ class ResponsePolicyService:
             if policy.name == normalized:
                 return policy
         raise ResponsePolicyNotFoundError(f"response policy not found: {policy_name}")
+
+    def create_policy(self, state: BindDesiredState, domain_name: str) -> BindDesiredState:
+        """Add the conventional RPZ policy for one customer DNS domain."""
+        policy = ResponsePolicy.for_domain(domain_name)
+        if any(existing.name == policy.name or existing.zone_name == policy.zone_name for existing in state.response_policies):
+            raise ResponsePolicyAlreadyExistsError(f"response policy already exists: {policy.name}")
+        return replace(state, response_policies=(*state.response_policies, policy))
+
+    def delete_policy(self, state: BindDesiredState, policy_name: str) -> BindDesiredState:
+        """Remove one empty response policy from the desired state."""
+        policy = self.get_policy(state, policy_name)
+        if policy.rules:
+            raise ValueError(f"response policy {policy.name} still contains rules; delete them before deleting the policy")
+        return replace(state, response_policies=tuple(item for item in state.response_policies if item.name != policy.name))
+
+    def add_fixed_host(self, state: BindDesiredState, policy_name: str, hostname: str, ip_address: str) -> BindDesiredState:
+        """Add an exact A or AAAA override below a convention-based policy domain."""
+        policy = self.get_policy(state, policy_name)
+        normalized_hostname = hostname.strip().rstrip(".").lower()
+        if not re.fullmatch(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?", normalized_hostname):
+            raise ValueError("response policy hostname must be one DNS host label")
+        try:
+            address = ipaddress.ip_address(ip_address.strip())
+        except ValueError as error:
+            raise ValueError(f"response policy fixed-host address is not an IP address: {ip_address}") from error
+        record_type = "A" if address.version == 4 else "AAAA"
+        return self.add_rule(
+            state,
+            policy.name,
+            ResponsePolicyRule(
+                query_name=f"{normalized_hostname}.{policy.domain_name}",
+                records=(ResponsePolicyRecord(record_type=record_type, value=str(address)),),
+            ),
+        )
 
     def add_rule(self, state: BindDesiredState, policy_name: str, rule: ResponsePolicyRule) -> BindDesiredState:
         policy = self.get_policy(state, policy_name)

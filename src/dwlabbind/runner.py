@@ -8,6 +8,7 @@ import logging
 from pathlib import Path
 
 from dwlabbasicpy.dwlabSettings import dwlabSettings
+from dwlabbasicpy.dwlabOperation import LoggingOperationReporter
 
 from dwlabbind.api import serve
 from dwlabbind.bind_conf import (
@@ -16,11 +17,16 @@ from dwlabbind.bind_conf import (
 )
 from dwlabbind.dynamic_dns import handle_dynamic_dns_update
 from dwlabbind.application import BindReconciliationService, ReconciliationError
-from dwlabbind.bind_adapters import NamedCheckValidator, StagingBindRenderer
+from dwlabbind.bind_adapters import NamedCheckValidator, StagingBindRenderer, SystemdBindServiceController
 from dwlabbind.desired_state_io import DesiredStateFileError, YamlDesiredStateRepository
-from dwlabbind.desired_state import ResponsePolicyRecord, ResponsePolicyRule
+from dwlabbind.desired_state import ListenerFamilyPolicy, ListenerPolicy, ResponsePolicyRecord, ResponsePolicyRule
 from dwlabbind.legacy_import import LegacyXmlDesiredStateImporter
+from dwlabbind.installation import BindInstallationInspector, BindInstallationMode
 from dwlabbind.response_policy import ResponsePolicyService
+from dwlabbind.listener_policy import ListenerPolicyService
+from dwlabbind.runtime import BindRuntimeConfiguration, BindRuntimeService
+
+from dwlabbind.zone_create_options import add_zone_type_options, validate_zone_type_options
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +100,36 @@ def _response_policy_rule_from_args(args: argparse.Namespace) -> ResponsePolicyR
             raise ValueError("--record must use TYPE=VALUE, for example A=192.168.2.31") from error
         records.append(ResponsePolicyRecord(record_type=record_type, value=record_value))
     return ResponsePolicyRule(query_name=args.query_name, action=args.action, records=tuple(records))
+
+
+def _listener_policy_from_args(args: argparse.Namespace) -> ListenerPolicy:
+    return ListenerPolicy(
+        ipv4=ListenerFamilyPolicy(addresses=tuple(args.ipv4 or ()), port=args.ipv4_port),
+        ipv6=ListenerFamilyPolicy(addresses=tuple(args.ipv6 or ()), port=args.ipv6_port),
+    )
+
+
+def _add_runtime_arguments(parser: argparse.ArgumentParser, *, state_required: bool = True) -> None:
+    parser.add_argument("--state", required=state_required, metavar="FILE", help="Desired-state YAML file")
+    parser.add_argument("--releases-root", default="/etc/bind/dwlab/releases", metavar="DIR")
+    parser.add_argument("--runtime-root", default="/etc/bind/dwlab/current", metavar="DIR")
+    parser.add_argument("--named-options", default="/etc/bind/named.conf.options", metavar="FILE")
+    parser.add_argument("--named-local", default="/etc/bind/named.conf.local", metavar="FILE")
+    parser.add_argument("--named-main", default="/etc/bind/named.conf", metavar="FILE")
+    parser.add_argument("--key-directory", default="/etc/bind/dwlab/keys", metavar="DIR")
+    parser.add_argument("--service", default="bind9", metavar="UNIT")
+
+
+def _runtime_configuration(args: argparse.Namespace) -> BindRuntimeConfiguration:
+    return BindRuntimeConfiguration(
+        state_path=Path(args.state),
+        releases_root=Path(args.releases_root),
+        runtime_root=Path(args.runtime_root),
+        named_options=Path(args.named_options),
+        named_local=Path(args.named_local),
+        named_main=Path(args.named_main),
+        key_directory=Path(args.key_directory),
+    )
 
 
 def main() -> None:
@@ -182,6 +218,61 @@ def main() -> None:
     api.add_argument("--host", default="127.0.0.1")
     api.add_argument("--port", type=int, default=8080)
     api.add_argument("--desired-state", default=None, metavar="FILE", help="Desired-state YAML managed by RPZ HTTP endpoints")
+    api.add_argument("--api-token", default=None, metavar="TOKEN", help="Required when listening beyond loopback")
+    api.add_argument("--releases-root", default="/etc/bind/dwlab/releases", metavar="DIR")
+    api.add_argument("--runtime-root", default="/etc/bind/dwlab/current", metavar="DIR")
+    api.add_argument("--named-options", default="/etc/bind/named.conf.options", metavar="FILE")
+    api.add_argument("--named-local", default="/etc/bind/named.conf.local", metavar="FILE")
+    api.add_argument("--named-main", default="/etc/bind/named.conf", metavar="FILE")
+    api.add_argument("--key-directory", default="/etc/bind/dwlab/keys", metavar="DIR")
+    api.add_argument("--named-service", default="bind9", metavar="UNIT")
+
+    configure = sub.add_parser("configure", help="stage and atomically activate a desired-state BIND release")
+    _add_runtime_arguments(configure)
+    configure.add_argument("--release-name", required=True, metavar="NAME")
+    configure.add_argument(
+        "--installation-mode",
+        required=True,
+        choices=[mode.value for mode in BindInstallationMode],
+        help="Explicit ownership mode: new-server, additive, or adopt-existing",
+    )
+    legacy_migrate = sub.add_parser("legacy-migrate", help="transactionally migrate legacy named.conf into managed desired state")
+    _add_runtime_arguments(legacy_migrate)
+    legacy_migrate.add_argument("--release-name", required=True, metavar="NAME")
+    legacy_migrate.add_argument("--backup", required=True, metavar="FILE")
+    legacy_migrate.add_argument(
+        "--legacy-named-conf",
+        default=None,
+        metavar="FILE",
+        help="Optional preserved legacy named.conf to import instead of the active named.conf",
+    )
+
+    installation_inspect = sub.add_parser(
+        "installation-inspect",
+        help="Read existing BIND zones and show safe first-install ownership modes",
+    )
+    installation_inspect.add_argument("--named-conf", default="/etc/bind/named.conf", metavar="FILE")
+
+    installation_validate = sub.add_parser(
+        "installation-validate",
+        help="Validate an explicit first-install ownership mode without changing BIND",
+    )
+    installation_validate.add_argument("--named-conf", default="/etc/bind/named.conf", metavar="FILE")
+    installation_validate.add_argument(
+        "--installation-mode",
+        required=True,
+        choices=[mode.value for mode in BindInstallationMode],
+    )
+
+    ovpn_zone = sub.add_parser("ovpn-zone-ensure", help="add and activate a managed OpenVPN DNS zone")
+    _add_runtime_arguments(ovpn_zone)
+    ovpn_zone.add_argument("--domain-name", required=True, metavar="DOMAIN")
+    ovpn_zone.add_argument("--dns-server-cidr", required=True, metavar="IP/PREFIX")
+    ovpn_zone.add_argument("--base-hostname", required=True, metavar="HOST")
+
+    ovpn_remove = sub.add_parser("ovpn-zone-remove", help="remove and deactivate a managed OpenVPN DNS zone")
+    _add_runtime_arguments(ovpn_remove)
+    ovpn_remove.add_argument("--domain-name", required=True, metavar="DOMAIN")
 
     desired_plan = sub.add_parser("desired-state-plan", help="Validate and plan a dwlabbind/v1 YAML state")
     desired_plan.add_argument("--state", required=True, metavar="FILE", help="Desired-state YAML file")
@@ -197,10 +288,31 @@ def main() -> None:
         help="Stable BIND runtime root, normally the managed current symlink",
     )
 
-    rpz = sub.add_parser("rpz", help="Manage response-policy rules in desired-state YAML")
+    listener_show = sub.add_parser("server-listener-show", help="Show the explicit global BIND listener policy")
+    listener_show.add_argument("--state", required=True, metavar="FILE", help="Desired-state YAML file")
+    listener_update = sub.add_parser("server-listener-update", help="Replace the explicit global BIND listener policy")
+    listener_update.add_argument("--state", required=True, metavar="FILE", help="Desired-state YAML file")
+    listener_update.add_argument("--ipv4", action="append", default=[], metavar="IP", help="IPv4 listener address; repeat as required")
+    listener_update.add_argument("--ipv6", action="append", default=[], metavar="IP", help="IPv6 listener address; repeat as required")
+    listener_update.add_argument("--ipv4-port", type=int, default=53, metavar="PORT")
+    listener_update.add_argument("--ipv6-port", type=int, default=53, metavar="PORT")
+    listener_update.add_argument("--clear", action="store_true", help="Remove the explicit policy and restore BIND defaults")
+
+    rpz = sub.add_parser("rpz", help="Manage response policies and rules in desired-state YAML")
     rpz_sub = rpz.add_subparsers(dest="rpz_command", required=True)
     rpz_list = rpz_sub.add_parser("list", help="List configured response policies and rules")
     rpz_list.add_argument("--state", required=True, metavar="FILE", help="Desired-state YAML file")
+    rpz_policy_create = rpz_sub.add_parser("policy-create", help="Create the conventional RPZ policy for one DNS domain")
+    rpz_policy_create.add_argument("--state", required=True, metavar="FILE", help="Desired-state YAML file")
+    rpz_policy_create.add_argument("--domain-name", required=True, metavar="DOMAIN", help="Customer domain, for example dw-lab.com")
+    rpz_policy_delete = rpz_sub.add_parser("policy-delete", help="Delete an empty response policy")
+    rpz_policy_delete.add_argument("--state", required=True, metavar="FILE", help="Desired-state YAML file")
+    rpz_policy_delete.add_argument("--policy", required=True, metavar="NAME", help="Response policy name")
+    rpz_fixed_host_add = rpz_sub.add_parser("fixed-host-add", help="Add one A or AAAA fixed-host override to a response policy")
+    rpz_fixed_host_add.add_argument("--state", required=True, metavar="FILE", help="Desired-state YAML file")
+    rpz_fixed_host_add.add_argument("--policy", required=True, metavar="NAME", help="Response policy name")
+    rpz_fixed_host_add.add_argument("--hostname", required=True, metavar="HOST", help="Single host label below the policy domain")
+    rpz_fixed_host_add.add_argument("--ip-address", required=True, metavar="IP", help="IPv4 or IPv6 answer address")
     for action in ("add", "update"):
         rpz_mutation = rpz_sub.add_parser(action, help=f"{action.title()} one response-policy rule")
         rpz_mutation.add_argument("--state", required=True, metavar="FILE", help="Desired-state YAML file")
@@ -217,7 +329,7 @@ def main() -> None:
     legacy_import.add_argument("--xml", required=True, metavar="FILE", help="Legacy dwlabbind XML file")
     legacy_import.add_argument("--output", required=True, metavar="FILE", help="New desired-state YAML output file")
 
-    add_host = sub.add_parser("add-fixed-host", help="Add static A/AAAA and PTR records into matching zones")
+    add_host = sub.add_parser("fixed-host-add", help="Add static A/AAAA and PTR records into matching zones")
     add_host.add_argument(
         "--named-conf",
         default="/etc/bind/named.conf",
@@ -245,7 +357,7 @@ def main() -> None:
         help="Overwrite existing host/ip mappings if they already exist",
     )
 
-    del_host = sub.add_parser("delete-fixed-host", help="Delete static host mapping from forward/reverse zones")
+    del_host = sub.add_parser("fixed-host-delete", help="Delete static host mapping from forward/reverse zones")
     del_host.add_argument(
         "--named-conf",
         default="/etc/bind/named.conf",
@@ -272,7 +384,8 @@ def main() -> None:
         help="Reserved flag for future delete conflict policies",
     )
 
-    zone_create = sub.add_parser("zone-create", help="Create forward/reverse zone from minimal parameters")
+    zone_create = sub.add_parser("zone-create", help="Create primary forward/reverse zones or a forwarding zone")
+    add_zone_type_options(zone_create)
     zone_create.add_argument("--named-conf", default="/etc/bind/named.conf", metavar="FILE", help="Optional full path to named.conf (default: /etc/bind/named.conf)")
     zone_create.add_argument("--domain-name", default=None, metavar="DOMAIN", help="Domain name (e.g. example.com)")
     zone_create.add_argument("--dns-server", default=None, metavar="IP/PREFIX", help="DNS server IPv4 with /8,/16,/24 prefix (e.g. 192.168.5.10/24)")
@@ -285,7 +398,7 @@ def main() -> None:
     zone_create.add_argument("--no-allow-update", action="store_true", help="Do not inject allow-update/key defaults")
     zone_create.add_argument("--force", action="store_true", help="Replace existing forward/reverse zones when already present")
 
-    zone_delete = sub.add_parser("delete-zone", help="Delete a managed zone and optionally linked reverse zone")
+    zone_delete = sub.add_parser("zone-delete", help="Delete a managed zone and optionally linked reverse zone")
     zone_delete.add_argument("--named-conf", default="/etc/bind/named.conf", metavar="FILE", help="Optional full path to named.conf (default: /etc/bind/named.conf)")
     zone_delete.add_argument("--zone-name", required=True, metavar="ZONE", help="Forward or reverse zone name to delete")
     zone_delete.add_argument("--named-etc", default=None, metavar="DIR", help="Target named configuration directory (default: directory of --named-conf)")
@@ -294,7 +407,7 @@ def main() -> None:
     zone_delete.add_argument("--no-delete-related", action="store_true", help="Delete only the requested zone and keep linked forward/reverse zones")
     zone_delete.add_argument("--force", action="store_true", help="Reserved flag for future delete conflict policies")
 
-    zone_update = sub.add_parser("update-zone", help="Bump the SOA serial for a zone and rewrite the managed layout")
+    zone_update = sub.add_parser("zone-update", help="Bump the SOA serial for a zone and rewrite the managed layout")
     zone_update.add_argument("--named-conf", default="/etc/bind/named.conf", metavar="FILE", help="Optional full path to named.conf (default: /etc/bind/named.conf)")
     zone_update.add_argument("--zone-name", required=True, metavar="ZONE", help="Zone name whose SOA serial should be bumped")
     zone_update.add_argument("--named-etc", default=None, metavar="DIR", help="Target named configuration directory (default: directory of --named-conf)")
@@ -335,6 +448,15 @@ def main() -> None:
                     f"{zone.get('zone_name')} | {direction} | {zone.get('zone_type') or '-'} | {ddns} | {status} | {zone.get('file_path')}"
                 )
             return
+        if args.command in {"installation-inspect", "installation-validate"}:
+            inspector = BindInstallationInspector(manager)
+            inspection = inspector.inspect(args.named_conf)
+            if args.command == "installation-validate":
+                inspector.validate_mode(BindInstallationMode(args.installation_mode), inspection)
+                print(json.dumps({**inspection.to_mapping(), "installation_mode": args.installation_mode, "status": "approved"}, indent=2, sort_keys=True))
+            else:
+                print(json.dumps(inspection.to_mapping(), indent=2, sort_keys=True))
+            return
         if args.command == "restore":
             result = manager.restore_named_conf(
                 named_conf=args.named_conf,
@@ -370,7 +492,48 @@ def main() -> None:
             )
             return
         if args.command == "serve-api":
-            serve(host=args.host, port=args.port, desired_state_path=args.desired_state)
+            serve(
+                host=args.host,
+                port=args.port,
+                desired_state_path=args.desired_state,
+                api_token=args.api_token,
+                releases_root=args.releases_root,
+                runtime_root=args.runtime_root,
+                named_options=args.named_options,
+                named_local=args.named_local,
+                named_main=args.named_main,
+                key_directory=args.key_directory,
+                named_service=args.named_service,
+            )
+            return
+        if args.command == "configure":
+            inspector = BindInstallationInspector(manager)
+            inspector.validate_mode(BindInstallationMode(args.installation_mode), inspector.inspect(args.named_main))
+            release = BindRuntimeService(SystemdBindServiceController(args.service), LoggingOperationReporter(logger)).configure(
+                _runtime_configuration(args), args.release_name
+            )
+            print(json.dumps({"release_root": release, "status": "activated"}, sort_keys=True))
+            return
+        if args.command == "legacy-migrate":
+            release = BindRuntimeService(SystemdBindServiceController(args.service), LoggingOperationReporter(logger)).migrate_legacy(
+                _runtime_configuration(args),
+                args.release_name,
+                Path(args.backup),
+                Path(args.legacy_named_conf) if args.legacy_named_conf else None,
+            )
+            print(json.dumps({"release_root": release, "status": "migrated"}, sort_keys=True))
+            return
+        if args.command == "ovpn-zone-ensure":
+            result = BindRuntimeService(SystemdBindServiceController(args.service), LoggingOperationReporter(logger)).ensure_ovpn_zone(
+                _runtime_configuration(args), args.domain_name, args.dns_server_cidr, args.base_hostname
+            )
+            print(json.dumps(result, sort_keys=True))
+            return
+        if args.command == "ovpn-zone-remove":
+            BindRuntimeService(SystemdBindServiceController(args.service)).remove_ovpn_zone(
+                _runtime_configuration(args), args.domain_name
+            )
+            print(json.dumps({"status": "removed"}, sort_keys=True))
             return
         if args.command == "rpz":
             repository = YamlDesiredStateRepository()
@@ -379,7 +542,13 @@ def main() -> None:
             if args.rpz_command == "list":
                 print(json.dumps({"response_policies": [policy.to_mapping() for policy in service.list_policies(state)]}, indent=2, sort_keys=True))
                 return
-            if args.rpz_command == "delete":
+            if args.rpz_command == "policy-create":
+                updated = service.create_policy(state, args.domain_name)
+            elif args.rpz_command == "policy-delete":
+                updated = service.delete_policy(state, args.policy)
+            elif args.rpz_command == "fixed-host-add":
+                updated = service.add_fixed_host(state, args.policy, args.hostname, args.ip_address)
+            elif args.rpz_command == "delete":
                 updated = service.delete_rule(state, args.policy, args.query_name)
             else:
                 rule = _response_policy_rule_from_args(args)
@@ -413,6 +582,19 @@ def main() -> None:
                 )
             )
             return
+        if args.command in {"server-listener-show", "server-listener-update"}:
+            repository = YamlDesiredStateRepository()
+            state = repository.load(args.state)
+            service = ListenerPolicyService()
+            if args.command == "server-listener-show":
+                print(json.dumps({"listener_policy": service.get_policy(state).to_mapping() if service.get_policy(state) else None}, indent=2, sort_keys=True))
+                return
+            if args.clear and (args.ipv4 or args.ipv6 or args.ipv4_port != 53 or args.ipv6_port != 53):
+                raise ValueError("--clear cannot be combined with listener addresses or ports")
+            updated = service.clear_policy(state) if args.clear else service.update_policy(state, _listener_policy_from_args(args))
+            repository.save(updated, args.state)
+            print(json.dumps({"status": "ok", "listener_policy": updated.listener_policy.to_mapping() if updated.listener_policy else None}, indent=2, sort_keys=True))
+            return
         if args.command == "legacy-xml-import":
             result = LegacyXmlDesiredStateImporter().from_xml(args.xml)
             output = YamlDesiredStateRepository().save(result.desired_state, args.output)
@@ -430,7 +612,7 @@ def main() -> None:
                 )
             )
             return
-        if args.command == "add-fixed-host":
+        if args.command == "fixed-host-add":
             result = manager.add_fixed_host_and_write(
                 named_conf=args.named_conf,
                 fqdn=args.fqdn,
@@ -452,6 +634,20 @@ def main() -> None:
             )
             return
         if args.command == "zone-create":
+            validate_zone_type_options(args)
+            if args.zone_type == "forward":
+                result = manager.create_forward_zone_and_write(
+                    named_conf=args.named_conf,
+                    domain_name=args.domain_name,
+                    forwarders=args.forwarder,
+                    forward_mode=args.forward_mode or "only",
+                    force=args.force,
+                    named_etc=args.named_etc,
+                    named_var=args.named_var,
+                )
+                logger.info("forwarding zone created (domain=%s, conf=%s, xml=%s)",
+                            result.get("domain"), result.get("conf"), result.get("xml"))
+                return
             domain_name, dns_server, base_hostname = _resolve_zone_create_inputs(args)
             result = manager.create_zone_and_write(
                 named_conf=args.named_conf,
@@ -472,7 +668,7 @@ def main() -> None:
                 result.get("xml"),
             )
             return
-        if args.command == "delete-zone":
+        if args.command == "zone-delete":
             result = manager.delete_zone_and_write(
                 named_conf=args.named_conf,
                 zone_name=args.zone_name,
@@ -491,7 +687,7 @@ def main() -> None:
                 result.get("xml"),
             )
             return
-        if args.command == "update-zone":
+        if args.command == "zone-update":
             result = manager.update_zone_serial_and_write(
                 named_conf=args.named_conf,
                 zone_name=args.zone_name,
@@ -540,7 +736,7 @@ def main() -> None:
                 result.get("dns_zone"),
             )
             return
-        if args.command == "delete-fixed-host":
+        if args.command == "fixed-host-delete":
             result = manager.delete_fixed_host_and_write(
                 named_conf=args.named_conf,
                 fqdn=args.fqdn,

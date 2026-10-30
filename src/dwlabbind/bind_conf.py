@@ -16,11 +16,15 @@ import shutil
 import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 import logging
 from dwlabbasicpy import dwlabLogger
 from dwlabbasicpy import dwlabSettings
-dwlabLogger.setup_logging(package_name="dwlabbind")
+dwlabLogger.setup_logging(
+    package_name="dwlabbind",
+    config_path=Path(__file__).with_name("etc") / "logging.yaml",
+)
 logger=logging.getLogger(__name__)
 __PACKAGE_NAME__ = "bind_conf"
 
@@ -2339,14 +2343,12 @@ class ZoneResourceRecord(ZoneFileStatement):
 
         # Disambiguate numeric owner labels (common in reverse zones), e.g.
         # "1 IN PTR host.example." where "1" is owner, not TTL.
-        if (
-            len(pre_tokens) >= 2
-            and re.fullmatch(r"[0-9]+", pre_tokens[0] or "")
-            and pre_tokens[1].upper() in cls.DNS_CLASSES
-        ):
+        if pre_tokens and re.fullmatch(r"[0-9]+", pre_tokens[0] or "") and not cleaned[:1].isspace():
             owner = pre_tokens[0]
-            dns_class = pre_tokens[1].upper()
-            pre_tokens = pre_tokens[2:]
+            pre_tokens = pre_tokens[1:]
+            if pre_tokens and pre_tokens[0].upper() in cls.DNS_CLASSES:
+                dns_class = pre_tokens[0].upper()
+                pre_tokens = pre_tokens[1:]
 
         for token in pre_tokens:
             upper = token.upper()
@@ -4328,6 +4330,41 @@ class BindServer:
             return (f"{b}.{a}.in-addr.arpa", f"{d}.{c}")
         return (f"{a}.in-addr.arpa", f"{d}.{c}.{b}")
 
+    def create_forward_zone(
+        self,
+        domain_name: str,
+        forwarders: List[str],
+        forward_mode: str = "only",
+        force: bool = False,
+    ) -> dict:
+        """Create one forwarding zone without authoritative data or reverse zones."""
+        domain = self._normalize_domain_name(domain_name)
+        if forward_mode not in {"only", "first"}:
+            raise BindOperationError("INVALID_FORWARD_MODE", "Forward mode must be only or first.")
+        if not forwarders:
+            raise BindOperationError("MISSING_FORWARDERS", "At least one upstream IP address is required.")
+        addresses = []
+        for address in forwarders:
+            try:
+                normalized = str(ipaddress.ip_address(address))
+                if "%" in normalized:
+                    raise ValueError("Scoped addresses are not supported")
+            except ValueError as exc:
+                raise BindOperationError("INVALID_FORWARDER", f"Invalid forwarder IP address: {address}",
+                                         "Use IPv4 or IPv6 addresses without a subnet prefix.") from exc
+            if normalized not in addresses:
+                addresses.append(normalized)
+        if domain in self._zone_names_in_use():
+            if not force:
+                raise BindOperationError("ZONE_ALREADY_EXISTS", f"Zone already exists: {domain}",
+                                         "Use --force to replace the existing zone definition.", status=409)
+            self._remove_zone_definition(domain)
+        endpoints = " ".join(f"{address};" for address in addresses)
+        self._statements.append(Zone.fromText(
+            f'zone "{domain}" {{ type forward; forward {forward_mode}; forwarders {{ {endpoints} }}; }};'
+        ))
+        return {"domain": domain, "zone_type": "forward", "forwarders": addresses, "forward_mode": forward_mode}
+
     def create_zone_minimal(
         self,
         domain_name: str,
@@ -4619,7 +4656,7 @@ class BindServer:
             self._set_dynamic_zone_permissions(layout)
 
     def _prune_managed_layout_files(self, layout: dict, named_etc: str, named_var: str) -> None:
-        """Remove stale generated files from managed dwlab directories after a successful write."""
+        """Prune the flat legacy layout without traversing deployment releases."""
         keep_files = {os.path.abspath(path) for path in layout.get("files", {}).keys()}
         for zone_file in self._zone_files:
             if zone_file.externally_managed:
@@ -4627,18 +4664,27 @@ class BindServer:
             keep_files.add(os.path.abspath(zone_file.file_path))
             keep_files.add(os.path.abspath(zone_file.fixed_hosts_file_path))
 
-        for root in (os.path.join(named_etc, "dwlab"), os.path.join(named_var, "dwlab")):
-            if not os.path.isdir(root):
+        # The deployment service also owns paths under dwlab (current/releases).
+        # Recursive deletion here destroys its active and rollback releases.
+        # Only the flat directories and file types emitted by this writer are
+        # eligible for cleanup. In particular, named owns dynamic .jnl files.
+        managed_etc = os.path.join(named_etc, "dwlab")
+        cleanup_directories = (
+            (managed_etc, (".conf",)),
+            (os.path.join(managed_etc, "keys"), (".key",)),
+            (os.path.join(named_var, "dwlab"), (".zone", ".zone.FixedHosts")),
+        )
+        for root, suffixes in cleanup_directories:
+            if os.path.islink(root) or not os.path.isdir(root):
                 continue
-            for current, _, files in os.walk(root, topdown=False):
-                for filename in files:
-                    candidate = os.path.abspath(os.path.join(current, filename))
+            with os.scandir(root) as entries:
+                for entry in entries:
+                    if not entry.name.endswith(suffixes) or not entry.is_file(follow_symlinks=False):
+                        continue
+                    candidate = os.path.abspath(entry.path)
                     if candidate in keep_files:
                         continue
-                    if os.path.lexists(candidate):
-                        os.remove(candidate)
-                if not os.listdir(current):
-                    os.rmdir(current)
+                    os.remove(candidate)
 
     def _validate_layout(self, layout: dict) -> None:
         """Internal helper."""
@@ -5174,7 +5220,7 @@ class BindConfigurationManager:
         force: bool = False,
         persist: bool = True,
     ) -> dict:
-        """Apply add-fixed-host logic to a loaded named.conf model."""
+        """Apply fixed-host-add logic to a loaded named.conf model."""
         function_name = sys._getframe().f_code.co_name
         package_name = __PACKAGE_NAME__
         function_name=package_name+"."+function_name
@@ -5280,6 +5326,25 @@ class BindConfigurationManager:
             "xml": xml_path,
             "conf": conf_path,
         }
+
+    def create_forward_zone_and_write(
+        self,
+        named_conf: str,
+        domain_name: str,
+        forwarders: List[str],
+        forward_mode: str = "only",
+        force: bool = False,
+        named_etc: Optional[str] = None,
+        named_var: Optional[str] = None,
+    ) -> dict:
+        """Validate and write a forwarding zone through the shared configuration writer."""
+        server = BindServer.fromConfFile(named_conf)
+        result = server.create_forward_zone(domain_name, forwarders, forward_mode, force)
+        etc_path = named_etc or os.path.dirname(named_conf)
+        conf_path = server.toConfFile(named_etc=etc_path, named_var=named_var or "/var/lib/bind", force=force)
+        xml_path = os.path.join(etc_path, "dwlabbind.xml")
+        self._write_server_xml(server, xml_path)
+        return {**result, "conf": conf_path, "xml": xml_path}
 
     def create_zone_and_write(
         self,
@@ -5599,7 +5664,7 @@ def add_fixed_host_entry(
     force: bool = False,
     persist: bool = True,
 ) -> dict:
-    """Apply add-fixed-host logic to a loaded named.conf model."""
+    """Apply fixed-host-add logic to a loaded named.conf model."""
     manager = BindConfigurationManager()
     return manager.add_fixed_host_entry(
         named_conf=named_conf,

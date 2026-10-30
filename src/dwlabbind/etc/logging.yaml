@@ -12,7 +12,7 @@ handlers:
     class: logging.StreamHandler
     level: DEBUG
     formatter: detailed
-    stream: ext://sys.stdout
+    stream: ext://sys.stderr
 
   syslog:
     class: logging.handlers.SysLogHandler

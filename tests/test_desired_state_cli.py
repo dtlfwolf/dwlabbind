@@ -97,3 +97,50 @@ def test_runner_rpz_add_persists_a_typed_rule(tmp_path: Path) -> None:
     assert persisted["response_policies"][0]["rules"] == [
         {"query_name": "t-com.dw-lab.com", "action": "answer", "records": [{"type": "A", "value": "192.168.2.31"}]}
     ]
+
+
+def test_runner_rpz_policy_create_and_fixed_host_add_follow_domain_convention(tmp_path: Path) -> None:
+    state = tmp_path / "state.yaml"
+    _write_state(state)
+    repository_root = Path(__file__).resolve().parents[1]
+    environment = os.environ.copy()
+    environment["PYTHONPATH"] = os.pathsep.join([str(repository_root / "src"), str(repository_root.parent / "dwlabbasicpy" / "src")])
+
+    for command in (
+        ["policy-create", "--state", str(state), "--domain-name", "dw-lab.com"],
+        [
+            "fixed-host-add",
+            "--state",
+            str(state),
+            "--policy",
+            "dw-lab.com-overrides",
+            "--hostname",
+            "cmkdev",
+            "--ip-address",
+            "192.168.2.31",
+        ],
+    ):
+        completed = subprocess.run(
+            [sys.executable, "-m", "dwlabbind.runner", "rpz", *command],
+            env=environment,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        assert completed.returncode == 0, completed.stderr
+
+    persisted = yaml.safe_load(state.read_text(encoding="utf-8"))
+    assert persisted["response_policies"] == [
+        {
+            "name": "dw-lab.com-overrides",
+            "zone_name": "rpz.dw-lab.com-overrides",
+            "enabled": True,
+            "rules": [
+                {
+                    "query_name": "cmkdev.dw-lab.com",
+                    "action": "answer",
+                    "records": [{"type": "A", "value": "192.168.2.31"}],
+                }
+            ],
+        }
+    ]

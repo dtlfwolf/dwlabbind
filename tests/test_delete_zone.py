@@ -37,7 +37,7 @@ class TestDeleteZone(unittest.TestCase):
                     sample.write_fixture_metadata(fixture.manifest)
                     sample.copy_fixture_file(fixture.archive_path)
                     sample.copy_fixture_file(fixture.manifest_path)
-                    sample.append_log("suite.log", f"delete-zone start fixture={fixture_name}")
+                    sample.append_log("suite.log", f"zone-delete start fixture={fixture_name}")
 
                     manager = BindConfigurationManager()
                     domain_name = "dwlabbind-delete.example"
@@ -72,7 +72,7 @@ class TestDeleteZone(unittest.TestCase):
                         if generated_group_conf.exists()
                         else ""
                     )
-                    scenario = sample.scenario(8, "delete-zone")
+                    scenario = sample.scenario(8, "zone-delete")
                     scenario.copy_file(fixture.named_conf, "input/named.conf")
                     if fixture.named_etc.exists():
                         scenario.copy_tree(fixture.named_etc, "generated/etc")
@@ -93,7 +93,7 @@ class TestDeleteZone(unittest.TestCase):
                     }
                     scenario.write_status(status_payload)
                     sample.append_log(
-                        "delete-zone.log",
+                        "zone-delete.log",
                         f"fixture={fixture_name} deleted_zones={','.join(delete_result['deleted_zones'])}",
                     )
                     summary["fixtures"].append(status_payload)

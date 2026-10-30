@@ -42,7 +42,7 @@ class TestDeleteFixedHost(unittest.TestCase):
                     sample.write_fixture_metadata(fixture.manifest)
                     sample.copy_fixture_file(fixture.archive_path)
                     sample.copy_fixture_file(fixture.manifest_path)
-                    sample.append_log("suite.log", f"delete-fixed-host start fixture={fixture_name}")
+                    sample.append_log("suite.log", f"fixed-host-delete start fixture={fixture_name}")
 
                     manager = BindConfigurationManager()
                     fqdn = "dwlabbind-test-host-02.dw-lab.de"
@@ -66,7 +66,7 @@ class TestDeleteFixedHost(unittest.TestCase):
                             named_var=str(fixture.named_var),
                         )
 
-                    scenario = sample.scenario(5, "delete-fixed-host")
+                    scenario = sample.scenario(5, "fixed-host-delete")
                     scenario.copy_file(fixture.named_conf, "input/named.conf")
                     if fixture.named_etc.exists():
                         scenario.copy_tree(fixture.named_etc, "generated/etc")
@@ -86,7 +86,7 @@ class TestDeleteFixedHost(unittest.TestCase):
                     }
                     scenario.write_status(status_payload)
                     sample.append_log(
-                        "delete-fixed-host.log",
+                        "fixed-host-delete.log",
                         f"fixture={fixture_name} fqdn={fqdn} removed_forward={result['removed_forward_records']} removed_reverse={result['removed_reverse_records']}",
                     )
                     summary["fixtures"].append(status_payload)

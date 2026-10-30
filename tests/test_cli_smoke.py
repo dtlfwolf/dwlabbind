@@ -260,9 +260,9 @@ class TestCliSmoke(unittest.TestCase):
                     sample.write_fixture_metadata(fixture.manifest)
                     sample.copy_fixture_file(fixture.archive_path)
                     sample.copy_fixture_file(fixture.manifest_path)
-                    sample.append_log("suite.log", f"runner add-fixed-host smoke start fixture={fixture_name}")
+                    sample.append_log("suite.log", f"runner fixed-host-add smoke start fixture={fixture_name}")
 
-                    scenario = sample.scenario(18, "runner-add-fixed-host-smoke")
+                    scenario = sample.scenario(18, "runner-fixed-host-add-smoke")
                     fqdn = "dwlabbind-cli-runner-01.dw-lab.de"
                     ip_address = "10.100.0.242"
 
@@ -271,7 +271,7 @@ class TestCliSmoke(unittest.TestCase):
                         mock.patch.object(BindServer, "_validate_zone_file_record", return_value=None),
                         mock.patch.object(sys, "argv", [
                             "runner.py",
-                            "add-fixed-host",
+                            "fixed-host-add",
                             "--named-conf",
                             str(fixture.named_conf),
                             "--fqdn",
@@ -306,7 +306,7 @@ class TestCliSmoke(unittest.TestCase):
                     }
                     scenario.write_status(status_payload)
                     sample.append_log(
-                        "runner-add-fixed-host-smoke.log",
+                        "runner-fixed-host-add-smoke.log",
                         f"fixture={fixture_name} fqdn={fqdn} ip={ip_address}",
                     )
                     summary["fixtures"].append(status_payload)
@@ -337,9 +337,9 @@ class TestCliSmoke(unittest.TestCase):
                     sample.write_fixture_metadata(fixture.manifest)
                     sample.copy_fixture_file(fixture.archive_path)
                     sample.copy_fixture_file(fixture.manifest_path)
-                    sample.append_log("suite.log", f"local cli add-fixed-host smoke start fixture={fixture_name}")
+                    sample.append_log("suite.log", f"local cli fixed-host-add smoke start fixture={fixture_name}")
 
-                    scenario = sample.scenario(19, "local-cli-add-fixed-host-smoke")
+                    scenario = sample.scenario(19, "local-cli-fixed-host-add-smoke")
                     fqdn = "dwlabbind-cli-local-01.dw-lab.de"
                     ip_address = "10.100.0.243"
 
@@ -348,7 +348,7 @@ class TestCliSmoke(unittest.TestCase):
                         mock.patch.object(BindServer, "_validate_zone_file_record", return_value=None),
                         mock.patch.object(sys, "argv", [
                             "cli.py",
-                            "add-fixed-host",
+                            "fixed-host-add",
                             "--named-conf",
                             str(fixture.named_conf),
                             "--fqdn",
@@ -383,7 +383,7 @@ class TestCliSmoke(unittest.TestCase):
                     }
                     scenario.write_status(status_payload)
                     sample.append_log(
-                        "local-cli-add-fixed-host-smoke.log",
+                        "local-cli-fixed-host-add-smoke.log",
                         f"fixture={fixture_name} fqdn={fqdn} ip={ip_address}",
                     )
                     summary["fixtures"].append(status_payload)
@@ -414,9 +414,9 @@ class TestCliSmoke(unittest.TestCase):
                     sample.write_fixture_metadata(fixture.manifest)
                     sample.copy_fixture_file(fixture.archive_path)
                     sample.copy_fixture_file(fixture.manifest_path)
-                    sample.append_log("suite.log", f"runner delete-fixed-host smoke start fixture={fixture_name}")
+                    sample.append_log("suite.log", f"runner fixed-host-delete smoke start fixture={fixture_name}")
 
-                    scenario = sample.scenario(20, "runner-delete-fixed-host-smoke")
+                    scenario = sample.scenario(20, "runner-fixed-host-delete-smoke")
                     fqdn = "dwlabbind-cli-runner-del-01.dw-lab.de"
                     ip_address = "10.100.0.244"
 
@@ -426,7 +426,7 @@ class TestCliSmoke(unittest.TestCase):
                     ):
                         with mock.patch.object(sys, "argv", [
                             "runner.py",
-                            "add-fixed-host",
+                            "fixed-host-add",
                             "--named-conf",
                             str(fixture.named_conf),
                             "--fqdn",
@@ -441,7 +441,7 @@ class TestCliSmoke(unittest.TestCase):
                             runner.main()
                         with mock.patch.object(sys, "argv", [
                             "runner.py",
-                            "delete-fixed-host",
+                            "fixed-host-delete",
                             "--named-conf",
                             str(fixture.named_conf),
                             "--fqdn",
@@ -475,7 +475,7 @@ class TestCliSmoke(unittest.TestCase):
                     }
                     scenario.write_status(status_payload)
                     sample.append_log(
-                        "runner-delete-fixed-host-smoke.log",
+                        "runner-fixed-host-delete-smoke.log",
                         f"fixture={fixture_name} fqdn={fqdn} ip={ip_address}",
                     )
                     summary["fixtures"].append(status_payload)
@@ -504,9 +504,9 @@ class TestCliSmoke(unittest.TestCase):
                     sample.write_fixture_metadata(fixture.manifest)
                     sample.copy_fixture_file(fixture.archive_path)
                     sample.copy_fixture_file(fixture.manifest_path)
-                    sample.append_log("suite.log", f"local cli delete-fixed-host smoke start fixture={fixture_name}")
+                    sample.append_log("suite.log", f"local cli fixed-host-delete smoke start fixture={fixture_name}")
 
-                    scenario = sample.scenario(21, "local-cli-delete-fixed-host-smoke")
+                    scenario = sample.scenario(21, "local-cli-fixed-host-delete-smoke")
                     fqdn = "dwlabbind-cli-local-del-01.dw-lab.de"
                     ip_address = "10.100.0.245"
 
@@ -516,7 +516,7 @@ class TestCliSmoke(unittest.TestCase):
                     ):
                         with mock.patch.object(sys, "argv", [
                             "cli.py",
-                            "add-fixed-host",
+                            "fixed-host-add",
                             "--named-conf",
                             str(fixture.named_conf),
                             "--fqdn",
@@ -531,7 +531,7 @@ class TestCliSmoke(unittest.TestCase):
                             cli.main()
                         with mock.patch.object(sys, "argv", [
                             "cli.py",
-                            "delete-fixed-host",
+                            "fixed-host-delete",
                             "--named-conf",
                             str(fixture.named_conf),
                             "--fqdn",
@@ -565,7 +565,7 @@ class TestCliSmoke(unittest.TestCase):
                     }
                     scenario.write_status(status_payload)
                     sample.append_log(
-                        "local-cli-delete-fixed-host-smoke.log",
+                        "local-cli-fixed-host-delete-smoke.log",
                         f"fixture={fixture_name} fqdn={fqdn} ip={ip_address}",
                     )
                     summary["fixtures"].append(status_payload)

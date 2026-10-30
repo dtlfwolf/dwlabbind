@@ -126,7 +126,7 @@ class TestLocalCli(unittest.TestCase):
             mock.patch.object(cli, "BindConfigurationManager") as manager_cls,
             mock.patch.object(sys, "argv", [
                 "cli.py",
-                "delete-zone",
+                "zone-delete",
                 "--named-conf", "/etc/bind/named.conf",
                 "--zone-name", "example.com",
                 "--named-etc", "/etc/bind",
@@ -244,7 +244,7 @@ class TestLocalCli(unittest.TestCase):
             mock.patch.object(cli.logger, "info") as log_info,
             mock.patch.object(sys, "argv", [
                 "cli.py",
-                "delete-fixed-host",
+                "fixed-host-delete",
                 "--named-conf", "/etc/bind/named.conf",
                 "--fqdn", "host.example.com",
                 "--ip", "192.0.2.10",
@@ -299,7 +299,7 @@ class TestLocalCli(unittest.TestCase):
             mock.patch.object(cli.logger, "error") as log_error,
             mock.patch.object(sys, "argv", [
                 "cli.py",
-                "delete-fixed-host",
+                "fixed-host-delete",
                 "--fqdn", "host.example.com",
             ]),
         ):

@@ -9,11 +9,11 @@ more rules:
 
 ```yaml
 response_policies:
-  - name: internal-host-overrides
-    zone_name: rpz.internal.dw-lab
+  - name: dw-lab.com-overrides
+    zone_name: rpz.dw-lab.com-overrides
     enabled: true
     rules:
-      - query_name: t-com.dw-lab.com
+      - query_name: cmkdev.dw-lab.com
         action: answer
         records:
           - type: A
@@ -31,6 +31,10 @@ Rules must have unique `query_name` values within a policy. Available actions:
 Only `answer` accepts records. `dwlabbind` derives its managed filename as
 `rpz/<policy-name>.zone`; desired state never accepts a free-form file path.
 With BIND views, dwlabbind declares every enabled policy inside every view.
+The standard policy lifecycle derives `name: <domain>-overrides` and
+`zone_name: rpz.<domain>-overrides` from a domain name. Its fixed-host command
+then derives `<hostname>.<domain>` and selects `A` or `AAAA` from the supplied
+IP address.
 
 `dwlabbind/v1` is the transport-independent configuration contract for a BIND
 server. It is the only input format future CLI, HTTP API, and reconciliation
@@ -48,6 +52,17 @@ activate the configuration.
 schema_version: dwlabbind/v1
 server:
   name: dns-01
+  # Omit listener_policy to retain BIND's distribution defaults. When present,
+  # it owns both address families; an empty addresses list renders "none".
+  listener_policy:
+    ipv4:
+      addresses:
+        - 127.0.0.1
+        - 192.168.2.30
+      port: 53
+    ipv6:
+      addresses: []
+      port: 53
   resolver_policy:
     recursion_enabled: false
     allow_query:
@@ -107,13 +122,18 @@ views:
   never included: `secret_reference` points to a provisioned secret.
 - Resolver recursion is explicit. Enabling it requires `allow_recursion`; it
   is never inferred from a reverse zone or client network.
+- `listener_policy` is optional for backward compatibility. When configured,
+  it is global to BIND, not view-specific. Each address must be a concrete IP
+  address of the correct family, except for the explicit `any` opt-in. An
+  empty family renders `listen-on { none; };` or `listen-on-v6 { none; };`.
 - A view requires `match_clients`. BIND view order and source-match overlap
   checks will be added by the reconciliation service before configuration is
   activated.
 
 ## Boundaries
 
-`BindDesiredState`, `View`, `Zone`, `TsigKey`, and `ResolverPolicy` are pure
+`BindDesiredState`, `View`, `Zone`, `TsigKey`, `ResolverPolicy`, and
+`ListenerPolicy` are pure
 domain objects. They can be constructed from a decoded YAML/JSON mapping by a
 CLI command or an HTTP request. They do not read files, start BIND, invoke
 `rndc`, or perform firewall changes.
