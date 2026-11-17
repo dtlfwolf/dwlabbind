@@ -377,11 +377,17 @@ Start HTTP API server.
 
 ```bash
 python -m dwlabbind.runner serve-api --host 127.0.0.1 --port 8080 \
+  --api-token "$DWLABBIND_API_TOKEN" \
   --desired-state /etc/dwlab/dns.yaml
 ```
 
 For a remote controller, explicitly configure the BIND paths and a bearer
-token. `serve-api` rejects a non-loopback listen address without a token.
+token. Since 0.21.16, `serve-api` requires a token even on loopback; reads and
+mutations all require authorization before body parsing or configuration access.
+Each server owns its policy/state; no global token or shared configuration exists.
+Use a long random secret, protect its source and never commit it. CLI/programming
+interfaces keep their operating-system permissions; this change does not create
+an anonymous management mode or enable the API automatically.
 Terminate TLS in a reverse proxy or run the API only on a trusted management
 network.
 

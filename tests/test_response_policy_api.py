@@ -8,7 +8,6 @@ from unittest.mock import Mock, patch
 
 import pytest
 import yaml
-from http.server import HTTPServer
 
 from dwlabbind import api
 
@@ -32,12 +31,17 @@ def _write_state(path: Path) -> None:
     )
 
 
+@pytest.fixture
+def context():
+    return api.BindApiContext("test-token")
+
+
 def _request(
     port: int,
     method: str,
     path: str,
     payload: dict | None = None,
-    token: str | None = None,
+    token: str | None = "test-token",
 ) -> tuple[int, dict]:
     connection = http.client.HTTPConnection("127.0.0.1", port, timeout=3)
     body = json.dumps(payload).encode("utf-8") if payload is not None else None
@@ -51,11 +55,11 @@ def _request(
     return response.status, result
 
 
-def test_rpz_http_lifecycle_uses_only_the_server_configured_state_file(tmp_path: Path) -> None:
+def test_rpz_http_lifecycle_uses_only_the_server_configured_state_file(tmp_path: Path, context) -> None:
     state = tmp_path / "state.yaml"
     _write_state(state)
-    api._API_STATE["desired_state_path"] = str(state)
-    server = HTTPServer(("127.0.0.1", 0), api.BindApiHandler)
+    context.state["desired_state_path"] = str(state)
+    server = api.BindHttpServer(("127.0.0.1", 0), context)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
@@ -92,18 +96,18 @@ def test_rpz_http_lifecycle_uses_only_the_server_configured_state_file(tmp_path:
         server.shutdown()
         thread.join(timeout=3)
         server.server_close()
-        api._API_STATE["desired_state_path"] = None
+        context.state["desired_state_path"] = None
 
 
-def test_rpz_http_policy_create_and_fixed_host_add_use_domain_convention(tmp_path: Path) -> None:
+def test_rpz_http_policy_create_and_fixed_host_add_use_domain_convention(tmp_path: Path, context) -> None:
     state = tmp_path / "state.yaml"
     _write_state(state)
     document = yaml.safe_load(state.read_text(encoding="utf-8"))
     document["response_policies"] = []
     state.write_text(yaml.safe_dump(document, sort_keys=False), encoding="utf-8")
-    previous_state = dict(api._API_STATE)
-    api._API_STATE.update({"desired_state_path": str(state), "api_token": "test-token"})
-    server = HTTPServer(("127.0.0.1", 0), api.BindApiHandler)
+    previous_state = dict(context.state)
+    context.state.update({"desired_state_path": str(state), "api_token": "test-token"})
+    server = api.BindHttpServer(("127.0.0.1", 0), context)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
@@ -130,16 +134,16 @@ def test_rpz_http_policy_create_and_fixed_host_add_use_domain_convention(tmp_pat
         server.shutdown()
         thread.join(timeout=3)
         server.server_close()
-        api._API_STATE.clear()
-        api._API_STATE.update(previous_state)
+        context.state.clear()
+        context.state.update(previous_state)
 
 
-def test_listener_policy_http_lifecycle_uses_the_desired_state_file(tmp_path: Path) -> None:
+def test_listener_policy_http_lifecycle_uses_the_desired_state_file(tmp_path: Path, context) -> None:
     state = tmp_path / "state.yaml"
     _write_state(state)
-    previous_state = dict(api._API_STATE)
-    api._API_STATE.update({"desired_state_path": str(state), "api_token": "test-token"})
-    server = HTTPServer(("127.0.0.1", 0), api.BindApiHandler)
+    previous_state = dict(context.state)
+    context.state.update({"desired_state_path": str(state), "api_token": "test-token"})
+    server = api.BindHttpServer(("127.0.0.1", 0), context)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
@@ -164,19 +168,19 @@ def test_listener_policy_http_lifecycle_uses_the_desired_state_file(tmp_path: Pa
         server.shutdown()
         thread.join(timeout=3)
         server.server_close()
-        api._API_STATE.clear()
-        api._API_STATE.update(previous_state)
+        context.state.clear()
+        context.state.update(previous_state)
 
 
-def test_fixed_host_http_routes_use_the_renamed_contract() -> None:
+def test_fixed_host_http_routes_use_the_renamed_contract(context) -> None:
     bind_server = Mock()
     bind_server.add_fixed_host.return_value = {"fqdn": "host.example.test", "ip": "192.0.2.10"}
     bind_server.delete_fixed_host.return_value = {"fqdn": "host.example.test", "ip": "192.0.2.10"}
-    previous_server = api._API_STATE.get("server")
-    previous_named_conf = api._API_STATE.get("named_conf")
-    api._API_STATE["server"] = bind_server
-    api._API_STATE["named_conf"] = "/etc/bind/named.conf"
-    server = HTTPServer(("127.0.0.1", 0), api.BindApiHandler)
+    previous_server = context.state.get("server")
+    previous_named_conf = context.state.get("named_conf")
+    context.state["server"] = bind_server
+    context.state["named_conf"] = "/etc/bind/named.conf"
+    server = api.BindHttpServer(("127.0.0.1", 0), context)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
@@ -211,15 +215,15 @@ def test_fixed_host_http_routes_use_the_renamed_contract() -> None:
         server.shutdown()
         thread.join(timeout=3)
         server.server_close()
-        api._API_STATE["server"] = previous_server
-        api._API_STATE["named_conf"] = previous_named_conf
+        context.state["server"] = previous_server
+        context.state["named_conf"] = previous_named_conf
 
 
-def test_active_zone_http_resource_uses_transactional_runtime_service_and_token(tmp_path: Path) -> None:
-    previous_state = dict(api._API_STATE)
+def test_active_zone_http_resource_uses_transactional_runtime_service_and_token(tmp_path: Path, context) -> None:
+    previous_state = dict(context.state)
     state_file = tmp_path / "state.yaml"
     _write_state(state_file)
-    api._API_STATE.update(
+    context.state.update(
         {
             "api_token": "test-token",
             "desired_state_path": str(state_file),
@@ -232,7 +236,7 @@ def test_active_zone_http_resource_uses_transactional_runtime_service_and_token(
             "named_service": "bind9",
         }
     )
-    server = HTTPServer(("127.0.0.1", 0), api.BindApiHandler)
+    server = api.BindHttpServer(("127.0.0.1", 0), context)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
@@ -250,6 +254,7 @@ def test_active_zone_http_resource_uses_transactional_runtime_service_and_token(
                 "POST",
                 "/v1/zones",
                 {"domain_name": "ovpn.example.test", "dns_server_cidr": "10.8.4.1/24", "base_hostname": "central"},
+                token=None,
             )
             assert status == 401
             assert denied["code"] == "UNAUTHORIZED"
@@ -284,16 +289,16 @@ def test_active_zone_http_resource_uses_transactional_runtime_service_and_token(
         server.shutdown()
         thread.join(timeout=3)
         server.server_close()
-        api._API_STATE.clear()
-        api._API_STATE.update(previous_state)
+        context.state.clear()
+        context.state.update(previous_state)
 
 
-def test_installation_http_endpoints_are_read_only_and_validate_modes(tmp_path: Path) -> None:
-    previous_state = dict(api._API_STATE)
+def test_installation_http_endpoints_are_read_only_and_validate_modes(tmp_path: Path, context) -> None:
+    previous_state = dict(context.state)
     named_conf = tmp_path / "named.conf"
     named_conf.write_text("options {};\n", encoding="utf-8")
-    api._API_STATE["named_main"] = str(named_conf)
-    with patch.object(api, "_MANAGER") as manager:
+    context.state["named_main"] = str(named_conf)
+    with patch.object(context, "manager") as manager:
         manager.list_zones_from_conf.return_value = [
             {
                 "zone_name": ".",
@@ -303,7 +308,7 @@ def test_installation_http_endpoints_are_read_only_and_validate_modes(tmp_path: 
             },
             {"zone_name": "customer.example", "zone_type": "master", "file_path": "/var/lib/bind/customer.zone"},
         ]
-        server = HTTPServer(("127.0.0.1", 0), api.BindApiHandler)
+        server = api.BindHttpServer(("127.0.0.1", 0), context)
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
         try:
@@ -323,8 +328,8 @@ def test_installation_http_endpoints_are_read_only_and_validate_modes(tmp_path: 
             server.shutdown()
             thread.join(timeout=3)
             server.server_close()
-            api._API_STATE.clear()
-            api._API_STATE.update(previous_state)
+            context.state.clear()
+            context.state.update(previous_state)
 
 
 def test_serve_api_rejects_remote_listener_without_token() -> None:

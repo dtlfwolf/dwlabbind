@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import hmac
 import os
 from pathlib import Path
 import tempfile
@@ -26,12 +27,34 @@ from .bind_adapters import SystemdBindServiceController
 from .installation import BindInstallationError, BindInstallationInspector, BindInstallationMode
 from .runtime import BindRuntimeConfiguration, BindRuntimeService
 
-_API_STATE: dict[str, object] = {
+class BearerAuthorization:
+    """Per-server fail-closed authorization for every management HTTP operation."""
+
+    def __init__(self, token: str | None) -> None:
+        if not isinstance(token, str) or not token or any(not 33 <= ord(char) <= 126 for char in token):
+            raise ValueError("--api-token is required for every BIND management listener")
+        self._token = token
+
+    def require(self, headers) -> None:
+        """Reject missing, duplicate and invalid credentials before reading bodies."""
+        values = headers.get_all("Authorization", [])
+        if len(values) != 1 or not hmac.compare_digest(values[0].encode(), f"Bearer {self._token}".encode()):
+            raise BindOperationError("UNAUTHORIZED", "A valid bearer token is required for BIND management", status=401)
+
+
+class BindApiContext:
+    """Own one server's policy, runtime configuration and legacy adapter state."""
+
+    def __init__(self, api_token: str | None, *, state: dict | None = None,
+                 manager: BindConfigurationManager | None = None) -> None:
+        self.authorization = BearerAuthorization(api_token)
+        self.manager = manager or BindConfigurationManager()
+        self.xml_serializer = BindServerXmlSerializer()
+        self.state: dict[str, object] = {
     "server": None,
     "named_conf": None,
     "xml_root": None,
     "desired_state_path": None,
-    "api_token": None,
     "releases_root": "/etc/bind/dwlab/releases",
     "runtime_root": "/etc/bind/dwlab/current",
     "named_options": "/etc/bind/named.conf.options",
@@ -39,22 +62,25 @@ _API_STATE: dict[str, object] = {
     "named_main": "/etc/bind/named.conf",
     "key_directory": "/etc/bind/dwlab/keys",
     "named_service": "bind9",
-}
-_MANAGER = BindConfigurationManager()
-_XML_SERIALIZER = BindServerXmlSerializer()
+        }
+        self.state.update(state or {})
+
+
+class BindHttpServer(HTTPServer):
+    """Inject state into a single listener; never share authorization globally."""
+
+    def __init__(self, address: tuple[str, int], context: BindApiContext) -> None:
+        self.context = context
+        super().__init__(address, BindApiHandler)
 
 
 class BindApiHandler(BaseHTTPRequestHandler):
+    @property
+    def context(self) -> BindApiContext:
+        return self.server.context
+
     def _require_mutation_authorization(self) -> None:
-        token = _API_STATE.get("api_token")
-        if not isinstance(token, str) or not token:
-            return
-        if self.headers.get("Authorization") != f"Bearer {token}":
-            raise BindOperationError(
-                "UNAUTHORIZED",
-                "A valid bearer token is required for BIND mutations.",
-                status=401,
-            )
+        self.context.authorization.require(self.headers)
 
     def _create_managed_zone(self, data: dict) -> dict:
         domain_name = str(data.get("domain_name") or "").strip()
@@ -75,26 +101,26 @@ class BindApiHandler(BaseHTTPRequestHandler):
         return {"zone_name": zone_name}
 
     def _runtime_service(self) -> BindRuntimeService:
-        return BindRuntimeService(SystemdBindServiceController(str(_API_STATE["named_service"])))
+        return BindRuntimeService(SystemdBindServiceController(str(self.context.state["named_service"])))
 
     def _runtime_configuration(self) -> BindRuntimeConfiguration:
         return BindRuntimeConfiguration(
             state_path=Path(self._desired_state_path()),
-            releases_root=Path(str(_API_STATE["releases_root"])),
-            runtime_root=Path(str(_API_STATE["runtime_root"])),
-            named_options=Path(str(_API_STATE["named_options"])),
-            named_local=Path(str(_API_STATE["named_local"])),
-            named_main=Path(str(_API_STATE["named_main"])),
-            key_directory=Path(str(_API_STATE["key_directory"])),
+            releases_root=Path(str(self.context.state["releases_root"])),
+            runtime_root=Path(str(self.context.state["runtime_root"])),
+            named_options=Path(str(self.context.state["named_options"])),
+            named_local=Path(str(self.context.state["named_local"])),
+            named_main=Path(str(self.context.state["named_main"])),
+            key_directory=Path(str(self.context.state["key_directory"])),
         )
 
     def _installation_inspector(self) -> BindInstallationInspector:
         """Create the read-only first-install inspection service."""
 
-        return BindInstallationInspector(_MANAGER)
+        return BindInstallationInspector(self.context.manager)
 
     def _desired_state_path(self) -> str:
-        path = _API_STATE.get("desired_state_path")
+        path = self.context.state.get("desired_state_path")
         if not isinstance(path, str) or not path:
             raise BindOperationError(
                 "DESIRED_STATE_NOT_CONFIGURED",
@@ -155,13 +181,14 @@ class BindApiHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         try:
+            self._require_mutation_authorization()
             parts = self._rpz_path_parts(urlparse(self.path).path)
             if parts == ["v1", "installation"]:
-                inspection = self._installation_inspector().inspect(str(_API_STATE["named_main"]))
+                inspection = self._installation_inspector().inspect(str(self.context.state["named_main"]))
                 self._send_json(200, inspection.to_mapping())
                 return
             if len(parts) == 4 and parts[:3] == ["v1", "installation", "validate"]:
-                inspection = self._installation_inspector().inspect(str(_API_STATE["named_main"]))
+                inspection = self._installation_inspector().inspect(str(self.context.state["named_main"]))
                 mode = BindInstallationMode(parts[3])
                 self._installation_inspector().validate_mode(mode, inspection)
                 self._send_json(200, {**inspection.to_mapping(), "installation_mode": mode.value, "status": "approved"})
@@ -286,7 +313,7 @@ class BindApiHandler(BaseHTTPRequestHandler):
         return self._normalize_zone_name(value_el.text or "")
 
     def _ensure_xml_root(self) -> ET.Element:
-        root = _API_STATE.get("xml_root")
+        root = self.context.state.get("xml_root")
         if isinstance(root, ET.Element):
             return root
         raise BindOperationError(
@@ -305,7 +332,7 @@ class BindApiHandler(BaseHTTPRequestHandler):
                 f"XML parse error: {exc}",
                 status=400,
             )
-        _API_STATE["xml_root"] = root
+        self.context.state["xml_root"] = root
         return root
 
     def _zones_container(self, root: ET.Element, create_if_missing: bool = False) -> ET.Element | None:
@@ -349,10 +376,10 @@ class BindApiHandler(BaseHTTPRequestHandler):
         fd, tmp_path = tempfile.mkstemp(prefix="dwlabbind-api-", suffix=".xml")
         os.close(fd)
         try:
-            _XML_SERIALIZER.write_server_xml(server, tmp_path)
+            self.context.xml_serializer.write_server_xml(server, tmp_path)
             xml_tree = ET.parse(tmp_path)
             root = xml_tree.getroot()
-            _API_STATE["xml_root"] = root
+            self.context.state["xml_root"] = root
             return self._xml_to_text(root)
         finally:
             if os.path.exists(tmp_path):
@@ -463,20 +490,20 @@ class BindApiHandler(BaseHTTPRequestHandler):
                 if not output:
                     self._send_error(400, "MISSING_REQUIRED_FIELD", "output is required")
                     return
-                path = _MANAGER.backup_named_conf(named_conf, output)
+                path = self.context.manager.backup_named_conf(named_conf, output)
                 self._send_json(200, {"archive": path})
                 return
             if self.path == "/import":
                 data = self._read_json()
                 named_conf = data.get("named_conf", "/etc/bind/named.conf")
-                path = _MANAGER.import_named_conf(named_conf)
-                _API_STATE["server"] = BindServer.fromConfFile(named_conf)
-                _API_STATE["named_conf"] = named_conf
+                path = self.context.manager.import_named_conf(named_conf)
+                self.context.state["server"] = BindServer.fromConfFile(named_conf)
+                self.context.state["named_conf"] = named_conf
                 try:
                     xml_tree = ET.parse(path)
-                    _API_STATE["xml_root"] = xml_tree.getroot()
+                    self.context.state["xml_root"] = xml_tree.getroot()
                 except Exception:
-                    _API_STATE["xml_root"] = None
+                    self.context.state["xml_root"] = None
                 self._send_json(200, {"xml": path})
                 return
             if self.path == "/restore":
@@ -486,7 +513,7 @@ class BindApiHandler(BaseHTTPRequestHandler):
                 named_etc = data.get("named_etc")
                 named_var = data.get("named_var")
                 force = bool(data.get("force", False))
-                result = _MANAGER.restore_named_conf(
+                result = self.context.manager.restore_named_conf(
                     named_conf=named_conf,
                     archive_path=archive_path,
                     force=force,
@@ -494,15 +521,15 @@ class BindApiHandler(BaseHTTPRequestHandler):
                     named_var=named_var,
                 )
                 restored_named_conf = str(result.get("named_conf") or named_conf)
-                _API_STATE["server"] = BindServer.fromConfFile(restored_named_conf)
-                _API_STATE["named_conf"] = restored_named_conf
+                self.context.state["server"] = BindServer.fromConfFile(restored_named_conf)
+                self.context.state["named_conf"] = restored_named_conf
                 xml_path = result.get("xml")
                 if xml_path:
                     try:
                         xml_tree = ET.parse(str(xml_path))
-                        _API_STATE["xml_root"] = xml_tree.getroot()
+                        self.context.state["xml_root"] = xml_tree.getroot()
                     except Exception:
-                        _API_STATE["xml_root"] = None
+                        self.context.state["xml_root"] = None
                 self._send_json(200, result)
                 return
             if self.path == "/initialize":
@@ -515,7 +542,7 @@ class BindApiHandler(BaseHTTPRequestHandler):
                 force = bool(data.get("force", False))
                 cleanup = bool(data.get("cleanup", True))
                 keep_stage_on_error = bool(data.get("keep_stage_on_error", False))
-                result = _MANAGER.initialize_named_conf(
+                result = self.context.manager.initialize_named_conf(
                     named_conf=named_conf,
                     xml_input=xml_input,
                     backup_output=output,
@@ -526,15 +553,15 @@ class BindApiHandler(BaseHTTPRequestHandler):
                     keep_stage_on_error=keep_stage_on_error,
                 )
                 loaded_conf = result.get("conf") or named_conf
-                _API_STATE["server"] = BindServer.fromConfFile(str(loaded_conf))
-                _API_STATE["named_conf"] = str(loaded_conf)
+                self.context.state["server"] = BindServer.fromConfFile(str(loaded_conf))
+                self.context.state["named_conf"] = str(loaded_conf)
                 xml_path = result.get("xml")
                 if xml_path:
                     try:
                         xml_tree = ET.parse(str(xml_path))
-                        _API_STATE["xml_root"] = xml_tree.getroot()
+                        self.context.state["xml_root"] = xml_tree.getroot()
                     except Exception:
-                        _API_STATE["xml_root"] = None
+                        self.context.state["xml_root"] = None
                 self._send_json(200, result)
                 return
             if self.path == "/xml/load":
@@ -560,12 +587,12 @@ class BindApiHandler(BaseHTTPRequestHandler):
                         "fqdn and ip are required",
                     )
                     return
-                server = _API_STATE.get("server")
-                current_named_conf = _API_STATE.get("named_conf")
+                server = self.context.state.get("server")
+                current_named_conf = self.context.state.get("named_conf")
                 if named_conf and (server is None or current_named_conf != named_conf):
                     server = BindServer.fromConfFile(named_conf)
-                    _API_STATE["server"] = server
-                    _API_STATE["named_conf"] = named_conf
+                    self.context.state["server"] = server
+                    self.context.state["named_conf"] = named_conf
                 if server is None:
                     self._send_error(
                         409,
@@ -587,7 +614,7 @@ class BindApiHandler(BaseHTTPRequestHandler):
                     {
                         **result,
                         "mode": "in-memory",
-                        "named_conf": _API_STATE.get("named_conf"),
+                        "named_conf": self.context.state.get("named_conf"),
                         "xml": xml_text,
                     },
                 )
@@ -605,12 +632,12 @@ class BindApiHandler(BaseHTTPRequestHandler):
                         "fqdn is required",
                     )
                     return
-                server = _API_STATE.get("server")
-                current_named_conf = _API_STATE.get("named_conf")
+                server = self.context.state.get("server")
+                current_named_conf = self.context.state.get("named_conf")
                 if named_conf and (server is None or current_named_conf != named_conf):
                     server = BindServer.fromConfFile(named_conf)
-                    _API_STATE["server"] = server
-                    _API_STATE["named_conf"] = named_conf
+                    self.context.state["server"] = server
+                    self.context.state["named_conf"] = named_conf
                 if server is None:
                     self._send_error(
                         409,
@@ -631,7 +658,7 @@ class BindApiHandler(BaseHTTPRequestHandler):
                     {
                         **result,
                         "mode": "in-memory",
-                        "named_conf": _API_STATE.get("named_conf"),
+                        "named_conf": self.context.state.get("named_conf"),
                         "xml": xml_text,
                     },
                 )
@@ -652,12 +679,12 @@ class BindApiHandler(BaseHTTPRequestHandler):
                         "domain_name, dns_server, and base_hostname are required",
                     )
                     return
-                server = _API_STATE.get("server")
-                current_named_conf = _API_STATE.get("named_conf")
+                server = self.context.state.get("server")
+                current_named_conf = self.context.state.get("named_conf")
                 if named_conf and (server is None or current_named_conf != named_conf):
                     server = BindServer.fromConfFile(named_conf)
-                    _API_STATE["server"] = server
-                    _API_STATE["named_conf"] = named_conf
+                    self.context.state["server"] = server
+                    self.context.state["named_conf"] = named_conf
                 if server is None:
                     self._send_error(
                         409,
@@ -681,7 +708,7 @@ class BindApiHandler(BaseHTTPRequestHandler):
                         "status": "ok",
                         "action": "create-minimal",
                         "mode": "in-memory",
-                        "named_conf": _API_STATE.get("named_conf"),
+                        "named_conf": self.context.state.get("named_conf"),
                         "xml": xml_text,
                         **result,
                     },
@@ -790,16 +817,9 @@ def serve(
     key_directory: str = "/etc/bind/dwlab/keys",
     named_service: str = "bind9",
 ) -> None:
-    if host not in {"127.0.0.1", "::1", "localhost"} and not api_token:
-        raise ValueError("--api-token is required when serve-api listens beyond loopback.")
-    _API_STATE["desired_state_path"] = desired_state_path
-    _API_STATE["api_token"] = api_token
-    _API_STATE["releases_root"] = releases_root
-    _API_STATE["runtime_root"] = runtime_root
-    _API_STATE["named_options"] = named_options
-    _API_STATE["named_local"] = named_local
-    _API_STATE["named_main"] = named_main
-    _API_STATE["key_directory"] = key_directory
-    _API_STATE["named_service"] = named_service
-    server = HTTPServer((host, port), BindApiHandler)
-    server.serve_forever()
+    context = BindApiContext(api_token, state=dict(
+        desired_state_path=desired_state_path, releases_root=releases_root,
+        runtime_root=runtime_root, named_options=named_options, named_local=named_local,
+        named_main=named_main, key_directory=key_directory, named_service=named_service))
+    with BindHttpServer((host, port), context) as server:
+        server.serve_forever()

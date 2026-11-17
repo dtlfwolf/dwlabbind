@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dwlabbind"
-version = "0.21.15"
+version = "0.21.16"
 description = "BIND statement classes, parser, and CLI tools"
 readme = "README.md"
 license = { file = "LICENSE" }
