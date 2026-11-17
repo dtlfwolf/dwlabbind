@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import argparse
 import logging
 
@@ -151,6 +153,7 @@ def main() -> None:
     api.add_argument("--port", type=int, default=8080)
     api.add_argument("--desired-state", default=None, metavar="FILE")
     api.add_argument("--api-token", default=None, metavar="TOKEN", help="Required for every HTTP operation, including loopback")
+    api.add_argument("--api-token-file", type=Path, default=None, metavar="FILE", help="Read the bearer token from an owner-only file instead of exposing it in argv")
     api.add_argument("--backup-directory", default="/var/lib/dwlab/dwlabbind/backups", metavar="DIR")
     api.add_argument("--managed-named-conf", default="/etc/bind/named.conf", metavar="FILE")
     api.add_argument("--managed-named-etc", default="/etc/bind", metavar="DIR")
@@ -318,6 +321,7 @@ def main() -> None:
                 port=args.port,
                 desired_state_path=args.desired_state,
                 api_token=args.api_token,
+                api_token_file=args.api_token_file,
                 backup_directory=args.backup_directory,
                 managed_named_conf=args.managed_named_conf,
                 managed_named_etc=args.managed_named_etc,

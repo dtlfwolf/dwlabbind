@@ -7,7 +7,7 @@ from threading import Thread
 
 import pytest
 
-from dwlabbind.api import BindApiContext, BindHttpServer
+from dwlabbind.api import BearerAuthorization, BindApiContext, BindHttpServer
 
 
 class ApiHost:
@@ -78,3 +78,35 @@ def test_restore_http_cannot_override_server_owned_roots(field):
         status, body = host.request("POST", "/restore", "test-token", {field: "/etc/cron.d", "archive": "/missing"})
         assert status == 400
         assert body["code"] == "RESTORE_SCOPE_OVERRIDE"
+
+
+@pytest.mark.parametrize("host", ["0.0.0.0", "::", "192.0.2.1", "2001:db8::1", "localhost", "dns.example.test"])
+def test_token_never_authorizes_non_loopback_cleartext(host):
+    with pytest.raises(ValueError, match="loopback|cleartext"):
+        BindHttpServer((host, 0), BindApiContext("test-token"))
+
+
+def test_ipv6_loopback_is_explicitly_supported():
+    import socket
+    if not socket.has_ipv6:
+        pytest.skip("Kernel has no IPv6 support")
+    server = BindHttpServer(("::1", 0), BindApiContext("test-token"))
+    try:
+        assert server.server_address[0] == "::1"
+    finally:
+        server.server_close()
+
+
+def test_private_token_file_does_not_expose_value_or_allow_public_files(tmp_path):
+    path = tmp_path / "token"
+    path.write_text("test-token\n")
+    path.chmod(0o600)
+    authorization = BearerAuthorization.from_file(path)
+    assert "test-token" not in repr(authorization)
+    path.chmod(0o644)
+    with pytest.raises(ValueError, match="owner-only"):
+        BearerAuthorization.from_file(path)
+    link = tmp_path / "link"
+    link.symlink_to(path)
+    with pytest.raises(ValueError, match="symlinks"):
+        BearerAuthorization.from_file(link)

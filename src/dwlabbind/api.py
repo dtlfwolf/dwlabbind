@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import json
 import hmac
+import ipaddress
+import socket
+import stat
 import os
 from pathlib import Path
 import tempfile
@@ -35,6 +38,30 @@ class BearerAuthorization:
             raise ValueError("--api-token is required for every BIND management listener")
         self._token = token
 
+    @classmethod
+    def from_file(cls, path: Path) -> BearerAuthorization:
+        """Read a bounded owner-only service credential without exposing argv."""
+        if not path.is_absolute() or path != path.resolve():
+            raise ValueError("API token file must be an absolute path without symlinks")
+        for parent in path.parents:
+            info = parent.stat()
+            sticky_root = info.st_uid == 0 and info.st_mode & stat.S_ISVTX
+            if info.st_uid not in {0, os.geteuid()} or (info.st_mode & 0o022 and not sticky_root):
+                raise ValueError("Untrusted API token directory")
+        descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        with os.fdopen(descriptor, "rb") as stream:
+            info = os.fstat(stream.fileno())
+            if (not stat.S_ISREG(info.st_mode) or info.st_uid != os.geteuid()
+                    or info.st_nlink != 1 or info.st_mode & 0o077):
+                raise ValueError("API token file must be an owner-only regular file (0600)")
+            content = stream.read(4097)
+        if len(content) > 4096:
+            raise ValueError("API token file exceeds size limit")
+        try:
+            return cls(content.decode("ascii").rstrip("\r\n"))
+        except UnicodeDecodeError:
+            raise ValueError("Invalid API token encoding") from None
+
     def require(self, headers) -> None:
         """Reject missing, duplicate and invalid credentials before reading bodies."""
         values = headers.get_all("Authorization", [])
@@ -46,8 +73,11 @@ class BindApiContext:
     """Own one server's policy, runtime configuration and legacy adapter state."""
 
     def __init__(self, api_token: str | None, *, state: dict | None = None,
-                 manager: BindConfigurationManager | None = None) -> None:
-        self.authorization = BearerAuthorization(api_token)
+                 manager: BindConfigurationManager | None = None,
+                 token_file: Path | None = None) -> None:
+        if token_file is not None and api_token is not None:
+            raise ValueError("Choose a token file or a token value, not both")
+        self.authorization = BearerAuthorization.from_file(token_file) if token_file is not None else BearerAuthorization(api_token)
         self.manager = manager or BindConfigurationManager()
         self.xml_serializer = BindServerXmlSerializer()
         self.state: dict[str, object] = {
@@ -71,6 +101,13 @@ class BindHttpServer(HTTPServer):
     """Inject state into a single listener; never share authorization globally."""
 
     def __init__(self, address: tuple[str, int], context: BindApiContext) -> None:
+        try:
+            host = ipaddress.ip_address(address[0])
+        except ValueError:
+            raise ValueError("BIND management backend requires a literal loopback address") from None
+        if not host.is_loopback:
+            raise ValueError("Remote cleartext BIND management is disabled; use TLS ingress to a loopback backend")
+        self.address_family = socket.AF_INET6 if host.version == 6 else socket.AF_INET
         self.context = context
         super().__init__(address, BindApiHandler)
 
@@ -830,11 +867,12 @@ def serve(
     key_directory: str = "/etc/bind/dwlab/keys",
     named_service: str = "bind9",
     backup_directory: str = "/var/lib/dwlab/dwlabbind/backups",
+    api_token_file: Path | None = None,
 ) -> None:
     context = BindApiContext(api_token, state=dict(
         desired_state_path=desired_state_path, releases_root=releases_root,
         runtime_root=runtime_root, named_options=named_options, named_local=named_local,
         named_main=named_main, key_directory=key_directory, named_service=named_service,
-        backup_directory=backup_directory))
+        backup_directory=backup_directory), token_file=api_token_file)
     with BindHttpServer((host, port), context) as server:
         server.serve_forever()

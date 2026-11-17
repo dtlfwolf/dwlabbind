@@ -221,6 +221,7 @@ def main() -> None:
     api.add_argument("--port", type=int, default=8080)
     api.add_argument("--desired-state", default=None, metavar="FILE", help="Desired-state YAML managed by RPZ HTTP endpoints")
     api.add_argument("--api-token", default=None, metavar="TOKEN", help="Required for every HTTP operation, including loopback")
+    api.add_argument("--api-token-file", type=Path, default=None, metavar="FILE", help="Read the bearer token from an owner-only file instead of exposing it in argv")
     api.add_argument("--backup-directory", default="/var/lib/dwlab/dwlabbind/backups", metavar="DIR")
     api.add_argument("--releases-root", default="/etc/bind/dwlab/releases", metavar="DIR")
     api.add_argument("--runtime-root", default="/etc/bind/dwlab/current", metavar="DIR")
@@ -502,6 +503,7 @@ def main() -> None:
                 port=args.port,
                 desired_state_path=args.desired_state,
                 api_token=args.api_token,
+                api_token_file=args.api_token_file,
                 backup_directory=args.backup_directory,
                 releases_root=args.releases_root,
                 runtime_root=args.runtime_root,

@@ -403,7 +403,7 @@ Start HTTP API server.
 
 ```bash
 python -m dwlabbind.runner serve-api --host 127.0.0.1 --port 8080 \
-  --api-token "$DWLABBIND_API_TOKEN" \
+  --api-token-file /etc/dwlab/dwlabbind/credentials/api.token \
   --desired-state /etc/dwlab/dns.yaml
 ```
 
@@ -414,17 +414,46 @@ Each server owns its policy/state; no global token or shared configuration exist
 Use a long random secret, protect its source and never commit it. CLI/programming
 interfaces keep their operating-system permissions; this change does not create
 an anonymous management mode or enable the API automatically.
-Terminate TLS in a reverse proxy or run the API only on a trusted management
-network.
+Since 0.21.19, the backend accepts literal loopback IPv4/IPv6 addresses only.
+A token never authorizes cleartext remote exposure, including wildcard listeners.
+Hostnames are rejected to avoid DNS-dependent binding. This concerns management,
+not BIND's DNS data-plane `listen-on` policy. Remote administration requires an
+explicit TLS reverse proxy on a dedicated management IP with source CIDR and
+ingress-interface firewall restrictions. Never forward/NAT public traffic into
+loopback or enable route_localnet. IPv6 ingress requires equivalent explicit rules.
 
 ```bash
-python -m dwlabbind.runner serve-api --host 192.168.2.30 --port 8080 \
-  --api-token "$DWLABBIND_API_TOKEN" \
+python -m dwlabbind.runner serve-api --host 127.0.0.1 --port 8080 \
+  --api-token-file /etc/dwlab/dwlabbind/credentials/api.token \
   --desired-state /etc/dwlab/dwlabbind/dns.yaml \
   --releases-root /etc/bind/dwlab/releases \
   --runtime-root /etc/bind/dwlab/current \
   --named-service bind9
 ```
+
+Create the credential file as the service OS identity with mode 0600 in a trusted
+private directory, using a long cryptographically random token. Token files must
+be absolute, owned by the service identity and neither symlinks nor hardlinks.
+Restart the explicit API listener after rotation. Avoid literal `--api-token`
+values in production: shell history/process arguments may expose them. Files and
+values cannot be supplied together. Never put tokens in URLs or identity headers.
+
+The independent deployment package supplies disabled reference nginx and nftables
+examples under `/usr/share/doc/dwlab-bind-deploy/examples/management-ingress/`.
+They require installation-specific address, interface, source network, FQDN and
+certificate substitution. Install nginx separately only if this remote feature
+is wanted. Review existing firewall policy, back up configuration and run
+`nginx -t` and `nft --check --file <reviewed-file>` before activation. No proxy,
+firewall rule, remote listener or token is enabled by installing the DEB.
+
+The proxy must preserve bearer authentication; it cannot grant access through
+X-Forwarded-User or similar claims. Clients must verify TLS CA trust and hostname;
+never use `--insecure`. Restrict all ingress interfaces/sources even though nginx
+binds a dedicated IP. The example firewall adds narrow drop guards without
+flushing unrelated tables; IPv4-only examples do not authorize IPv6 exposure.
+Local plaintext HTTP is confined to the host; it is not an authorization boundary.
+The test suite exercises verified TLS fronting, token enforcement, wrong trust,
+source denial and explicit IPv6 loopback. It does not activate live firewall rules.
 
 ## API endpoints
 
