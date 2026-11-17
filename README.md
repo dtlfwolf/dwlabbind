@@ -234,6 +234,18 @@ records.
 
 ### `backup`
 
+Security release 0.21.17 adds an in-archive SHA-256 manifest. Restore plans all
+members against approved DNS roots before cleanup, stages and validates the
+configuration, then performs anchored no-follow writes with rollback on failure.
+The manifest detects integrity changes; it does not authenticate an archive or
+grant write access outside local policy. Only restore backups from trusted sources.
+The HTTP restore endpoint accepts only `archive` and `force`; target configuration
+and roots come from server configuration. Nondefault direct CLI layouts require
+explicit `--named-etc` approval. After reviewing an old manifest-less archive,
+local CLI users may pass `--allow-legacy-archive`; path/type/link checks still
+apply, and safe archived file aliases are flattened rather than installed as links.
+Unrelated releases, symlinked cleanup directories and journal files are preserved.
+
 Back up `named.conf` plus referenced files.
 
 ```bash

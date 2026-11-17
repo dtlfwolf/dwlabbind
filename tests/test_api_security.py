@@ -26,11 +26,11 @@ class ApiHost:
             self.thread.join(timeout=5)
             self.server.server_close()
 
-    def request(self, method, path, token=None):
+    def request(self, method, path, token=None, payload=None):
         connection = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=3)
         try:
             headers = {"Authorization": f"Bearer {token}"} if token else {}
-            connection.request(method, path, body="NOT_JSON", headers=headers)
+            connection.request(method, path, body="NOT_JSON" if payload is None else json.dumps(payload), headers=headers)
             response = connection.getresponse()
             return response.status, json.loads(response.read())
         finally:
@@ -70,3 +70,11 @@ def test_servers_have_independent_state_and_credentials():
             assert first.request("GET", "/unknown", "first-token")[0] == 404
             assert second.request("GET", "/unknown", "first-token")[0] == 401
             assert second.request("GET", "/unknown", "second-token")[0] == 404
+
+
+@pytest.mark.parametrize("field", ["named_conf", "named_etc", "named_var", "allow_legacy"])
+def test_restore_http_cannot_override_server_owned_roots(field):
+    with ApiHost().running() as host:
+        status, body = host.request("POST", "/restore", "test-token", {field: "/etc/cron.d", "archive": "/missing"})
+        assert status == 400
+        assert body["code"] == "RESTORE_SCOPE_OVERRIDE"

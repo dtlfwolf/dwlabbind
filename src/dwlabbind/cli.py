@@ -77,6 +77,7 @@ def main() -> None:
     list_zones.add_argument("--named-conf", default="/etc/bind/named.conf", metavar="FILE", help="Full path to named.conf")
 
     restore = sub.add_parser("restore", help="Restore named.conf and related files from backup")
+    restore.add_argument("--allow-legacy-archive", action="store_true", help="Explicitly approve a reviewed manifest-less archive; DNS path/link scope is still enforced")
     restore.add_argument("--named-conf", default="/etc/bind/named.conf", metavar="FILE", help="Full path to named.conf")
     restore.add_argument(
         "--archive",
@@ -275,6 +276,7 @@ def main() -> None:
             return
         if args.command == "restore":
             result = manager.restore_named_conf(
+                **({"allow_legacy": True} if args.allow_legacy_archive else {}),
                 named_conf=args.named_conf,
                 archive_path=args.archive,
                 force=args.force,

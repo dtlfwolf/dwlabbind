@@ -3145,10 +3145,9 @@ class BindServer:
             raise ValueError("source_path not set")
         files = self._collect_referenced_files()
         os.makedirs(os.path.dirname(output_tar) or ".", exist_ok=True)
+        from .archive_security import DnsArchiveManifest
         with tarfile.open(output_tar, "w") as tar:
-            for file_path in files:
-                if os.path.exists(file_path):
-                    tar.add(file_path, arcname=os.path.relpath(file_path, "/"))
+            DnsArchiveManifest().add_files(tar, files)
 
         logger.debug("Leaving function "+str(function_name))
         return output_tar
@@ -4956,49 +4955,25 @@ class BindConfigurationManager:
         """Internal helper."""
         self._xml_serializer.write_server_xml(server, path)
 
-    def _backup_files_from_archive(self, archive_path: str) -> set[str]:
-        """Internal helper."""
-        files: set[str] = set()
-        with tarfile.open(archive_path, "r") as tar:
-            for member in tar.getmembers():
-                if not (member.isfile() or member.issym() or member.islnk()):
-                    continue
-                relative = member.name.lstrip("/")
-                normalized = os.path.normpath("/" + relative)
-                files.add(normalized)
-        return files
+    def _backup_files_from_archive(self, archive_path: str, roots=None,
+                                   allow_legacy: bool = False) -> set[str]:
+        """Validate the complete archive before returning any cleanup allowlist."""
+        from .archive_security import DnsRestorePolicy, DnsRestoreTransaction
+        policy = DnsRestorePolicy(roots) if roots is not None else DnsRestorePolicy()
+        entries = DnsRestoreTransaction(policy, self._is_package_managed_path).plan(
+            archive_path, allow_legacy=allow_legacy)
+        return {str(entry.path) for entry in entries}
 
-    def _restore_from_backup_archive(self, archive_path: str) -> None:
-        """Internal helper."""
-        with tarfile.open(archive_path, "r") as tar:
-            for member in tar.getmembers():
-                if not (member.isfile() or member.issym() or member.islnk()):
-                    continue
-                relative = member.name.lstrip("/")
-                target_path = os.path.normpath("/" + relative)
-                if not target_path.startswith("/"):
-                    continue
-                if self._is_package_managed_path(target_path):
-                    continue
-                os.makedirs(os.path.dirname(target_path), exist_ok=True)
-                try:
-                    if os.path.lexists(target_path):
-                        if os.path.isdir(target_path) and not os.path.islink(target_path):
-                            shutil.rmtree(target_path)
-                        else:
-                            os.remove(target_path)
-                    if member.issym() or member.islnk():
-                        link_target = member.linkname
-                        os.symlink(link_target, target_path)
-                        continue
-                    source = tar.extractfile(member)
-                    if source is None:
-                        continue
-                    with source, open(target_path, "wb") as handle:
-                        handle.write(source.read())
-                except PermissionError:
-                    logger.warning("Rollback skipped '%s' due to permission error.", target_path)
-                    continue
+    def _restore_from_backup_archive(self, archive_path: str, *, named_conf: str,
+                                     roots, validate: bool = True,
+                                     allow_legacy: bool = False) -> set[str]:
+        """Restore only preflighted DNS files, after isolated configuration validation."""
+        from .archive_security import DnsRestorePolicy, DnsRestoreTransaction
+        transaction = DnsRestoreTransaction(DnsRestorePolicy(roots), self._is_package_managed_path)
+        entries = transaction.plan(archive_path, allow_legacy=allow_legacy)
+        validator = self._validate_existing_conf if validate else lambda path: None
+        transaction.restore(entries, Path(named_conf), validator)
+        return {str(entry.path) for entry in entries}
 
     def _find_latest_backup_archive(self, named_conf: str) -> str:
         """Locate the newest managed backup archive for the named.conf directory."""
@@ -5060,7 +5035,7 @@ class BindConfigurationManager:
     ) -> list[str]:
         """Internal helper."""
         removed: list[str] = []
-        backup_files = self._backup_files_from_archive(archive_path)
+        backup_files = self._backup_files_from_archive(archive_path, roots=(Path(named_etc), Path(named_var)))
         keep_files = set(os.path.abspath(path) for path in active_refs)
         keep_files.add(os.path.abspath(os.path.join(named_etc, "named.conf")))
         for path in sorted(backup_files):
@@ -5103,18 +5078,19 @@ class BindConfigurationManager:
                 continue
             os.remove(apath)
 
-        for root in (os.path.join(named_etc, "dwlab"), os.path.join(named_var, "dwlab")):
-            if not os.path.isdir(root):
+        directories = ((Path(named_etc) / "dwlab", ("*.conf",)),
+                       (Path(named_etc) / "dwlab/keys", ("*.key",)),
+                       (Path(named_var) / "dwlab", ("*.zone", "*.zone.FixedHosts")))
+        for root, patterns in directories:
+            if root.is_symlink() or not root.is_dir():
                 continue
-            for current, _, files in os.walk(root, topdown=False):
-                for filename in files:
-                    candidate = os.path.abspath(os.path.join(current, filename))
-                    if candidate in keep_files:
-                        continue
-                    if os.path.lexists(candidate):
-                        os.remove(candidate)
-                if not os.listdir(current):
-                    os.rmdir(current)
+            approved = Path(named_etc) if root.is_relative_to(Path(named_etc)) else Path(named_var)
+            if not root.resolve().is_relative_to(approved.resolve()):
+                continue
+            for pattern in patterns:
+                for candidate in root.glob(pattern):
+                    if str(candidate.absolute()) not in keep_files and not candidate.is_dir():
+                        candidate.unlink()
 
     def backup_named_conf(self, named_conf: str, output_tar: str) -> str:
         """Back up a named.conf tree via the configuration manager."""
@@ -5512,7 +5488,7 @@ class BindConfigurationManager:
                 archive_path,
                 exc,
             )
-            keep_files = self._backup_files_from_archive(archive_path)
+            keep_files = self._backup_files_from_archive(archive_path, roots=(Path(etc_path), Path(var_path)))
             try:
                 self._cleanup_generated_definitions(
                     named_etc=etc_path,
@@ -5520,7 +5496,8 @@ class BindConfigurationManager:
                     xml_path=xml_path,
                     keep_files=keep_files,
                 )
-                self._restore_from_backup_archive(archive_path)
+                self._restore_from_backup_archive(archive_path, named_conf=named_conf,
+                                                  roots=(Path(etc_path), Path(var_path)), validate=False)
                 logger.warning("Rollback from backup archive completed.")
             except Exception as rollback_exc:
                 logger.error("Rollback failed: %s", rollback_exc)
@@ -5540,6 +5517,7 @@ class BindConfigurationManager:
         force: bool = False,
         named_etc: Optional[str] = None,
         named_var: Optional[str] = None,
+        allow_legacy: bool = False,
     ) -> dict:
         """Restore named.conf and related files from the newest or requested backup archive."""
         function_name = sys._getframe().f_code.co_name
@@ -5551,6 +5529,8 @@ class BindConfigurationManager:
         var_path = named_var or "/var/lib/bind"
         xml_path = os.path.join(etc_path, "dwlabbind.xml")
         archive_to_restore = archive_path or self._find_latest_backup_archive(named_conf)
+        if named_etc is None and Path(etc_path) != Path("/etc/bind"):
+            raise BindOperationError("RESTORE_SCOPE_REVIEW_REQUIRED", "Nondefault restore roots require explicit local --named-etc approval", status=400)
         if not os.path.isfile(archive_to_restore):
             raise BindOperationError(
                 "BACKUP_NOT_FOUND",
@@ -5572,14 +5552,12 @@ class BindConfigurationManager:
                 status=409,
             )
 
-        backup_files = self._backup_files_from_archive(archive_to_restore)
+        roots = (Path(etc_path), Path(var_path))
+        backup_files = self._restore_from_backup_archive(
+            archive_to_restore, named_conf=named_conf, roots=roots, allow_legacy=allow_legacy)
         self._cleanup_generated_definitions(
-            named_etc=etc_path,
-            named_var=var_path,
-            xml_path=xml_path,
-            keep_files=backup_files,
-        )
-        self._restore_from_backup_archive(archive_to_restore)
+            named_etc=etc_path, named_var=var_path, xml_path=xml_path,
+            keep_files=backup_files)
 
         restored_named_conf = named_conf
         if not os.path.exists(restored_named_conf):
@@ -5591,7 +5569,6 @@ class BindConfigurationManager:
                 status=409,
             )
 
-        self._validate_existing_conf(restored_named_conf)
         regenerated_xml = self.import_named_conf(restored_named_conf)
 
         logger.info(

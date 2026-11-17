@@ -508,10 +508,12 @@ class BindApiHandler(BaseHTTPRequestHandler):
                 return
             if self.path == "/restore":
                 data = self._read_json()
-                named_conf = data.get("named_conf", "/etc/bind/named.conf")
+                named_conf = str(self.context.state["named_main"])
+                if set(data) - {"archive", "force"}:
+                    raise BindOperationError("RESTORE_SCOPE_OVERRIDE", "Restore targets are server-controlled; only archive and force are accepted", status=400)
                 archive_path = data.get("archive")
-                named_etc = data.get("named_etc")
-                named_var = data.get("named_var")
+                named_etc = str(Path(named_conf).parent)
+                named_var = "/var/lib/bind"
                 force = bool(data.get("force", False))
                 result = self.context.manager.restore_named_conf(
                     named_conf=named_conf,
