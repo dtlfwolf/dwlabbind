@@ -42,7 +42,7 @@ class TestRestore(unittest.TestCase):
                     manager = BindConfigurationManager()
                     original_named_conf = fixture.named_conf.read_text(encoding="utf-8")
                     backup_tar = sample.root / "steps" / "10-restore" / "backup" / "named.dwlab.conf.tar"
-                    backup_tar.parent.mkdir(parents=True, exist_ok=True)
+                    backup_tar.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
 
                     with mock.patch.object(BindServer, "_validate_layout", return_value=None):
                         init_result = manager.initialize_named_conf(

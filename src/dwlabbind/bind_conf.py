@@ -3134,7 +3134,7 @@ class BindServer:
         logger.debug("Leaving function "+str(function_name))
         return payload
 
-    def backup(self, output_tar: str) -> str:
+    def backup(self, output_tar: str, *, overwrite: bool = False) -> str:
         """Archive all referenced config and zone files into a tar file."""
         function_name = sys._getframe().f_code.co_name
         class_name=self.__class__.__name__
@@ -3144,10 +3144,8 @@ class BindServer:
         if not self.source_path:
             raise ValueError("source_path not set")
         files = self._collect_referenced_files()
-        os.makedirs(os.path.dirname(output_tar) or ".", exist_ok=True)
-        from .archive_security import DnsArchiveManifest
-        with tarfile.open(output_tar, "w") as tar:
-            DnsArchiveManifest().add_files(tar, files)
+        from .backup_security import DnsBackupWriter
+        DnsBackupWriter().write(Path(output_tar), files, overwrite=overwrite)
 
         logger.debug("Leaving function "+str(function_name))
         return output_tar
@@ -4977,9 +4975,9 @@ class BindConfigurationManager:
 
     def _find_latest_backup_archive(self, named_conf: str) -> str:
         """Locate the newest managed backup archive for the named.conf directory."""
-        backup_dir = os.path.dirname(named_conf) or "/etc/bind"
+        backup_dir = os.path.join(os.path.dirname(named_conf) or "/etc/bind", "backups")
         pattern = os.path.join(backup_dir, "named.dwlab.conf.*.tar")
-        candidates = [path for path in glob.glob(pattern) if os.path.isfile(path)]
+        candidates = [path for path in glob.glob(pattern) if os.path.isfile(path) and not os.path.islink(path)]
         if not candidates:
             raise BindOperationError(
                 "BACKUP_NOT_FOUND",
@@ -5092,7 +5090,7 @@ class BindConfigurationManager:
                     if str(candidate.absolute()) not in keep_files and not candidate.is_dir():
                         candidate.unlink()
 
-    def backup_named_conf(self, named_conf: str, output_tar: str) -> str:
+    def backup_named_conf(self, named_conf: str, output_tar: str, *, overwrite: bool = False) -> str:
         """Back up a named.conf tree via the configuration manager."""
         function_name = sys._getframe().f_code.co_name
         package_name = __PACKAGE_NAME__
@@ -5102,7 +5100,7 @@ class BindConfigurationManager:
         server = BindServer.fromConfFile(named_conf)
 
         logger.debug("Leaving function "+str(function_name))
-        return server.backup(output_tar)
+        return server.backup(output_tar, overwrite=overwrite)
 
     def list_zones_from_conf(self, named_conf: str) -> List[dict]:
         """Load a named.conf tree and return its zones."""
@@ -5447,7 +5445,7 @@ class BindConfigurationManager:
         if backup_output:
             archive_target = backup_output
         else:
-            backup_dir = os.path.dirname(named_conf) or "/etc/bind"
+            backup_dir = os.path.join(os.path.dirname(named_conf) or "/etc/bind", "backups")
             ts = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             archive_target = os.path.join(backup_dir, f"named.dwlab.conf.{ts}.tar")
         archive_path = discovered_server.backup(archive_target)
@@ -6187,4 +6185,7 @@ class BindServerXmlSerializer:
 
         tree = ET.ElementTree(root)
         ET.indent(tree, space="  ")
-        tree.write(path, encoding="utf-8", xml_declaration=True)
+        from .backup_security import PrivateFilePublisher
+        PrivateFilePublisher().publish(Path(path),
+                                       lambda stream: tree.write(stream, encoding="utf-8", xml_declaration=True),
+                                       overwrite=True, private_directory=False)

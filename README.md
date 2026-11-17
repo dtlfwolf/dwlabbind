@@ -234,6 +234,20 @@ records.
 
 ### `backup`
 
+Since 0.21.18, backups use atomic 0600 publication in an owner-controlled 0700
+directory, independent of umask. Existing public/shared directories are rejected,
+not chmodded: choose a dedicated private subdirectory. `initialize` defaults to
+`<named-etc>/backups/`; explicit old locations require `--archive` for recovery.
+Existing archives are preserved unless direct `backup --overwrite` explicitly
+approves replacement. Symlinks, hardlinks, special files and foreign ownership
+are rejected. XML exports containing imported key material are also 0600.
+The HTTP backup/recovery directory is server-configured with `--backup-directory`;
+requests cannot pick a different directory or named configuration. Transfer via
+authenticated encrypted SSH/SFTP, restrict copies to authorized staff and apply
+an installation-specific encrypted retention policy. These tar archives are not
+encrypted. Review/remove old readable backups and exports separately; a package
+upgrade does not scrub historical copies or rotate exposed TSIG keys.
+
 Security release 0.21.17 adds an in-archive SHA-256 manifest. Restore plans all
 members against approved DNS roots before cleanup, stages and validates the
 configuration, then performs anchored no-follow writes with rollback on failure.

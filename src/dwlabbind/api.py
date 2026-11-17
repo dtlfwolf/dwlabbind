@@ -62,6 +62,7 @@ class BindApiContext:
     "named_main": "/etc/bind/named.conf",
     "key_directory": "/etc/bind/dwlab/keys",
     "named_service": "bind9",
+    "backup_directory": "/var/lib/dwlab/dwlabbind/backups",
         }
         self.state.update(state or {})
 
@@ -485,12 +486,19 @@ class BindApiHandler(BaseHTTPRequestHandler):
                 return
             if self.path == "/backup":
                 data = self._read_json()
-                named_conf = data.get("named_conf", "/etc/bind/named.conf")
+                named_conf = str(self.context.state["named_main"])
                 output = data.get("output")
                 if not output:
                     self._send_error(400, "MISSING_REQUIRED_FIELD", "output is required")
                     return
-                path = self.context.manager.backup_named_conf(named_conf, output)
+                if set(data) - {"output", "overwrite"} or not isinstance(data.get("overwrite", False), bool):
+                    raise BindOperationError("BACKUP_SCOPE_OVERRIDE", "Backup accepts only output and boolean overwrite", status=400)
+                directory = Path(str(self.context.state["backup_directory"]))
+                requested = Path(str(output))
+                output_path = requested if requested.is_absolute() else directory / requested
+                if output_path.parent != directory or output_path.name in {".", ".."}:
+                    raise BindOperationError("BACKUP_SCOPE_OVERRIDE", "Backup output must stay in the configured backup directory", status=400)
+                path = self.context.manager.backup_named_conf(named_conf, str(output_path), overwrite=data.get("overwrite", False))
                 self._send_json(200, {"archive": path})
                 return
             if self.path == "/import":
@@ -512,6 +520,9 @@ class BindApiHandler(BaseHTTPRequestHandler):
                 if set(data) - {"archive", "force"}:
                     raise BindOperationError("RESTORE_SCOPE_OVERRIDE", "Restore targets are server-controlled; only archive and force are accepted", status=400)
                 archive_path = data.get("archive")
+                directory = Path(str(self.context.state["backup_directory"]))
+                if archive_path is not None and Path(str(archive_path)).parent != directory:
+                    raise BindOperationError("RESTORE_SCOPE_OVERRIDE", "HTTP recovery archives must come from the configured backup directory", status=400)
                 named_etc = str(Path(named_conf).parent)
                 named_var = "/var/lib/bind"
                 force = bool(data.get("force", False))
@@ -818,10 +829,12 @@ def serve(
     named_main: str = "/etc/bind/named.conf",
     key_directory: str = "/etc/bind/dwlab/keys",
     named_service: str = "bind9",
+    backup_directory: str = "/var/lib/dwlab/dwlabbind/backups",
 ) -> None:
     context = BindApiContext(api_token, state=dict(
         desired_state_path=desired_state_path, releases_root=releases_root,
         runtime_root=runtime_root, named_options=named_options, named_local=named_local,
-        named_main=named_main, key_directory=key_directory, named_service=named_service))
+        named_main=named_main, key_directory=key_directory, named_service=named_service,
+        backup_directory=backup_directory))
     with BindHttpServer((host, port), context) as server:
         server.serve_forever()

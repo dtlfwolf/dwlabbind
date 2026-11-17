@@ -137,6 +137,7 @@ def main() -> None:
     sub = parser.add_subparsers(dest="command", required=True)
 
     backup = sub.add_parser("backup", help="Backup named.conf and referenced files")
+    backup.add_argument("--overwrite", action="store_true", help="Explicitly replace an owned regular backup file")
     backup.add_argument("--named-conf", default="/etc/bind/named.conf", metavar="FILE", help="Full path to named.conf")
     backup.add_argument("--output", required=True, metavar="FILE", help="Full output archive path (e.g. /tmp/named.backup.tar)")
 
@@ -219,7 +220,8 @@ def main() -> None:
     api.add_argument("--host", default="127.0.0.1")
     api.add_argument("--port", type=int, default=8080)
     api.add_argument("--desired-state", default=None, metavar="FILE", help="Desired-state YAML managed by RPZ HTTP endpoints")
-    api.add_argument("--api-token", default=None, metavar="TOKEN", help="Required when listening beyond loopback")
+    api.add_argument("--api-token", default=None, metavar="TOKEN", help="Required for every HTTP operation, including loopback")
+    api.add_argument("--backup-directory", default="/var/lib/dwlab/dwlabbind/backups", metavar="DIR")
     api.add_argument("--releases-root", default="/etc/bind/dwlab/releases", metavar="DIR")
     api.add_argument("--runtime-root", default="/etc/bind/dwlab/current", metavar="DIR")
     api.add_argument("--named-options", default="/etc/bind/named.conf.options", metavar="FILE")
@@ -432,7 +434,8 @@ def main() -> None:
     manager = BindConfigurationManager()
     try:
         if args.command == "backup":
-            path = manager.backup_named_conf(args.named_conf, args.output)
+            path = manager.backup_named_conf(args.named_conf, args.output,
+                                            **({"overwrite": True} if args.overwrite else {}))
             print(path)
             return
         if args.command == "import":
@@ -499,6 +502,7 @@ def main() -> None:
                 port=args.port,
                 desired_state_path=args.desired_state,
                 api_token=args.api_token,
+                backup_directory=args.backup_directory,
                 releases_root=args.releases_root,
                 runtime_root=args.runtime_root,
                 named_options=args.named_options,

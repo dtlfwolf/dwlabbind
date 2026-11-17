@@ -54,7 +54,7 @@ class TestCliSmoke(unittest.TestCase):
 
                     scenario = sample.scenario(16, "runner-smoke")
                     backup_tar = scenario.root / "backup" / "named.dwlab.conf.tar"
-                    backup_tar.parent.mkdir(parents=True, exist_ok=True)
+                    backup_tar.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
 
                     with (
                         mock.patch.object(sys, "argv", [
@@ -159,7 +159,7 @@ class TestCliSmoke(unittest.TestCase):
 
                     scenario = sample.scenario(17, "local-cli-smoke")
                     backup_tar = scenario.root / "backup" / "named.dwlab.conf.tar"
-                    backup_tar.parent.mkdir(parents=True, exist_ok=True)
+                    backup_tar.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
 
                     with (
                         mock.patch.object(sys, "argv", [

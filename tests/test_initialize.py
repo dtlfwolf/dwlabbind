@@ -60,7 +60,7 @@ class TestInitializeLayout(unittest.TestCase):
                     scenario = sample.scenario(3, "initialize")
                     scenario.copy_file(fixture.named_conf, "input/named.conf.before")
                     backup_tar = scenario.root / "backup" / "named.dwlab.conf.tar"
-                    backup_tar.parent.mkdir(parents=True, exist_ok=True)
+                    backup_tar.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
 
                     validation_ctx = (
                         contextlib.nullcontext()
@@ -167,7 +167,7 @@ class TestInitializeLayout(unittest.TestCase):
                     scenario = sample.scenario(12, "initialize-rollback")
                     scenario.copy_file(fixture.named_conf, "input/named.conf.before")
                     backup_tar = scenario.root / "backup" / "named.dwlab.conf.tar"
-                    backup_tar.parent.mkdir(parents=True, exist_ok=True)
+                    backup_tar.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
                     original_named_conf = fixture.named_conf.read_text(encoding="utf-8")
                     generated_conf = fixture.named_etc / "dwlab.named.conf"
                     generated_xml = fixture.named_etc / "dwlabbind.xml"
@@ -241,7 +241,7 @@ class TestInitializeLayout(unittest.TestCase):
                     scenario = sample.scenario(13, "initialize-cleanup-rollback")
                     scenario.copy_file(fixture.named_conf, "input/named.conf.before")
                     backup_tar = scenario.root / "backup" / "named.dwlab.conf.tar"
-                    backup_tar.parent.mkdir(parents=True, exist_ok=True)
+                    backup_tar.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
                     original_named_conf = fixture.named_conf.read_text(encoding="utf-8")
                     generated_conf = fixture.named_etc / "dwlab.named.conf"
                     generated_xml = fixture.named_etc / "dwlabbind.xml"
@@ -322,7 +322,7 @@ class TestInitializeLayout(unittest.TestCase):
                     scenario = sample.scenario(14, "initialize-xml-input")
                     scenario.copy_file(fixture.named_conf, "input/named.conf.before")
                     backup_tar = scenario.root / "backup" / "named.dwlab.conf.tar"
-                    backup_tar.parent.mkdir(parents=True, exist_ok=True)
+                    backup_tar.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
                     xml_input = scenario.root / "input" / "dwlabbind.source.xml"
                     xml_input.parent.mkdir(parents=True, exist_ok=True)
 
@@ -405,7 +405,7 @@ class TestInitializeLayout(unittest.TestCase):
                     scenario = sample.scenario(15, "initialize-xml-input-mutation")
                     scenario.copy_file(fixture.named_conf, "input/named.conf.before")
                     backup_tar = scenario.root / "backup" / "named.dwlab.conf.tar"
-                    backup_tar.parent.mkdir(parents=True, exist_ok=True)
+                    backup_tar.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
                     xml_input = scenario.root / "input" / "dwlabbind.mutated.xml"
                     xml_input.parent.mkdir(parents=True, exist_ok=True)
 

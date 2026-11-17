@@ -67,6 +67,7 @@ def main() -> None:
     sub = parser.add_subparsers(dest="command", required=True)
 
     backup = sub.add_parser("backup", help="Backup named.conf and referenced files")
+    backup.add_argument("--overwrite", action="store_true", help="Explicitly replace an owned regular backup file")
     backup.add_argument("--named-conf", default="/etc/bind/named.conf", metavar="FILE", help="Full path to named.conf")
     backup.add_argument("--output", required=True, metavar="FILE", help="Full output archive path (e.g. /tmp/named.backup.tar)")
 
@@ -149,7 +150,8 @@ def main() -> None:
     api.add_argument("--host", default="127.0.0.1")
     api.add_argument("--port", type=int, default=8080)
     api.add_argument("--desired-state", default=None, metavar="FILE")
-    api.add_argument("--api-token", default=None, metavar="TOKEN", help="Required when listening beyond loopback")
+    api.add_argument("--api-token", default=None, metavar="TOKEN", help="Required for every HTTP operation, including loopback")
+    api.add_argument("--backup-directory", default="/var/lib/dwlab/dwlabbind/backups", metavar="DIR")
     api.add_argument("--managed-named-conf", default="/etc/bind/named.conf", metavar="FILE")
     api.add_argument("--managed-named-etc", default="/etc/bind", metavar="DIR")
     api.add_argument("--managed-named-var", default="/var/lib/bind", metavar="DIR")
@@ -257,7 +259,8 @@ def main() -> None:
     manager = BindConfigurationManager()
     try:
         if args.command == "backup":
-            path = manager.backup_named_conf(args.named_conf, args.output)
+            path = manager.backup_named_conf(args.named_conf, args.output,
+                                            **({"overwrite": True} if args.overwrite else {}))
             print(path)
             return
         if args.command == "import":
@@ -315,6 +318,7 @@ def main() -> None:
                 port=args.port,
                 desired_state_path=args.desired_state,
                 api_token=args.api_token,
+                backup_directory=args.backup_directory,
                 managed_named_conf=args.managed_named_conf,
                 managed_named_etc=args.managed_named_etc,
                 managed_named_var=args.managed_named_var,
