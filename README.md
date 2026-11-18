@@ -543,3 +543,14 @@ Example:
   </fixed_hosts>
 </zone_file>
 ```
+## Bounded API Transport (0.21.20)
+
+Requires independently installable `dwlabbasicpy>=0.23.0`. The authenticated
+loopback backend now limits concurrent readers to 8, headers to 16 KiB and
+bodies to 64 KiB. Header/body deadlines are absolute 3/5 seconds; response
+writes time out after 2 seconds. Invalid/duplicate lengths and transfer encoding
+are rejected. Authorization still precedes body reads. Configuration operations
+remain serialized; contention returns 503 after 1 second, and admitted mutations
+are drained safely on shutdown. Use the existing verified TLS-ingress design for
+explicit remote access, not a publicly exposed stdlib HTTP server.
+Standalone regression: `PYTHONPATH=src pytest tests/test_http_transport.py`.

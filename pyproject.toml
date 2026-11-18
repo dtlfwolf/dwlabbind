@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dwlabbind"
-version = "0.21.19"
+version = "0.21.20"
 description = "BIND statement classes, parser, and CLI tools"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
 dependencies = [
-  "dwlabbasicpy>=0.20.2",
+  "dwlabbasicpy>=0.23.0",
   "PyYAML>=6.0",
 ]
 

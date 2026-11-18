@@ -11,7 +11,8 @@ import os
 from pathlib import Path
 import tempfile
 import xml.etree.ElementTree as ET
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import HTTPServer
+from dwlabbasicpy.http_transport import BoundedHttpRequestHandler, BoundedHttpServerMixin, HttpTransportLimits
 from urllib.parse import unquote, urlparse
 
 from .bind_conf import (
@@ -97,10 +98,11 @@ class BindApiContext:
         self.state.update(state or {})
 
 
-class BindHttpServer(HTTPServer):
+class BindHttpServer(BoundedHttpServerMixin, HTTPServer):
     """Inject state into a single listener; never share authorization globally."""
 
-    def __init__(self, address: tuple[str, int], context: BindApiContext) -> None:
+    def __init__(self, address: tuple[str, int], context: BindApiContext, *,
+                 transport_limits: HttpTransportLimits | None = None) -> None:
         try:
             host = ipaddress.ip_address(address[0])
         except ValueError:
@@ -109,10 +111,20 @@ class BindHttpServer(HTTPServer):
             raise ValueError("Remote cleartext BIND management is disabled; use TLS ingress to a loopback backend")
         self.address_family = socket.AF_INET6 if host.version == 6 else socket.AF_INET
         self.context = context
+        self.configure_transport(transport_limits)
         super().__init__(address, BindApiHandler)
 
 
-class BindApiHandler(BaseHTTPRequestHandler):
+class BindApiHandler(BoundedHttpRequestHandler):
+    def authorize_transport_request(self) -> bool:
+        """Reject invalid credentials before buffering any request body."""
+        try:
+            self.context.authorization.require(self.headers)
+        except BindOperationError:
+            self._send_error(401, "UNAUTHORIZED", "A valid bearer token is required for BIND management")
+            return False
+        return True
+
     @property
     def context(self) -> BindApiContext:
         return self.server.context
@@ -424,11 +436,16 @@ class BindApiHandler(BaseHTTPRequestHandler):
                 os.remove(tmp_path)
 
     def _read_json(self) -> dict:
-        length = int(self.headers.get("Content-Length", "0"))
-        raw = self.rfile.read(length) if length else b""
+        raw = self.read_body()
         if not raw:
             return {}
-        return json.loads(raw.decode("utf-8"))
+        try:
+            result = json.loads(raw.decode("utf-8"))
+        except (ValueError, UnicodeDecodeError):
+            raise BindOperationError("INVALID_JSON", "Malformed JSON request body", status=400) from None
+        if not isinstance(result, dict):
+            raise BindOperationError("INVALID_JSON", "JSON request body must be an object", status=400)
+        return result
 
     def _send_json(self, status: int, payload: dict) -> None:
         body = json.dumps(payload).encode("utf-8")
